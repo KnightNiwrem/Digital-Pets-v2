@@ -1,4 +1,4 @@
-# Improved Specifications for HTML5 Pet Raising Game
+# Specifications for HTML5 Digital Pet Raising Game
 ## Architecture Overview
 The game follows a clean architecture pattern with three main components:
 1. **Systems**: Manage non-UI domains (PetSystem, InventorySystem, BattleSystem, WorldSystem, TimeSystem, SaveSystem)
