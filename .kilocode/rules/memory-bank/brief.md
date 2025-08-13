@@ -11,8 +11,8 @@ The game follows a clean architecture pattern with three main components:
 - **Pet Rarities**: 10 common (3 starters), 8 uncommon, 6 rare, 4 epic, 3 legendary
 - **Starter Selection**: Manages initial pet selection from 3 common pets
 - **Pet Stats**:
-  - Displayed stats (integers): Satiety, Hydration, Happiness
-  - Hidden counters: `satietyTicksLeft`, `hydrationTicksLeft`, `happinessTicksLeft`, `lifeTicksLeft`
+  - Displayed (computed-only) stats (integers): Satiety, Hydration, Happiness
+  - Hidden counters: `satietyTicksLeft`, `hydrationTicksLeft`, `happinessTicksLeft`, `lifeTicksLeft`, `poopTicksLeft`, `sickByPoopTicksLeft`
   - Stat calculation: `Math.ceil(ticksLeft / multiplier)` per stat
 - **Health States**: Healthy, Injured, Sick (with specific illnesses)
 - **Growth System**:
@@ -28,7 +28,7 @@ The game follows a clean architecture pattern with three main components:
   - Decrease rates: 100 (injured), 200 (sick), 300 (0 satiety), 500 (0 hydration), 1 (final growth stage)
   - Recovery: +1 if life did not decrease for any reason
 - **Poop System**:
-  - Manages `poopTicksLeft` (random reset after pooping)
+  - Manages `poopTicksLeft` (random reset after pooping between 10800 and 86400)
   - Manages `sickByPoopTicksLeft` (resets to 17,280 ticks when clean; decreases faster per tick with more poop)
   - Triggers sickness when `sickByPoopTicksLeft` reaches 0
 - **Balancing System**:
