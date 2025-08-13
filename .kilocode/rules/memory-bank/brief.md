@@ -28,6 +28,7 @@ This architecture ensures clean separation of concerns, testability, and extensi
 
 #### GameEngine
 **Responsibilities**: Central coordinator for event processing and game flow
+
 **Features**:
 - Priority-based event queue management
 - Transaction-like state updates (all-or-nothing)
