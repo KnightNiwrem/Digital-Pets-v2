@@ -43,6 +43,11 @@ The Memory Bank consists of core files and optional context files, all in Markdo
    - Dependencies
    - Tool usage patterns
 
+6. `todo.md`
+   - High level goals
+   - Low level tasks and subtasks to implement
+   - Must be updated before completing work
+
 ### Additional Files
 Create additional files/folders within memory-bank/ when they help organize:
 - `tasks.md` - Documentation of repetitive tasks and their workflows
