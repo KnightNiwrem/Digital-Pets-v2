@@ -1,8 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { useRef, type FormEvent } from "react";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
+import { useRef, type FormEvent } from 'react';
 
 export function APITester() {
   const responseInputRef = useRef<HTMLTextAreaElement>(null);
@@ -13,9 +19,9 @@ export function APITester() {
     try {
       const form = e.currentTarget;
       const formData = new FormData(form);
-      const endpoint = formData.get("endpoint") as string;
+      const endpoint = formData.get('endpoint') as string;
       const url = new URL(endpoint, location.href);
-      const method = formData.get("method") as string;
+      const method = formData.get('method') as string;
       const res = await fetch(url, { method });
 
       const data = await res.json();
@@ -46,9 +52,9 @@ export function APITester() {
           name="endpoint"
           defaultValue="/api/hello"
           className={cn(
-            "flex-1 font-mono",
-            "bg-transparent border-0 shadow-none",
-            "focus-visible:ring-0 focus-visible:ring-offset-0",
+            'flex-1 font-mono',
+            'bg-transparent border-0 shadow-none',
+            'focus-visible:ring-0 focus-visible:ring-offset-0'
           )}
           placeholder="/api/hello"
         />
@@ -63,10 +69,10 @@ export function APITester() {
         readOnly
         placeholder="Response will appear here..."
         className={cn(
-          "w-full min-h-[140px] bg-card",
-          "border border-input rounded-xl p-3",
-          "font-mono resize-y",
-          "placeholder:text-muted-foreground",
+          'w-full min-h-[140px] bg-card',
+          'border border-input rounded-xl p-3',
+          'font-mono resize-y',
+          'placeholder:text-muted-foreground'
         )}
       />
     </div>

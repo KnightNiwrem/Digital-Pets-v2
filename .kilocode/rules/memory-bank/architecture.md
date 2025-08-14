@@ -42,35 +42,43 @@ The game uses a **Domain-Driven Design** with four distinct layers that ensure c
 ## Core Design Principles
 
 ### 1. Single Responsibility
+
 Each domain owns specific data and operations. No domain modifies another domain's data directly.
 
 ### 2. Event-Driven Communication
+
 Domains communicate through events, not direct method calls. This ensures loose coupling.
 
 ### 3. Immutable State Updates
+
 All state changes create new state objects. This enables history, undo, and predictable updates.
 
 ### 4. Command Pattern
+
 User actions become commands that are validated before execution.
 
 ## Layer 1: Input Layer
 
 ### Purpose
+
 Capture all external inputs and convert them to domain events.
 
 ### Components
 
 #### UserInputHandler
+
 - Captures clicks, taps, keyboard input
 - Validates input before creating events
 - Provides immediate feedback (button states, hover effects)
 
 #### TimerSystem
+
 - Manages game tick (every 15 seconds by default)
 - Emits tick events for time-based updates
 - Handles pause/resume functionality
 
 #### SystemEventHandler
+
 - Browser events (visibility, online/offline)
 - PWA lifecycle events
 - Save/load triggers
@@ -78,11 +86,13 @@ Capture all external inputs and convert them to domain events.
 ## Layer 2: Orchestration Layer
 
 ### Purpose
+
 Coordinate between inputs and domains, ensuring proper event flow and state consistency.
 
 ### Components
 
 #### EventBus
+
 ```typescript
 interface EventBus {
   emit(event: GameEvent): void;
@@ -98,14 +108,15 @@ interface GameEvent {
 }
 
 enum EventPriority {
-  IMMEDIATE = 0,  // User actions
-  HIGH = 1,       // Battle actions
-  NORMAL = 2,     // Tick updates
-  LOW = 3         // Background tasks
+  IMMEDIATE = 0, // User actions
+  HIGH = 1, // Battle actions
+  NORMAL = 2, // Tick updates
+  LOW = 3, // Background tasks
 }
 ```
 
 #### CommandProcessor
+
 ```typescript
 interface Command {
   type: string;
@@ -127,6 +138,7 @@ class CommandProcessor {
 ```
 
 #### StateCoordinator
+
 ```typescript
 interface StateCoordinator {
   applyChanges(state: GameState, changes: StateChange[]): GameState;
@@ -139,25 +151,28 @@ interface StateCoordinator {
 ## Layer 3: Domain Layer
 
 ### Core Domains
+
 These own the fundamental game data.
 
 #### Pet Domain
+
 **Owns:**
+
 ```typescript
 interface Pet {
   id: string;
   species: PetSpecies;
   name: string;
-  
+
   // Core stats
   stats: {
-    hunger: number;      // 0-100
-    happiness: number;   // 0-100
-    energy: number;      // 0-100
-    hygiene: number;     // 0-100
-    health: number;      // 0-100
+    hunger: number; // 0-100
+    happiness: number; // 0-100
+    energy: number; // 0-100
+    hygiene: number; // 0-100
+    health: number; // 0-100
   };
-  
+
   // Battle attributes
   battleStats: {
     level: number;
@@ -166,120 +181,128 @@ interface Pet {
     defense: number;
     speed: number;
   };
-  
-  abilities: PetAbility[];  // Moves for battle
-  
+
+  abilities: PetAbility[]; // Moves for battle
+
   // Growth
-  age: number;            // In game ticks
-  growthStage: number;    // Current evolution stage
-  experience: number;     // For leveling up
-  
+  age: number; // In game ticks
+  growthStage: number; // Current evolution stage
+  experience: number; // For leveling up
+
   // Personality
   personality: {
     traits: PersonalityTrait[];
     mood: Mood;
     preferences: Preferences;
   };
-  
+
   // Relationships
   relationships: {
-    playerId: number;     // Bond with player
+    playerId: number; // Bond with player
     petBonds: Map<string, number>; // Bonds with other pets
   };
 }
 ```
 
 **Responsibilities:**
+
 - Calculate stat decay over time
 - Determine mood from current stats
 - Level up and evolution logic
 - Personality development
 
 **Does NOT handle:**
+
 - Items (owned by Player)
 - Location (owned by World)
 - Battle execution (handled by Battle System)
 
 #### Player Domain
+
 **Owns:**
+
 ```typescript
 interface Player {
   id: string;
   name: string;
-  
+
   // Inventory
   inventory: {
-    items: Map<ItemId, number>;  // Item ID -> quantity
+    items: Map<ItemId, number>; // Item ID -> quantity
     maxCapacity: number;
   };
-  
+
   // Economy
   currencies: {
     coins: number;
-    gems: number;  // Premium currency
+    gems: number; // Premium currency
   };
-  
+
   // Progression
   level: number;
   experience: number;
   achievements: Achievement[];
   statistics: PlayerStats;
-  
+
   // Discovery
   discovered: {
     pets: Set<PetSpecies>;
     locations: Set<LocationId>;
     items: Set<ItemId>;
   };
-  
+
   // Owned pets
   pets: {
-    active: string[];    // Pet IDs currently active
-    stored: string[];    // Pet IDs in storage
+    active: string[]; // Pet IDs currently active
+    stored: string[]; // Pet IDs in storage
     graveyard: string[]; // Pet IDs that have passed
   };
-  
+
   // Settings
   settings: PlayerSettings;
 }
 ```
 
 **Responsibilities:**
+
 - Manage inventory (add/remove items)
 - Track player progression
 - Handle achievements
 - Manage currency
 
 **Does NOT handle:**
+
 - Pet stats (owned by Pet)
 - Market prices (owned by World)
 - Item effects (handled by Activity Systems)
 
 #### World Domain
+
 **Owns:**
+
 ```typescript
 interface World {
   // Locations
   locations: Map<LocationId, Location>;
   currentLocation: LocationId;
-  
+
   // NPCs
   npcs: Map<NpcId, NPC>;
-  
+
   // Economy (market is part of the world)
   market: {
     prices: Map<ItemId, PriceRange>;
     dailyDeals: Deal[];
     supplyDemand: Map<ItemId, number>;
   };
-  
+
   // Environment
   environment: {
     timeOfDay: TimeOfDay;
     weather: Weather;
     season: Season;
   };
-  
+
   // Events
   activeEvents: WorldEvent[];
 }
@@ -288,46 +311,50 @@ interface Location {
   id: LocationId;
   name: string;
   description: string;
-  
+
   // What you can do here
   availableActivities: ActivityType[];
-  
+
   // NPCs present
   npcs: NpcId[];
-  
+
   // Environmental modifiers
   modifiers: LocationModifier[];
 }
 ```
 
 **Responsibilities:**
+
 - Manage world state and time
 - Control market prices
 - Handle environmental effects
 - Manage NPCs and their state
 
 **Does NOT handle:**
+
 - Player inventory (owned by Player)
 - Pet locations (pets follow player)
 - Activity execution (handled by Activity Systems)
 
 #### Item Domain
+
 **Owns:**
+
 ```typescript
 interface ItemDefinition {
   id: ItemId;
   name: string;
   category: ItemCategory;
   rarity: Rarity;
-  
+
   // Base properties
   baseValue: number;
   stackable: boolean;
   maxStack: number;
-  
+
   // Effects when used
   effects: ItemEffect[];
-  
+
   // Crafting
   recipe?: CraftingRecipe;
   salvageable: boolean;
@@ -342,27 +369,32 @@ enum ItemCategory {
   GROOMING,
   EQUIPMENT,
   MATERIAL,
-  SPECIAL
+  SPECIAL,
 }
 ```
 
 **Responsibilities:**
+
 - Define all item properties
 - Specify item effects
 - Define crafting recipes
 
 **Does NOT handle:**
+
 - Who owns items (Player Domain)
 - Current market prices (World Domain)
 - Using items (Activity Systems)
 
 ### Activity Systems
+
 These orchestrate interactions between domains.
 
 #### Care System
+
 **Uses:** Pet Domain, Player Domain, Item Domain
 
 **Handles:**
+
 ```typescript
 interface CareSystem {
   feedPet(petId: string, itemId: ItemId): Command;
@@ -373,6 +405,7 @@ interface CareSystem {
 ```
 
 **Process:**
+
 1. Validate player has item
 2. Check pet can receive care
 3. Remove item from inventory
@@ -380,9 +413,11 @@ interface CareSystem {
 5. Update pet happiness/bond
 
 #### Battle System
+
 **Uses:** Pet Domain, World Domain
 
 **Handles:**
+
 ```typescript
 interface BattleSystem {
   startBattle(petId1: string, petId2: string): Battle;
@@ -400,6 +435,7 @@ interface Battle {
 ```
 
 **Process:**
+
 1. Initialize battle with pets
 2. Apply environmental modifiers
 3. Process moves in speed order
@@ -407,9 +443,11 @@ interface Battle {
 5. Distribute rewards
 
 #### Trade System
+
 **Uses:** Player Domain, World Domain, Item Domain
 
 **Handles:**
+
 ```typescript
 interface TradeSystem {
   buyItem(itemId: ItemId, quantity: number, npcId: NpcId): Command;
@@ -419,6 +457,7 @@ interface TradeSystem {
 ```
 
 **Process:**
+
 1. Check market prices
 2. Validate player resources
 3. Execute transaction
@@ -426,9 +465,11 @@ interface TradeSystem {
 5. Adjust market supply/demand
 
 #### Craft System
+
 **Uses:** Player Domain, Item Domain
 
 **Handles:**
+
 ```typescript
 interface CraftSystem {
   craft(recipeId: RecipeId): Command;
@@ -438,6 +479,7 @@ interface CraftSystem {
 ```
 
 **Process:**
+
 1. Validate recipe requirements
 2. Check player has materials
 3. Remove materials
@@ -445,9 +487,11 @@ interface CraftSystem {
 5. Add to inventory
 
 #### Explore System
+
 **Uses:** Player Domain, World Domain, Pet Domain
 
 **Handles:**
+
 ```typescript
 interface ExploreSystem {
   explore(locationId: LocationId, petId: string): ExploreSession;
@@ -457,6 +501,7 @@ interface ExploreSystem {
 ```
 
 **Process:**
+
 1. Check location accessibility
 2. Start exploration timer
 3. Generate encounters/resources
@@ -464,21 +509,24 @@ interface ExploreSystem {
 5. Distribute rewards
 
 ### Support Systems
+
 These provide infrastructure services.
 
 #### Time System
+
 ```typescript
 interface TimeSystem {
   currentTick: number;
   tickInterval: number; // milliseconds
   isPaused: boolean;
-  
+
   onTick(callback: TickHandler): void;
   calculateOfflineProgress(lastTick: number): OfflineProgress;
 }
 ```
 
 #### Save System
+
 ```typescript
 interface SaveSystem {
   save(state: GameState): Promise<void>;
@@ -489,6 +537,7 @@ interface SaveSystem {
 ```
 
 #### Notification System
+
 ```typescript
 interface NotificationSystem {
   notify(message: string, type: NotificationType): void;
@@ -500,21 +549,25 @@ interface NotificationSystem {
 ## Layer 4: Presentation Layer
 
 ### Purpose
+
 Handle all UI rendering and user feedback.
 
 ### Components
 
 #### UI Components
+
 - React components for each screen
 - Responsive design with Tailwind CSS
 - Accessibility features built-in
 
 #### Sound Manager
+
 - Background music
 - Sound effects
 - Volume controls
 
 #### Animation Manager
+
 - CSS animations
 - Sprite animations
 - Particle effects
@@ -523,7 +576,7 @@ Handle all UI rendering and user feedback.
 
 1. **User Action**: Player clicks "Feed" button
 2. **Input Layer**: Creates `FeedPetCommand`
-3. **Orchestration Layer**: 
+3. **Orchestration Layer**:
    - CommandProcessor validates command
    - Checks player has food item
    - Checks pet can be fed
@@ -538,18 +591,21 @@ Handle all UI rendering and user feedback.
 ## Key Architecture Decisions
 
 ### Why Domain-Driven Design?
+
 - **Clear boundaries**: Each domain has specific responsibilities
 - **No overlaps**: Trading is one system using Player and World domains
 - **Maintainable**: Easy to understand what code owns what data
 - **Testable**: Domains can be tested in isolation
 
 ### Why Event-Driven?
+
 - **Loose coupling**: Domains don't directly depend on each other
 - **Extensible**: Easy to add new event handlers
 - **Debuggable**: Event log shows exactly what happened
 - **Replayable**: Can replay events for testing/debugging
 
 ### Why Immutable State?
+
 - **Predictable**: State changes are explicit
 - **Debuggable**: Can see before/after states
 - **Undoable**: Easy to implement undo
@@ -622,30 +678,35 @@ src/
 ## Implementation Priorities
 
 ### Phase 1: Core Infrastructure (Week 1)
+
 1. EventBus and CommandProcessor
 2. StateCoordinator with immutable updates
 3. Basic UI framework
 4. Save System
 
 ### Phase 2: Core Domains (Week 2)
+
 1. Pet Domain with stats
 2. Player Domain with inventory
 3. Item definitions
 4. Basic World structure
 
 ### Phase 3: Basic Activities (Week 3)
+
 1. Care System (feeding, playing)
 2. Time System with ticks
 3. Stat decay logic
 4. Simple UI for pet care
 
 ### Phase 4: Extended Features (Week 4-5)
+
 1. Battle System
 2. Trade System
 3. Explore System
 4. More locations and NPCs
 
 ### Phase 5: Polish (Week 6)
+
 1. Animations and sound
 2. Achievements
 3. Tutorial
@@ -654,6 +715,7 @@ src/
 ## Performance Considerations
 
 ### Optimization Strategies
+
 1. **Immutable updates with structural sharing** - Only create new objects for changed parts
 2. **Memoization** - Cache expensive calculations
 3. **Virtual scrolling** - For long lists
@@ -661,6 +723,7 @@ src/
 5. **Web Workers** - Offline progress calculations
 
 ### Performance Targets
+
 - 60 FPS during gameplay
 - < 100ms response to user input
 - < 3 second initial load
@@ -669,18 +732,21 @@ src/
 ## Testing Strategy
 
 ### Unit Tests
+
 - Each domain tested independently
 - Mock dependencies injected
 - Test state transformations
 - Test validation logic
 
 ### Integration Tests
+
 - Test activity systems with real domains
 - Test event flow
 - Test save/load cycle
 - Test offline progression
 
 ### E2E Tests
+
 - Complete user workflows
 - Cross-browser testing
 - Performance benchmarks

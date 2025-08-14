@@ -3,12 +3,14 @@
 ## Current State
 
 ### Project Status
+
 - **Phase**: Pre-implementation / Architecture Design Complete
 - **Environment**: Development setup with Bun + React + TypeScript
 - **Implementation**: Basic React template with no game code yet
 - **Architecture**: Domain-driven design with clear separation of concerns
 
 ### What Has Been Done
+
 1. **Architecture Design**: Complete domain-driven architecture with four distinct layers
 2. **Domain Boundaries**: Clear separation between Pet, Player, World, and Item domains
 3. **Activity Systems**: Defined Care, Battle, Trade, Craft, and Explore systems that orchestrate domains
@@ -17,12 +19,14 @@
 6. **Documentation**: Comprehensive architecture documentation created and refined
 
 ### Architecture Redesign (Latest)
-  - Each domain owns specific data exclusively
-  - Activity systems orchestrate between domains
-  - No direct domain-to-domain communication
-  - Clear mental model of responsibilities
+
+- Each domain owns specific data exclusively
+- Activity systems orchestrate between domains
+- No direct domain-to-domain communication
+- Clear mental model of responsibilities
 
 ### Current Files Structure
+
 ```
 Digital-Pets-v2/
 ├── src/
@@ -36,7 +40,7 @@ Digital-Pets-v2/
 │   └── lib/utils.ts      # Utility functions
 ├── .kilocode/rules/memory-bank/
 │   ├── brief.md          # Enhanced architecture specification
-│   ├── product.md        # Product documentation  
+│   ├── product.md        # Product documentation
 │   ├── context.md        # This file
 │   ├── architecture.md   # Detailed system architecture
 │   └── tech.md           # Technology stack
@@ -49,8 +53,9 @@ Digital-Pets-v2/
 ```
 
 ### Implementation Status
+
 - **Game Engine**: Not implemented
-- **Event System**: Not implemented  
+- **Event System**: Not implemented
 - **State Management**: Not implemented
 - **Domain Systems**: Not implemented
 - **UI Components**: Template components only
@@ -60,6 +65,7 @@ Digital-Pets-v2/
 ## Recent Changes
 
 ### Architecture Redesign (Just Completed)
+
 - Switched from mixed system model to domain-driven design
 - Created four core domains: Pet, Player, World, Item
 - Defined five activity systems: Care, Battle, Trade, Craft, Explore
@@ -67,6 +73,7 @@ Digital-Pets-v2/
 - Clarified all domain boundaries and responsibilities
 
 ### Key Architecture Decisions
+
 - **Pet Domain** owns all pet-specific data (stats, abilities, personality)
 - **Player Domain** owns inventory, currency, achievements
 - **World Domain** owns locations, NPCs, and market economy
@@ -77,6 +84,7 @@ Digital-Pets-v2/
 ## Next Steps
 
 ### Immediate Priorities (Phase 1: Core Infrastructure)
+
 1. **Set up project structure** following domain-driven design
 2. **Implement Event System** with priority queue
 3. **Build Orchestration Layer** (EventBus, CommandProcessor, StateCoordinator)
@@ -84,6 +92,7 @@ Digital-Pets-v2/
 5. **Implement Save System** for persistence
 
 ### Short-term Goals (Phase 2: Core Domains)
+
 1. **Implement Pet Domain** with stats and decay
 2. **Build Player Domain** with inventory management
 3. **Create Item Domain** with item definitions
@@ -91,6 +100,7 @@ Digital-Pets-v2/
 5. **Implement Time System** for game ticks
 
 ### Medium-term Goals (Phase 3: Activity Systems)
+
 1. **Care System** for pet interactions
 2. **Basic UI screens** for pet management
 3. **Stat decay logic** over time
@@ -99,6 +109,7 @@ Digital-Pets-v2/
 ## Technical Decisions Made
 
 ### Architecture Choices
+
 - **Domain-Driven Design** for clear boundaries
 - **Event-driven communication** between domains
 - **Immutable state updates** for predictability
@@ -106,6 +117,7 @@ Digital-Pets-v2/
 - **Priority-based event queue** for performance
 
 ### Technology Stack (Confirmed)
+
 - **Runtime**: Bun for fast development
 - **Framework**: React 19 with TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui
@@ -113,6 +125,7 @@ Digital-Pets-v2/
 - **Build Tool**: Bun's native bundler
 
 ### Design Patterns
+
 - **Observer Pattern**: Event system
 - **Command Pattern**: User actions
 - **Repository Pattern**: Domain data access
@@ -121,6 +134,7 @@ Digital-Pets-v2/
 ## Current Blockers
 
 ### None Currently
+
 - Architecture design is complete and refined
 - Development environment is ready
 - Clear implementation path defined
@@ -128,12 +142,14 @@ Digital-Pets-v2/
 ## Questions to Resolve
 
 ### Implementation Questions
+
 1. **State Management Library**: Zustand vs Valtio - need to decide
 2. **Asset Pipeline**: How to handle sprites and sounds
 3. **Testing Strategy**: Vitest setup and test structure
 4. **PWA Configuration**: When to add PWA support
 
 ### Game Design Questions
+
 1. **Initial Pet Selection**: UI/UX for choosing starter pet
 2. **Tutorial Flow**: How to onboard new players
 3. **Difficulty Curve**: Balancing stat decay rates
@@ -142,12 +158,14 @@ Digital-Pets-v2/
 ## Development Environment
 
 ### Current Setup
+
 - **OS**: macOS Ventura
 - **Runtime**: Bun v1.2.19
 - **Editor**: VS Code with Kilo Code
 - **Package Manager**: Bun
 
 ### Available Scripts
+
 - `bun dev` - Start development server with HMR
 - `bun start` - Run production server
 - `bun run build.ts` - Build for production
@@ -155,6 +173,7 @@ Digital-Pets-v2/
 ## Notes for Next Session
 
 ### Remember To
+
 1. Follow domain-driven design principles strictly
 2. Keep domains isolated - no direct communication
 3. Use activity systems to orchestrate domain interactions
@@ -162,6 +181,7 @@ Digital-Pets-v2/
 5. Write tests alongside implementation
 
 ### Architecture Reminders
+
 - Domains own data, not logic for using that data
 - Activity systems orchestrate between domains
 - Events flow through the orchestration layer
@@ -169,6 +189,7 @@ Digital-Pets-v2/
 - Commands are validated before execution
 
 ### Code Quality Goals
+
 - TypeScript strict mode always
 - No `any` types
 - Comprehensive error handling
