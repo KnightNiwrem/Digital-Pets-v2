@@ -9,7 +9,7 @@
     "build": "bun run build.ts",
     "typecheck": "bun typecheck --noEmit",
     "lint": "eslint --flag unstable_native_nodejs_ts_config \"src/**/*.{ts,tsx,js,jsx}\"",
-    "lint:fix": "eslint --flag unstable_native_nodejs_ts_config --fix \"src/**/*.{ts,tsx,js,jsx}\"",
+    "lint:fix": "eslint --fix --flag unstable_native_nodejs_ts_config \"src/**/*.{ts,tsx,js,jsx}\"",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest",
@@ -25,6 +25,7 @@
     "lucide-react": "^0.539.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-hook-form": "^7.62.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
     "tailwindcss-animate": "^1.0.7"
