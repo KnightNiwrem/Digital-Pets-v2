@@ -6,22 +6,29 @@
 - **Phase**: Pre-implementation / Architecture Design Complete
 - **Environment**: Development setup with Bun + React + TypeScript
 - **Implementation**: Basic React template with no game code yet
-- **Architecture**: Comprehensive three-layer event-driven design documented
+- **Architecture**: Domain-driven design with clear separation of concerns
 
 ### What Has Been Done
-1. **Architecture Design**: Complete three-layer event-driven architecture designed and documented
-2. **System Specifications**: All game systems (Pet, Inventory, Battle, World, etc.) fully specified
-3. **Development Environment**: Bun-based React project initialized with TypeScript and Tailwind CSS
-4. **UI Components**: Basic shadcn/ui components integrated (Button, Card, Form, Input, Label, Select)
-5. **Documentation**: Comprehensive architecture documentation with diagrams created
+1. **Architecture Design**: Complete domain-driven architecture with four distinct layers
+2. **Domain Boundaries**: Clear separation between Pet, Player, World, and Item domains
+3. **Activity Systems**: Defined Care, Battle, Trade, Craft, and Explore systems that orchestrate domains
+4. **Development Environment**: Bun-based React project initialized with TypeScript and Tailwind CSS
+5. **UI Components**: Basic shadcn/ui components integrated
+6. **Documentation**: Comprehensive architecture documentation created and refined
+
+### Architecture Redesign (Latest)
+  - Each domain owns specific data exclusively
+  - Activity systems orchestrate between domains
+  - No direct domain-to-domain communication
+  - Clear mental model of responsibilities
 
 ### Current Files Structure
 ```
 Digital-Pets-v2/
 ├── src/
-│   ├── index.tsx          # Bun server entry point with API routes
+│   ├── index.tsx          # Bun server entry point
 │   ├── frontend.tsx       # React app entry point
-│   ├── App.tsx           # Main app component (template code)
+│   ├── App.tsx           # Main app component (template)
 │   ├── APITester.tsx     # API testing component (template)
 │   ├── index.html        # HTML entry point
 │   ├── index.css         # Global styles
@@ -29,9 +36,11 @@ Digital-Pets-v2/
 │   └── lib/utils.ts      # Utility functions
 ├── .kilocode/rules/memory-bank/
 │   ├── brief.md          # Enhanced architecture specification
-│   ├── product.md        # Product documentation
-│   └── context.md        # This file
-├── improved-architecture.md     # Detailed architecture redesign
+│   ├── product.md        # Product documentation  
+│   ├── context.md        # This file
+│   ├── architecture.md   # Detailed system architecture
+│   └── tech.md           # Technology stack
+├── improved-architecture.md     # Initial architecture design
 ├── architecture-diagrams.md     # Visual architecture diagrams
 ├── architecture-improvements-summary.md  # Summary of improvements
 ├── package.json          # Project dependencies
@@ -51,65 +60,70 @@ Digital-Pets-v2/
 ## Recent Changes
 
 ### Architecture Redesign (Just Completed)
-- Redesigned from mixed Actor/System model to three-layer architecture
-- Added comprehensive systems: Personality, Relationships, Economy, Progression
-- Defined clear event flow with priority queue
-- Specified immutable state management with history
-- Added performance optimization strategies
+- Switched from mixed system model to domain-driven design
+- Created four core domains: Pet, Player, World, Item
+- Defined five activity systems: Care, Battle, Trade, Craft, Explore
+- Added three support systems: Time, Save, Notification
+- Clarified all domain boundaries and responsibilities
 
-### Memory Bank Initialization (In Progress)
-- Created comprehensive product documentation
-- Documenting current project context
-- Will document architecture and technology stack
+### Key Architecture Decisions
+- **Pet Domain** owns all pet-specific data (stats, abilities, personality)
+- **Player Domain** owns inventory, currency, achievements
+- **World Domain** owns locations, NPCs, and market economy
+- **Item Domain** owns item definitions and crafting recipes
+- **Activity Systems** orchestrate interactions between domains
+- **No direct domain communication** - all through events
 
 ## Next Steps
 
 ### Immediate Priorities (Phase 1: Core Infrastructure)
-1. **Set up project structure** following the architecture design
+1. **Set up project structure** following domain-driven design
 2. **Implement Event System** with priority queue
-3. **Build GameEngine core** with event processing
-4. **Create StateManager** with immutable updates
-5. **Set up basic UI framework** with React components
+3. **Build Orchestration Layer** (EventBus, CommandProcessor, StateCoordinator)
+4. **Create basic UI framework** with React components
+5. **Implement Save System** for persistence
 
-### Short-term Goals (Phase 2: Essential Systems)
-1. **Implement PetSystem** with basic stats and care
-2. **Build TimeSystem** with game tick management
-3. **Create SaveSystem** with LocalStorage persistence
-4. **Develop basic UI screens** for pet interaction
+### Short-term Goals (Phase 2: Core Domains)
+1. **Implement Pet Domain** with stats and decay
+2. **Build Player Domain** with inventory management
+3. **Create Item Domain** with item definitions
+4. **Set up World Domain** with basic locations
+5. **Implement Time System** for game ticks
 
-### Medium-term Goals (Phase 3: Gameplay Loop)
-1. **Add pet care mechanics** (feeding, cleaning, playing)
-2. **Implement basic activities** (exploration, mini-games)
-3. **Create progression system** (experience, levels)
-4. **Polish UI** with animations and feedback
+### Medium-term Goals (Phase 3: Activity Systems)
+1. **Care System** for pet interactions
+2. **Basic UI screens** for pet management
+3. **Stat decay logic** over time
+4. **Simple activities** for engagement
 
 ## Technical Decisions Made
 
 ### Architecture Choices
-- **Three-layer architecture** for separation of concerns
-- **Event-driven design** for loose coupling
-- **Immutable state** for predictable updates
+- **Domain-Driven Design** for clear boundaries
+- **Event-driven communication** between domains
+- **Immutable state updates** for predictability
+- **Command pattern** for user actions
 - **Priority-based event queue** for performance
 
 ### Technology Stack (Confirmed)
 - **Runtime**: Bun for fast development
-- **Framework**: React 18+ with TypeScript
+- **Framework**: React 19 with TypeScript
 - **Styling**: Tailwind CSS + shadcn/ui
-- **State Management**: Will use Zustand or Valtio
-- **Build Tool**: Vite (to be integrated)
+- **State Management**: TBD (Zustand or Valtio)
+- **Build Tool**: Bun's native bundler
 
 ### Design Patterns
 - **Observer Pattern**: Event system
-- **Command Pattern**: Actions and state changes
-- **Strategy Pattern**: Different decay curves
-- **Factory Pattern**: Pet and item creation
+- **Command Pattern**: User actions
+- **Repository Pattern**: Domain data access
+- **Factory Pattern**: Entity creation
 
 ## Current Blockers
 
 ### None Currently
-- Architecture design is complete
-- Development environment is set up
-- Ready to begin implementation
+- Architecture design is complete and refined
+- Development environment is ready
+- Clear implementation path defined
 
 ## Questions to Resolve
 
@@ -130,7 +144,6 @@ Digital-Pets-v2/
 ### Current Setup
 - **OS**: macOS Ventura
 - **Runtime**: Bun v1.2.19
-- **Node**: Via Bun compatibility
 - **Editor**: VS Code with Kilo Code
 - **Package Manager**: Bun
 
@@ -142,17 +155,18 @@ Digital-Pets-v2/
 ## Notes for Next Session
 
 ### Remember To
-1. Read all memory bank files at start of each task
-2. Follow the three-layer architecture strictly
-3. Implement core infrastructure before features
-4. Write tests alongside implementation
-5. Document significant changes in context.md
+1. Follow domain-driven design principles strictly
+2. Keep domains isolated - no direct communication
+3. Use activity systems to orchestrate domain interactions
+4. Implement event system before domain logic
+5. Write tests alongside implementation
 
 ### Architecture Reminders
-- Events flow: Sources → Engine → Systems
-- State is immutable, use StateManager for updates
-- Effects are separate from state changes
-- Systems should not directly communicate
+- Domains own data, not logic for using that data
+- Activity systems orchestrate between domains
+- Events flow through the orchestration layer
+- State is immutable, use StateCoordinator for updates
+- Commands are validated before execution
 
 ### Code Quality Goals
 - TypeScript strict mode always
@@ -163,4 +177,4 @@ Digital-Pets-v2/
 
 ## Active Work Focus
 
-Currently focusing on completing memory bank initialization to ensure all project knowledge is properly documented for future sessions. After this, will begin Phase 1 implementation starting with the core Event System and GameEngine.
+Currently completing memory bank rebuild with clarified domain-driven architecture. The architecture now has clear boundaries with no overlapping responsibilities. Ready to begin Phase 1 implementation starting with the core orchestration layer (EventBus, CommandProcessor, StateCoordinator).

@@ -1,426 +1,318 @@
 # HTML5 Digital Pet Game - Enhanced Architecture Specification
 
 ## Project Overview
-A sophisticated HTML5 client-side digital pet raising game with deep gameplay mechanics, built using a three-layer event-driven architecture for scalability, maintainability, and performance.
+A sophisticated HTML5 client-side digital pet raising game with deep gameplay mechanics, built using a domain-driven architecture with clear separation of concerns for scalability, maintainability, and performance.
 
 ## Core Architecture Philosophy
 
-### Three-Layer Event-Driven Architecture
-1. **Layer 1: Event Sources** - Capture and emit events from various sources (user input, timers, system)
-2. **Layer 2: Game Engine** - Process events, coordinate systems, manage state transitions
-3. **Layer 3: Domain Systems** - Encapsulate domain-specific business logic
+### Domain-Driven Design with Event-Driven Architecture
+The game is organized into four distinct layers with clear boundaries:
+1. **Input Layer** - Captures all external events
+2. **Orchestration Layer** - Coordinates event processing and state management
+3. **Domain Layer** - Encapsulates business logic in focused domains
+4. **Presentation Layer** - Handles all UI and user feedback
 
-This architecture ensures clean separation of concerns, testability, and extensibility.
+This architecture ensures no overlapping responsibilities and clear ownership of data and operations.
 
-## Layer 1: Event Sources
+## Layer 1: Input Layer
 
-### Event System
-- **EventEmitter**: Central event bus with priority queue (Immediate, High, Normal, Low)
-- **Event Sources**:
-  - InputEventSource: User interactions with validation and feedback
-  - TickEventSource: Configurable game timer (default 15s intervals)
-  - SystemEventSource: Browser/system events, PWA lifecycle
-  - ActivityEventSource: Timed activities and completion events
+### Purpose
+Convert all external inputs into domain events.
 
-## Layer 2: Game Engine
+### Components
+- **UserInputHandler**: Mouse, touch, and keyboard events with validation
+- **TimerSystem**: Game tick events (default 15-second intervals)
+- **SystemEventHandler**: Browser events, PWA lifecycle, save/load triggers
+
+## Layer 2: Orchestration Layer
 
 ### Core Components
 
-#### GameEngine
-**Responsibilities**: Central coordinator for event processing and game flow
+#### EventBus
+- Priority-based event queue (Immediate > High > Normal > Low)
+- Publish-subscribe pattern for loose coupling
+- Event replay capability for debugging
 
-**Features**:
-- Priority-based event queue management
-- Transaction-like state updates (all-or-nothing)
-- System execution ordering based on dependencies
-- Rollback capability for failed operations
-- Performance monitoring and adaptive processing
+#### CommandProcessor
+- Converts events into validated commands
+- Transaction-like execution (all-or-nothing)
+- Undo/redo support through command history
 
-#### ActionProcessor
-**Responsibilities**: Transform events into domain-specific actions
-**Features**:
-- Event-to-action mapping
-- Action validation against current state
-- Compensating actions for rollback
-- Batch action processing
-
-#### StateManager
-**Responsibilities**: Manage immutable state transitions
-**Features**:
-- Immutable state operations using structural sharing
-- State history with undo capability
-- State diffing for optimized updates
-- Serialization/deserialization for saves
+#### StateCoordinator
+- Immutable state management with structural sharing
 - State validation and corruption recovery
+- Snapshot creation and restoration
+- Efficient diff calculation for UI updates
 
-#### EffectManager
-**Responsibilities**: Handle side effects outside state changes
-**Features**:
-- Sound effects and music management
-- Visual animations and particle effects
-- Achievement notifications
-- Analytics tracking
-- Asynchronous save operations
+## Layer 3: Domain Layer
 
-## Layer 3: Domain Systems
+### Core Domains (Data Ownership)
 
-### PetSystem
-**Responsibilities**: Comprehensive pet management including stats, growth, personality, and relationships
+#### Pet Domain
+**Owns**: Individual pet data and behavior
+- **Stats**: Hunger, happiness, energy, hygiene, health (0-100 scale)
+- **Battle Stats**: Level, HP, attack, defense, speed
+- **Abilities**: Moves and special traits for battle
+- **Growth**: Age, evolution stages, experience
+- **Personality**: Dynamic traits, mood, preferences
+- **Relationships**: Bonds with player and other pets
 
-**Core Features**:
-- **Pet Rarities**: 10 common (3 starters), 8 uncommon, 6 rare, 4 epic, 3 legendary
-- **Stats System**:
-  - Displayed stats: Satiety, Hydration, Happiness, Energy, Hygiene
-  - Hidden counters with configurable decay curves (linear, exponential, logarithmic)
-  - Stat modifiers and buffs/debuffs
-- **Health System**:
-  - Health states: Healthy, Injured, Sick (with specific illnesses)
-  - Condition tracking with immunities
-  - Medicine and recovery mechanics
-- **Growth System**:
-  - ~50 growth stages over ~2 real years
-  - Branching evolution paths based on care quality
-  - Stage-specific energy caps and recovery rates
+**Key Responsibilities**:
+- Calculate stat decay over time
+- Manage mood based on stats
+- Handle level-up and evolution
+- Develop personality through interactions
 
-**Advanced Features**:
-- **Personality System**:
-  - Dynamic personality traits developed through interactions
-  - Preferences affecting pet behavior
-  - Mood calculation based on multiple factors
-- **Relationship System**:
-  - Bonds with other pets and NPCs
-  - Relationship levels affecting interactions
-  - Social needs and group dynamics
-- **Breeding System**:
-  - Genetic trait inheritance
-  - Rarity combinations
-  - Offspring variations
-- **Life Mechanics**:
-  - Maximum lifespan of 1,000,000 ticks
-  - Variable depletion rates based on conditions
-  - Death and rebirth cycle with egg system
+#### Player Domain
+**Owns**: Player profile and resources
+- **Inventory**: Items with quantities and capacity limits
+- **Currency**: Coins (standard) and gems (premium)
+- **Progression**: Level, experience, achievements
+- **Discovery**: Unlocked pets, locations, items
+- **Pet Ownership**: Active, stored, and memorial pets
+- **Settings**: Preferences and configurations
 
-### InventorySystem
-**Responsibilities**: Item management, crafting, and trading
+**Key Responsibilities**:
+- Manage item storage and organization
+- Track player achievements and statistics
+- Handle currency transactions
+- Maintain discovery records
 
-**Features**:
-- **Item Categories**:
-  - Consumables (food/drinks) with stat effects
-  - Equipment with durability system
-  - Medicine for health conditions
-  - Crafting materials and components
-  - Special items (eggs, evolution stones)
-- **Crafting System**:
-  - Recipe-based crafting with success rates
-  - Tool requirements
-  - Material salvaging
-- **Storage Management**:
-  - Limited inventory with expansion options
-  - Item stacking and organization
-  - Storage sorting and filtering
-- **Trading System**:
-  - NPC trading with dynamic prices
-  - Trade offers and negotiations
-  - Auction house (future multiplayer ready)
+#### World Domain
+**Owns**: Game world state and environment
+- **Locations**: Places with unique properties and activities
+- **NPCs**: Non-player characters with dialogue and trades
+- **Market**: Dynamic economy with supply/demand pricing
+- **Environment**: Time of day, weather, seasons
+- **Events**: World events and special occasions
 
-### BattleSystem
-**Responsibilities**: Turn-based combat with environmental factors
+**Key Responsibilities**:
+- Update environmental conditions
+- Manage NPC behavior and schedules
+- Calculate market price fluctuations
+- Control world event timing
 
-**Features**:
-- **Combat Mechanics**:
-  - Turn-based system with priority and speed
-  - Elemental type advantages
-  - Critical hits and miss chances
-  - Status effects (buffs/debuffs)
-- **Environmental Factors**:
-  - Terrain effects on combat
-  - Weather conditions affecting moves
-  - Environmental hazards
-- **Advanced Features**:
-  - Combo system for chaining moves
-  - Tournament system with brackets
-  - Training facilities for stat improvement
-  - Adaptive AI that learns player patterns
-- **Battle Stats**:
-  - Attack, Defense, Speed, Health
-  - Elemental affinities
-  - Move sets with PP system
+#### Item Domain
+**Owns**: Item definitions and properties
+- **Categories**: Food, drinks, toys, medicine, grooming, materials
+- **Properties**: Effects, rarity, value, stack limits
+- **Recipes**: Crafting requirements and outputs
+- **Salvaging**: Breakdown into component materials
 
-### WorldSystem
-**Responsibilities**: Dynamic game world with locations, NPCs, and activities
+**Key Responsibilities**:
+- Define item effects and interactions
+- Specify crafting recipes
+- Determine salvage outcomes
 
-**Features**:
-- **Dynamic World**:
-  - Multiple regions with unique characteristics
-  - Day/night cycle affecting activities
-  - Seasonal changes and events
-  - World state that evolves over time
-- **Locations**:
-  - Towns with facilities (shops, centers, gyms)
-  - Wild areas for exploration
-  - Hidden locations with discovery system
-  - Starting city + 10+ destinations
-- **NPC System**:
-  - Dynamic NPCs with schedules
-  - Relationship building with reputation
-  - Quest givers and merchants
-  - Dialogue trees with choices
-- **Activities**:
-  - Resource gathering (foraging, fishing, mining)
-  - Exploration with random encounters
-  - Mini-games for rewards
-  - Time-based activities with rewards
+### Activity Systems (Domain Orchestration)
 
-### ProgressionSystem
-**Responsibilities**: Player advancement and achievements
+These systems coordinate between domains to implement gameplay features:
 
-**Features**:
-- **Player Level System**:
-  - Experience from various activities
-  - Level-based unlocks
-  - Skill point allocation
-- **Skill System**:
-  - Trainable skills affecting gameplay
-  - Skill trees with specializations
-  - Passive and active abilities
-- **Achievement System**:
-  - Short and long-term goals
-  - Rewards for completion
-  - Statistics tracking
-- **Mastery System**:
-  - Long-term progression goals
-  - Category-based mastery (Pet Care, Battle, Exploration)
-  - Prestige system for dedicated players
+#### Care System
+Manages pet care activities using Pet, Player, and Item domains.
+- Feed pets with food items
+- Hydrate with drinks
+- Play with toys
+- Administer medicine
+- Groom for hygiene
 
-### EconomySystem
-**Responsibilities**: Economic simulation and currency management
+#### Battle System
+Handles turn-based combat using Pet and World domains.
+- Initialize battles with environmental factors
+- Process moves with type advantages
+- Calculate damage and effects
+- Distribute experience and rewards
 
-**Features**:
-- **Currency Types**:
-  - Standard currency (gold/coins)
-  - Premium currency (gems) - future monetization ready
-  - Activity-specific currencies
-- **Market Dynamics**:
-  - Supply and demand affecting prices
-  - Market fluctuations
-  - Seasonal price changes
-- **Banking**:
-  - Savings accounts with interest
-  - Investment opportunities
-  - Property ownership
+#### Trade System
+Manages economy using Player, World, and Item domains.
+- Buy items from NPCs at market prices
+- Sell items with price negotiation
+- Trade pets for special rewards
+- Handle special deals and events
 
-### TimeSystem
-**Responsibilities**: Game timing and offline progression
+#### Craft System
+Handles item creation using Player and Item domains.
+- Combine materials following recipes
+- Salvage items into components
+- Upgrade equipment with enhancements
+- Discover new recipes through experimentation
 
-**Features**:
-- **Game Tick**: 15-second base interval
-- **Offline Progression**:
-  - Smart calculation based on offline duration
-  - Simplified calculations for >24 hour periods
-  - Prevents UI freezing with worker threads
-- **Time Management**:
-  - Pause/resume functionality
-  - Speed modifiers for testing
-  - Real-time clock integration
+#### Explore System
+Manages exploration using Player, World, and Pet domains.
+- Navigate to new locations
+- Discover hidden areas
+- Encounter wild pets
+- Gather resources
+- Complete location-specific activities
 
-### SaveSystem
-**Responsibilities**: Data persistence and recovery
+### Support Systems (Infrastructure)
 
-**Features**:
-- **Save Management**:
-  - Multiple save slots
-  - Autosave every tick
-  - Manual save option
-  - Quick save/load
-- **Storage Strategy**:
-  - Primary: LocalStorage for quick access
-  - Fallback: IndexedDB for larger saves
-  - Future: Cloud sync preparation
-- **Data Integrity**:
-  - Save validation and checksums
-  - Corruption detection and repair
-  - Import/export functionality
-  - Version migration support
+#### Time System
+- Game tick management (15-second default)
+- Offline progress calculation
+- Pause/resume functionality
+- Time-based event scheduling
 
-### NotificationSystem
-**Responsibilities**: User notifications and alerts
+#### Save System
+- Multi-slot save management
+- Auto-save every tick
+- Save validation and repair
+- Import/export functionality
 
-**Features**:
-- In-game notification queue
+#### Notification System
+- In-game notifications
+- Achievement popups
+- System messages
 - PWA push notifications
-- Event feed history
-- Customizable notification preferences
 
-### AnalyticsSystem
-**Responsibilities**: Performance and behavior tracking
+## Layer 4: Presentation Layer
 
-**Features**:
-- Event tracking for user actions
-- Performance metrics collection
-- A/B testing framework
-- Automated reporting
+### Components
+- **UI Components**: React components with Tailwind CSS
+- **Sound Manager**: Music and effects with volume control
+- **Animation Manager**: Sprite animations and transitions
+- **Accessibility**: Screen reader support and keyboard navigation
 
-## GameState Structure
+## Technical Implementation
 
+### State Structure
 ```typescript
 interface GameState {
-  // Metadata
-  version: string;
-  timestamp: number;
-  sessionId: string;
-  
-  // Core Data
-  player: PlayerProfile;
-  pets: {
-    active: Pet[];
-    stored: Pet[];
-    graveyard: Pet[];
-  };
-  inventory: Inventory;
+  player: PlayerState;
+  pets: Map<string, PetState>;
   world: WorldState;
-  economy: Economy;
-  
-  // Active States
+  items: Map<string, ItemDefinition>;
   activities: ActiveActivity[];
-  battles: Battle[];
-  quests: QuestState[];
-  
-  // UI State
-  ui: {
-    currentScreen: string;
-    preferences: UserPreferences;
-    tutorialProgress: TutorialState;
-  };
-  
-  // System Data
-  statistics: GameStatistics;
-  achievements: Achievement[];
+  ui: UIState;
+  metadata: GameMetadata;
 }
 ```
 
-## Performance Optimizations
+### Event Flow
+1. User performs action → Input Layer captures
+2. Input Layer → Creates event with priority
+3. EventBus → Queues event by priority
+4. CommandProcessor → Validates and executes
+5. Domains → Update their state immutably
+6. StateCoordinator → Merges changes
+7. Presentation Layer → Updates UI
 
-### Computation Strategies
-- **Web Workers**: Offline calculations, pathfinding, battle simulations
-- **Lazy Evaluation**: Calculate values only when needed
-- **Batch Processing**: Group similar operations
-- **Caching**: Multi-level cache with TTL
+### Performance Optimizations
+- Web Workers for offline calculations
+- Virtual scrolling for large lists
+- Lazy loading of assets
+- Memoization of expensive computations
+- Sprite batching for animations
 
-### Rendering Optimizations
-- **Virtual Scrolling**: For large lists
-- **Sprite Batching**: Combined render calls
-- **Progressive Loading**: On-demand asset loading
-- **RequestAnimationFrame**: Smooth animations
+## Game Content
 
-## Technical Stack
+### Pets
+- **31 Species Total**:
+  - 10 Common (3 starters)
+  - 8 Uncommon
+  - 6 Rare
+  - 4 Epic
+  - 3 Legendary
 
-### Core Technologies
-- **TypeScript** (strict mode) - Type safety
-- **React 18+** - Modern UI with concurrent features
-- **Zustand/Valtio** - State management
-- **Immer** - Immutable state updates
+### Progression
+- **Pet Growth**: ~50 stages over ~2 real years
+- **Player Levels**: 100 levels with milestone rewards
+- **Achievements**: 100+ achievements across categories
+- **Mastery System**: Long-term goals for dedicated players
 
-### Build & Development
-- **Vite** - Fast development and builds
-- **SWC** - Fast transpilation
-- **Vitest** - Unit testing
-- **Playwright** - E2E testing
+### World
+- **Starting City**: Tutorial and basic facilities
+- **10+ Locations**: Each with unique activities
+- **Dynamic Events**: Seasonal and special events
+- **Hidden Areas**: Secret locations to discover
 
-### Libraries
-- **date-fns** - Time calculations
-- **uuid** - Unique identifiers
-- **localforage** - Storage abstraction
-- **workbox** - PWA support
+### Activities
+- **Daily Tasks**: 5-15 minute sessions
+- **Extended Play**: 30+ minute exploration
+- **Mini-games**: Quick activities for rewards
+- **Tournaments**: Competitive battles
 
 ## Development Phases
 
-### Phase 1: Core Infrastructure (Week 1-2)
-- Three-layer architecture setup
-- Event system and GameEngine
+### Phase 1: Core Infrastructure (Week 1)
+- Event system and orchestration layer
 - State management
 - Basic UI framework
+- Save system
 
-### Phase 2: Essential Systems (Week 3-4)
-- PetSystem (basic features)
-- InventorySystem (basic)
-- TimeSystem
-- SaveSystem
+### Phase 2: Core Domains (Week 2)
+- Pet domain with stats
+- Player domain with inventory
+- Item definitions
+- Basic world structure
 
-### Phase 3: Gameplay Loop (Week 5-6)
-- Pet care mechanics
-- Basic activities
-- Simple progression
-- UI polish
+### Phase 3: Care Gameplay (Week 3)
+- Care system implementation
+- Time system with ticks
+- Stat decay and mood
+- Pet care UI
 
-### Phase 4: Advanced Features (Week 7-8)
-- BattleSystem
-- WorldSystem basics
-- Quest system
-- NPC interactions
+### Phase 4: Extended Features (Week 4-5)
+- Battle system
+- Trade system
+- Explore system
+- Additional locations
 
-### Phase 5: Polish & Balance (Week 9-10)
+### Phase 5: Polish (Week 6)
+- Animations and sound
+- Tutorial system
+- Achievements
 - Performance optimization
-- Game balancing
-- Bug fixes
-- PWA features
-
-### Phase 6: Extended Features (Post-launch)
-- Economy system
-- Breeding system
-- Tournaments
-- Social features
 
 ## Success Metrics
 
-### Technical Metrics
-- 60 FPS during gameplay
+### Technical
+- 60 FPS gameplay
 - < 3 second initial load
 - < 100ms input response
-- < 500ms offline calculation
+- < 5% save corruption rate
 
-### Engagement Metrics
-- Daily Active Users
-- Average session length
-- D1/D7/D30 retention
-- Achievement completion rate
+### Engagement
+- 50% D1 retention
+- 30% D7 retention
+- 15-30 minute average session
+- 40% achievement engagement
 
-### Quality Metrics
-- < 1% crash rate
-- > 90% test coverage
-- < 5% save corruption
-- > 95% recovery success
+## Future Expansion
 
-## Future Expansion Ready
-
-### Multiplayer Preparation
-- Event replay system
+### Multiplayer Ready
+- Event sourcing for replay
 - State synchronization patterns
 - Conflict resolution strategies
-- Server authoritative design ready
 
 ### Monetization Ready
 - Premium currency system
-- IAP integration points
-- Ad placement system
 - Cosmetic shop infrastructure
+- Battle pass framework
 
-### Platform Expansion
+### Platform Ready
 - PWA for mobile
-- Electron for desktop
-- Cloud save sync
-- Cross-platform progression
+- Desktop wrapper support
+- Cloud save preparation
 
-## Key Improvements from Original Design
+## Key Design Decisions
 
-1. **Three-layer architecture** replacing mixed Actor/System responsibilities
-2. **Priority-based event system** for better performance
-3. **Advanced state management** with history and rollback
-4. **Personality and relationship systems** for deeper gameplay
-5. **Dynamic world** that evolves over time
-6. **Comprehensive progression systems** for long-term engagement
-7. **Performance optimizations** using Web Workers and caching
-8. **Robust save system** with corruption recovery
-9. **Clear development roadmap** with phased approach
-10. **Future-ready design** for multiplayer and monetization
+### Why Domain-Driven?
+- **Clear Boundaries**: Each domain owns specific data
+- **No Overlaps**: Single source of truth for each concept
+- **Maintainable**: Easy to understand and modify
+- **Testable**: Domains can be tested independently
 
-This architecture provides a professional-grade foundation that balances immediate playability with long-term sustainability and growth potential.
+### Why Event-Driven?
+- **Loose Coupling**: Domains don't directly depend on each other
+- **Extensible**: Easy to add new features
+- **Debuggable**: Complete event history
+- **Replayable**: Reproduce bugs easily
+
+### Why Immutable State?
+- **Predictable**: No hidden mutations
+- **Time Travel**: Undo/redo capability
+- **Performance**: React optimization
+- **Debugging**: State snapshots
+
+This architecture provides a solid foundation that balances immediate playability with long-term sustainability, ensuring the game can grow and evolve while maintaining code quality and performance.

@@ -45,7 +45,7 @@ This project creates a comprehensive digital pet experience that:
 7. **Cross-Device Play**: Save syncing across devices (future)
 
 ### For Developers
-1. **Clean Architecture**: Three-layer event-driven design
+1. **Clean Architecture**: Domain-driven design with event-driven communication
 2. **Extensible Systems**: Easy to add new features
 3. **Performance Optimized**: Web Workers and efficient rendering
 4. **Future-Ready**: Prepared for multiplayer and monetization
@@ -143,6 +143,12 @@ This project creates a comprehensive digital pet experience that:
 - **Premium Currency**: Earned through play, optional purchase
 - **Battle Pass**: Seasonal content with free/paid tracks
 - **No Pay-to-Win**: All gameplay content achievable free
+
+### Platform Strategy
+- **Web (Current)**: Free-to-play browser game
+- **Mobile Apps**: Premium apps with ads removed
+- **Desktop**: Steam release with achievements
+- **Cloud Services**: Premium save backup/sync
 
 ## Competitive Advantages
 
