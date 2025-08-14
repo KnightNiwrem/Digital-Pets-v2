@@ -61,7 +61,6 @@
 ### Options Under Consideration
 
 1. **Zustand** (Preferred)
-
    - Simple API
    - TypeScript friendly
    - DevTools support
@@ -144,7 +143,6 @@
 ### Code Quality
 
 - **ESLint**: Linting and code standards
-
   - TypeScript ESLint parser
   - React hooks rules
   - Import sorting
