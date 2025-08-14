@@ -8,7 +8,7 @@ export enum EventPriority {
   LOW = 3,
 }
 
-export interface GameEvent<Payload = any> {
+export interface GameEvent<Payload = unknown> {
   type: string;
   payload: Payload;
   timestamp: number;
@@ -18,9 +18,9 @@ export interface GameEvent<Payload = any> {
 export type EventHandler<E extends GameEvent = GameEvent> = (event: E) => void;
 
 // Command pattern
-export interface Command {
+export interface Command<TPayload = unknown> {
   type: string;
-  payload: any;
+  payload: TPayload;
   validate(state: GameState): boolean;
   execute(state: GameState): StateChange[];
   undo?(state: GameState): StateChange[];
@@ -31,7 +31,7 @@ export interface StateChange {
   // path describes where to apply the change using dot-notation (e.g. "player.currencies.coins")
   path: string;
   // newValue is the value to set at path (immutable replacement)
-  newValue: any;
+  newValue: unknown;
   // optional descriptive metadata
   meta?: {
     source?: string;
@@ -77,7 +77,7 @@ export interface ItemEffect {
   key: string;
   magnitude: number;
   // arbitrary payload for extensibility
-  meta?: Record<string, any>;
+  meta?: Record<string, unknown>;
 }
 
 export interface ItemDefinition {
@@ -113,7 +113,7 @@ export interface BattleStats {
 export interface Personality {
   traits: string[]; // names of traits
   mood?: string;
-  preferences?: Record<string, any>;
+  preferences?: Record<string, unknown>;
 }
 
 export interface Pet {
@@ -165,8 +165,8 @@ export interface Player {
     stored: PetId[];
     graveyard: PetId[];
   };
-  settings?: Record<string, any>;
-  statistics?: Record<string, any>;
+  settings?: Record<string, unknown>;
+  statistics?: Record<string, unknown>;
 }
 
 // World Domain
@@ -176,7 +176,7 @@ export interface Location {
   description?: string;
   availableActivities?: string[];
   npcs?: NpcId[];
-  modifiers?: Record<string, any>;
+  modifiers?: Record<string, unknown>;
 }
 
 export interface MarketPriceRange {
@@ -187,7 +187,7 @@ export interface MarketPriceRange {
 export interface World {
   locations: Record<LocationId, Location>;
   currentLocation?: LocationId;
-  npcs?: Record<NpcId, any>;
+  npcs?: Record<NpcId, unknown>;
   market?: {
     prices: Record<ItemId, MarketPriceRange>;
     dailyDeals?: ItemId[];
@@ -198,7 +198,7 @@ export interface World {
     weather?: string;
     season?: string;
   };
-  activeEvents?: any[];
+  activeEvents?: unknown[];
 }
 
 // GameState - top-level immutable state object
@@ -207,9 +207,9 @@ export interface GameState {
   pets: Record<PetId, Pet>;
   world: World;
   items: Record<ItemId, ItemDefinition>;
-  activities?: any[]; // active activities / sessions
+  activities?: unknown[]; // active activities / sessions
   ui?: {
-    notifications?: any[];
+    notifications?: unknown[];
     route?: string;
   };
   metadata?: {
