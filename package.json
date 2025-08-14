@@ -4,7 +4,14 @@
   "private": true,
   "type": "module",
   "description": "HTML5 client-side digital pet raising game with deep gameplay mechanics",
-  "keywords": ["game", "digital-pets", "tamagotchi", "react", "typescript", "bun"],
+  "keywords": [
+    "game",
+    "digital-pets",
+    "tamagotchi",
+    "react",
+    "typescript",
+    "bun"
+  ],
   "author": "Digital Pets Development Team",
   "scripts": {
     "dev": "bun --hot src/index.tsx",

@@ -19,10 +19,5 @@ export const isGameEvent = (obj: unknown): obj is import('./types').GameEvent =>
 };
 
 export const isStateChange = (obj: unknown): obj is import('./types').StateChange => {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'path' in obj &&
-    'newValue' in obj
-  );
+  return typeof obj === 'object' && obj !== null && 'path' in obj && 'newValue' in obj;
 };

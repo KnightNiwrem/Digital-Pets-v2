@@ -1,5 +1,10 @@
 import { produce, type Draft } from 'immer';
-import type { GameState, StateChange, StateSnapshot, StateCoordinator as IStateCoordinator } from './types';
+import type {
+  GameState,
+  StateChange,
+  StateSnapshot,
+  StateCoordinator as IStateCoordinator,
+} from './types';
 
 /**
  * StateCoordinator - Manages immutable state updates with validation
@@ -83,7 +88,7 @@ export class StateCoordinator implements IStateCoordinator {
     if (!this.validateState(snapshot.state)) {
       throw new Error('Cannot restore invalid state snapshot');
     }
-    
+
     return structuredClone(snapshot.state);
   }
 
@@ -97,14 +102,14 @@ export class StateCoordinator implements IStateCoordinator {
     // Navigate to parent object
     for (let i = 0; i < pathSegments.length - 1; i++) {
       const segment = pathSegments[i];
-      
+
       if (!segment) continue;
-      
+
       if (current[segment] === undefined) {
         // Create intermediate objects if they don't exist
         current[segment] = {};
       }
-      
+
       current = current[segment];
     }
 
@@ -137,24 +142,29 @@ export class StateCoordinator implements IStateCoordinator {
    */
   getDifferences(oldState: GameState, newState: GameState): string[] {
     const differences: string[] = [];
-    
+
     // This is a simplified diff - in a full implementation,
     // you might want to use a proper deep diff library
     this.compareObjects(oldState, newState, '', differences);
-    
+
     return differences;
   }
 
   private compareObjects(obj1: any, obj2: any, path: string, differences: string[]): void {
     const keys = new Set([...Object.keys(obj1 || {}), ...Object.keys(obj2 || {})]);
-    
+
     for (const key of keys) {
       const currentPath = path ? `${path}.${key}` : key;
       const val1 = obj1?.[key];
       const val2 = obj2?.[key];
-      
+
       if (val1 !== val2) {
-        if (typeof val1 === 'object' && typeof val2 === 'object' && val1 !== null && val2 !== null) {
+        if (
+          typeof val1 === 'object' &&
+          typeof val2 === 'object' &&
+          val1 !== null &&
+          val2 !== null
+        ) {
           this.compareObjects(val1, val2, currentPath, differences);
         } else {
           differences.push(currentPath);

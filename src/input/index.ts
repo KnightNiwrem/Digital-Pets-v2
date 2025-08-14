@@ -27,19 +27,9 @@ export interface SystemEvent {
 }
 
 export const isUserInput = (obj: unknown): obj is UserInput => {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'type' in obj &&
-    'timestamp' in obj
-  );
+  return typeof obj === 'object' && obj !== null && 'type' in obj && 'timestamp' in obj;
 };
 
 export const isSystemEvent = (obj: unknown): obj is SystemEvent => {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'type' in obj &&
-    'timestamp' in obj
-  );
+  return typeof obj === 'object' && obj !== null && 'type' in obj && 'timestamp' in obj;
 };

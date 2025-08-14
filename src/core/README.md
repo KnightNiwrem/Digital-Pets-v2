@@ -11,12 +11,14 @@ The core layer provides the foundational infrastructure for the game's domain-dr
 Priority-based event system that enables loose coupling between domains.
 
 **Features:**
+
 - Priority-based event queue (IMMEDIATE → HIGH → NORMAL → LOW)
 - Pub/Sub pattern with type-safe subscriptions
 - Async event processing with error handling
 - Singleton instance available as `eventBus`
 
 **Usage:**
+
 ```typescript
 import { eventBus, EventPriority } from '@/core';
 
@@ -30,7 +32,7 @@ eventBus.emit({
   type: 'pet.hunger.changed',
   payload: { petId: 'pet-1', newHunger: 50 },
   timestamp: Date.now(),
-  priority: EventPriority.HIGH
+  priority: EventPriority.HIGH,
 });
 ```
 
@@ -41,19 +43,21 @@ eventBus.emit({
 Manages immutable state updates using Immer for structural sharing.
 
 **Features:**
+
 - Immutable state updates with dot-notation paths
 - State validation and integrity checks
 - Snapshot creation/restoration for save/load
 - Efficient structural sharing via Immer
 
 **Usage:**
+
 ```typescript
 import { stateCoordinator } from '@/core';
 
 // Apply state changes
 const newState = stateCoordinator.applyChanges(currentState, [
   { path: 'player.currencies.coins', newValue: 100 },
-  { path: 'pets.pet-1.stats.hunger', newValue: 75 }
+  { path: 'pets.pet-1.stats.hunger', newValue: 75 },
 ]);
 
 // Validate state
@@ -69,6 +73,7 @@ if (!stateCoordinator.validateState(newState)) {
 Will handle command validation and execution with undo/redo support.
 
 **Planned Features:**
+
 - Command pattern implementation
 - Validation before execution
 - Transaction-like all-or-nothing execution
@@ -81,6 +86,7 @@ Will handle command validation and execution with undo/redo support.
 Comprehensive type definitions for all game domains and systems.
 
 **Key Types:**
+
 - `GameState` - Root state interface
 - `GameEvent` - Event system types
 - `Command` - Command pattern interfaces
@@ -103,6 +109,7 @@ Comprehensive type definitions for all game domains and systems.
 ## Testing
 
 Run tests with:
+
 ```bash
 bun test src/core
 ```

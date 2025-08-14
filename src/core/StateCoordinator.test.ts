@@ -11,13 +11,13 @@ const createTestGameState = (): GameState => ({
     inventory: {
       items: [
         { itemId: 'apple', quantity: 5 },
-        { itemId: 'water', quantity: 3 }
+        { itemId: 'water', quantity: 3 },
       ],
-      maxCapacity: 100
+      maxCapacity: 100,
     },
     currencies: {
       coins: 100,
-      gems: 10
+      gems: 10,
     },
     level: 1,
     experience: 0,
@@ -25,13 +25,13 @@ const createTestGameState = (): GameState => ({
     discovered: {
       pets: ['starter-pet'],
       locations: ['home'],
-      items: ['apple', 'water']
+      items: ['apple', 'water'],
     },
     pets: {
       active: ['pet-1'],
       stored: [],
-      graveyard: []
-    }
+      graveyard: [],
+    },
   },
   pets: {
     'pet-1': {
@@ -43,32 +43,32 @@ const createTestGameState = (): GameState => ({
         happiness: 75,
         energy: 80,
         hygiene: 60,
-        health: 90
-      }
-    }
+        health: 90,
+      },
+    },
   },
   world: {
     locations: {
-      'home': {
+      home: {
         id: 'home',
         name: 'Home',
-        description: 'Starting location'
-      }
+        description: 'Starting location',
+      },
     },
-    currentLocation: 'home'
+    currentLocation: 'home',
   },
   items: {
-    'apple': {
+    apple: {
       id: 'apple',
       name: 'Apple',
-      category: ItemCategory.FOOD
+      category: ItemCategory.FOOD,
     },
-    'water': {
+    water: {
       id: 'water',
       name: 'Water',
-      category: ItemCategory.DRINK
-    }
-  }
+      category: ItemCategory.DRINK,
+    },
+  },
 });
 
 describe('StateCoordinator', () => {
@@ -84,23 +84,21 @@ describe('StateCoordinator', () => {
     it('should apply simple state changes', () => {
       const changes: StateChange[] = [
         { path: 'player.currencies.coins', newValue: 150 },
-        { path: 'pets.pet-1.stats.hunger', newValue: 75 }
+        { path: 'pets.pet-1.stats.hunger', newValue: 75 },
       ];
 
       const newState = stateCoordinator.applyChanges(initialState, changes);
 
       expect(newState.player.currencies.coins).toBe(150);
       expect(newState.pets['pet-1']!.stats.hunger).toBe(75);
-      
+
       // Original state should be unchanged (immutability)
       expect(initialState.player.currencies.coins).toBe(100);
       expect(initialState.pets['pet-1']!.stats.hunger).toBe(50);
     });
 
     it('should handle nested path creation', () => {
-      const changes: StateChange[] = [
-        { path: 'player.settings.soundVolume', newValue: 0.8 }
-      ];
+      const changes: StateChange[] = [{ path: 'player.settings.soundVolume', newValue: 0.8 }];
 
       const newState = stateCoordinator.applyChanges(initialState, changes);
 
@@ -114,7 +112,7 @@ describe('StateCoordinator', () => {
 
     it('should handle array modifications', () => {
       const changes: StateChange[] = [
-        { path: 'player.achievements', newValue: ['first-pet', 'first-feeding'] }
+        { path: 'player.achievements', newValue: ['first-pet', 'first-feeding'] },
       ];
 
       const newState = stateCoordinator.applyChanges(initialState, changes);
@@ -141,8 +139,8 @@ describe('StateCoordinator', () => {
         ...initialState,
         player: {
           ...initialState.player,
-          inventory: null as any
-        }
+          inventory: null as any,
+        },
       };
 
       expect(stateCoordinator.validateState(invalidState)).toBe(false);
@@ -155,9 +153,9 @@ describe('StateCoordinator', () => {
           ...initialState.player,
           currencies: {
             coins: -10,
-            gems: 5
-          }
-        }
+            gems: 5,
+          },
+        },
       };
 
       expect(stateCoordinator.validateState(invalidState)).toBe(false);
@@ -171,9 +169,9 @@ describe('StateCoordinator', () => {
           pets: {
             active: ['pet-1', 'missing-pet'],
             stored: [],
-            graveyard: []
-          }
-        }
+            graveyard: [],
+          },
+        },
       };
 
       expect(stateCoordinator.validateState(invalidState)).toBe(false);
@@ -191,16 +189,14 @@ describe('StateCoordinator', () => {
 
     it('should restore from snapshots', () => {
       const snapshot = stateCoordinator.createSnapshot(initialState);
-      
+
       // Modify state
-      const changes: StateChange[] = [
-        { path: 'player.currencies.coins', newValue: 200 }
-      ];
+      const changes: StateChange[] = [{ path: 'player.currencies.coins', newValue: 200 }];
       const modifiedState = stateCoordinator.applyChanges(initialState, changes);
-      
+
       // Restore from snapshot
       const restoredState = stateCoordinator.restoreSnapshot(snapshot);
-      
+
       expect(restoredState).toEqual(initialState);
       expect(restoredState.player.currencies.coins).toBe(100);
     });
@@ -209,7 +205,7 @@ describe('StateCoordinator', () => {
       const invalidSnapshot = {
         state: { invalid: 'state' } as any,
         createdAt: Date.now(),
-        description: 'Invalid snapshot'
+        description: 'Invalid snapshot',
       };
 
       expect(() => {
@@ -235,7 +231,7 @@ describe('StateCoordinator', () => {
     it('should detect differences between states', () => {
       const changes: StateChange[] = [
         { path: 'player.currencies.coins', newValue: 200 },
-        { path: 'pets.pet-1.stats.hunger', newValue: 80 }
+        { path: 'pets.pet-1.stats.hunger', newValue: 80 },
       ];
 
       const newState = stateCoordinator.applyChanges(initialState, changes);
@@ -249,9 +245,7 @@ describe('StateCoordinator', () => {
 
   describe('immutability', () => {
     it('should maintain structural sharing', () => {
-      const changes: StateChange[] = [
-        { path: 'player.currencies.coins', newValue: 200 }
-      ];
+      const changes: StateChange[] = [{ path: 'player.currencies.coins', newValue: 200 }];
 
       const newState = stateCoordinator.applyChanges(initialState, changes);
 
@@ -259,7 +253,7 @@ describe('StateCoordinator', () => {
       expect(newState.pets).toBe(initialState.pets);
       expect(newState.world).toBe(initialState.world);
       expect(newState.items).toBe(initialState.items);
-      
+
       // Changed objects should be new references
       expect(newState.player).not.toBe(initialState.player);
     });

@@ -4,7 +4,7 @@
 // Care System (to be implemented)
 // export * from './CareSystem';
 
-// Battle System (to be implemented)  
+// Battle System (to be implemented)
 // export * from './BattleSystem';
 
 // Trade System (to be implemented)

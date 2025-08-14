@@ -38,7 +38,7 @@ export class EventBus {
   emit(event: GameEvent): void {
     // Add to priority queue
     this.eventQueue.push(event);
-    
+
     // Sort queue by priority (lower numbers = higher priority)
     this.eventQueue.sort((a, b) => a.priority - b.priority);
 
@@ -77,7 +77,7 @@ export class EventBus {
     if (!handlers || handlers.size === 0) return;
 
     // Call all handlers for this event type
-    const promises = Array.from(handlers).map(handler => {
+    const promises = Array.from(handlers).map((handler) => {
       try {
         return Promise.resolve(handler(event));
       } catch (error) {

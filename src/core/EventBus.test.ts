@@ -12,7 +12,7 @@ describe('EventBus', () => {
   describe('subscription and emission', () => {
     it('should subscribe and emit events', async () => {
       const receivedEvents: GameEvent[] = [];
-      
+
       eventBus.subscribe('test.event', (event) => {
         receivedEvents.push(event);
       });
@@ -21,7 +21,7 @@ describe('EventBus', () => {
       eventBus.emit(testEvent);
 
       // Allow async processing
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise((resolve) => setTimeout(resolve, 1));
 
       expect(receivedEvents).toHaveLength(1);
       expect((receivedEvents[0]!.payload as { message: string }).message).toBe('hello');
@@ -31,11 +31,15 @@ describe('EventBus', () => {
       let handler1Called = false;
       let handler2Called = false;
 
-      eventBus.subscribe('multi.test', () => { handler1Called = true; });
-      eventBus.subscribe('multi.test', () => { handler2Called = true; });
+      eventBus.subscribe('multi.test', () => {
+        handler1Called = true;
+      });
+      eventBus.subscribe('multi.test', () => {
+        handler2Called = true;
+      });
 
       eventBus.emit(eventBus.createEvent('multi.test', {}));
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise((resolve) => setTimeout(resolve, 1));
 
       expect(handler1Called).toBe(true);
       expect(handler2Called).toBe(true);
@@ -43,11 +47,13 @@ describe('EventBus', () => {
 
     it('should unsubscribe correctly', async () => {
       let called = false;
-      const unsubscribe = eventBus.subscribe('unsub.test', () => { called = true; });
+      const unsubscribe = eventBus.subscribe('unsub.test', () => {
+        called = true;
+      });
 
       unsubscribe();
       eventBus.emit(eventBus.createEvent('unsub.test', {}));
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(called).toBe(false);
     });
@@ -63,11 +69,17 @@ describe('EventBus', () => {
 
       // Emit in reverse priority order
       eventBus.emit(eventBus.createEvent('priority.test', { priority: 'LOW' }, EventPriority.LOW));
-      eventBus.emit(eventBus.createEvent('priority.test', { priority: 'HIGH' }, EventPriority.HIGH));
-      eventBus.emit(eventBus.createEvent('priority.test', { priority: 'IMMEDIATE' }, EventPriority.IMMEDIATE));
-      eventBus.emit(eventBus.createEvent('priority.test', { priority: 'NORMAL' }, EventPriority.NORMAL));
+      eventBus.emit(
+        eventBus.createEvent('priority.test', { priority: 'HIGH' }, EventPriority.HIGH)
+      );
+      eventBus.emit(
+        eventBus.createEvent('priority.test', { priority: 'IMMEDIATE' }, EventPriority.IMMEDIATE)
+      );
+      eventBus.emit(
+        eventBus.createEvent('priority.test', { priority: 'NORMAL' }, EventPriority.NORMAL)
+      );
 
-      await new Promise(resolve => setTimeout(resolve, 5));
+      await new Promise((resolve) => setTimeout(resolve, 5));
 
       expect(processedOrder).toEqual(['IMMEDIATE', 'HIGH', 'NORMAL', 'LOW']);
     });
@@ -90,7 +102,7 @@ describe('EventBus', () => {
         eventBus.emit(eventBus.createEvent('error.test', {}));
       }).not.toThrow();
 
-      await new Promise(resolve => setTimeout(resolve, 1));
+      await new Promise((resolve) => setTimeout(resolve, 1));
 
       // Good handler should still be called
       expect(goodHandlerCalled).toBe(true);
@@ -100,13 +112,13 @@ describe('EventBus', () => {
   describe('utility methods', () => {
     it('should track queue size', async () => {
       expect(eventBus.getQueueSize()).toBe(0);
-      
+
       eventBus.emit(eventBus.createEvent('queue.test', {}));
       // Check queue size immediately after emission (before processing)
       expect(eventBus.getQueueSize()).toBeGreaterThan(0);
-      
+
       // Wait for processing to complete
-      await new Promise(resolve => setTimeout(resolve, 5));
+      await new Promise((resolve) => setTimeout(resolve, 5));
       expect(eventBus.getQueueSize()).toBe(0);
     });
 

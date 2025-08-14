@@ -5,6 +5,7 @@ The domain layer contains the core business logic of the game, organized into fo
 ## Domain-Driven Design Principles
 
 Each domain:
+
 - **Owns specific data** - No overlapping responsibilities
 - **Manages its own state** - Internal consistency and validation
 - **Communicates via events** - No direct domain-to-domain calls
@@ -17,18 +18,21 @@ Each domain:
 **Status: Not Implemented**
 
 **Owns:**
+
 - Individual pet data (stats, personality, relationships)
 - Pet evolution and growth logic
 - Stat decay calculations
 - Mood determination
 
 **Key Responsibilities:**
+
 - Calculate hunger/happiness/energy/hygiene/health decay
-- Manage personality development through interactions  
+- Manage personality development through interactions
 - Handle level-up and evolution triggers
 - Determine pet mood from current stats
 
 **Does NOT own:**
+
 - Items (owned by Player domain)
 - Locations (owned by World domain)
 - Battle execution (handled by Battle Activity System)
@@ -38,6 +42,7 @@ Each domain:
 **Status: Not Implemented**
 
 **Owns:**
+
 - Player profile and progression
 - Inventory management
 - Currency tracking
@@ -45,12 +50,14 @@ Each domain:
 - Discovery records
 
 **Key Responsibilities:**
+
 - Add/remove items from inventory with capacity limits
 - Track player experience and leveling
 - Manage currency transactions
 - Unlock and track discoveries
 
 **Does NOT own:**
+
 - Pet stats (owned by Pet domain)
 - Market prices (owned by World domain)
 - Item effects (handled by Activity Systems)
@@ -60,6 +67,7 @@ Each domain:
 **Status: Not Implemented**
 
 **Owns:**
+
 - Game world state and environment
 - Location definitions and properties
 - NPC behavior and schedules
@@ -67,12 +75,14 @@ Each domain:
 - Environmental conditions (time, weather, seasons)
 
 **Key Responsibilities:**
+
 - Update day/night cycles and weather
 - Calculate market price fluctuations based on supply/demand
 - Manage NPC availability and dialogue
 - Control world events and special occasions
 
 **Does NOT own:**
+
 - Player inventory (owned by Player domain)
 - Pet locations (pets follow player)
 - Activity execution (handled by Activity Systems)
@@ -82,18 +92,21 @@ Each domain:
 **Status: Not Implemented**
 
 **Owns:**
+
 - Item definitions and properties
 - Crafting recipes and requirements
 - Item effects and interactions
 - Salvaging recipes
 
 **Key Responsibilities:**
+
 - Define item categories, rarity, and base properties
 - Specify crafting recipes and material requirements
 - Define item effects when used
 - Determine salvaging outcomes
 
 **Does NOT own:**
+
 - Item ownership (handled by Player domain)
 - Current market prices (owned by World domain)
 - Using items (handled by Activity Systems)
@@ -141,7 +154,7 @@ eventBus.emit({
   type: 'pet.action.completed',
   payload: { petId, actionType: 'feed', experienceGained: 10 },
   priority: EventPriority.NORMAL,
-  timestamp: Date.now()
+  timestamp: Date.now(),
 });
 ```
 
@@ -150,6 +163,7 @@ eventBus.emit({
 ### Domain Entity Pattern
 
 Each domain provides:
+
 1. **Entity classes** - Core data structures
 2. **Repository pattern** - Data access and persistence
 3. **Domain services** - Business logic operations
@@ -171,7 +185,7 @@ export class PetService {
         energy: Math.max(0, pet.stats.energy - decay.energy),
         hygiene: Math.max(0, pet.stats.hygiene - decay.hygiene),
         health: Math.max(0, pet.stats.health - decay.health),
-      }
+      },
     };
   }
 }
@@ -180,6 +194,7 @@ export class PetService {
 ## Testing Strategy
 
 Each domain will have:
+
 - **Unit tests** for domain logic
 - **Integration tests** with event system
 - **Mock repositories** for isolated testing

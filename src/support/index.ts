@@ -1,4 +1,4 @@
-// Support systems layer exports  
+// Support systems layer exports
 // Support systems provide infrastructure services
 
 // Time System (to be implemented)

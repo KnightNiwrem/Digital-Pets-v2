@@ -7,7 +7,7 @@
 // Player Domain (to be implemented)
 // export * from './player';
 
-// World Domain (to be implemented)  
+// World Domain (to be implemented)
 // export * from './world';
 
 // Item Domain (to be implemented)
@@ -18,8 +18,8 @@ export const isDomainEntity = (obj: unknown, requiredFields: string[]): boolean 
   if (typeof obj !== 'object' || obj === null) {
     return false;
   }
-  
-  return requiredFields.every(field => field in obj);
+
+  return requiredFields.every((field) => field in obj);
 };
 
 // Domain-specific type guards (will be moved to respective domain folders)

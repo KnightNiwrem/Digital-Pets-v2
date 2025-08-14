@@ -7,7 +7,7 @@ A sophisticated HTML5 client-side digital pet raising game built with modern web
 An engaging virtual pet experience similar to Tamagotchi but with significantly enhanced gameplay mechanics:
 
 - **Deep Pet Care System** - Feed, groom, play, and nurture your pets
-- **Battle System** - Strategic turn-based combat with elemental advantages  
+- **Battle System** - Strategic turn-based combat with elemental advantages
 - **Dynamic World** - Explore locations, trade with NPCs, discover secrets
 - **Crafting & Economy** - Create items, manage resources, build wealth
 - **Long-term Progression** - Years of content with meaningful advancement
@@ -155,7 +155,7 @@ src/
 ### ✅ Phase 1.1 - Project Setup (COMPLETE)
 
 - [x] Domain-driven architecture design
-- [x] TypeScript configuration with strict mode  
+- [x] TypeScript configuration with strict mode
 - [x] ESLint + Prettier with game development rules
 - [x] Vitest testing framework setup
 - [x] Core type definitions for all domains
@@ -167,7 +167,7 @@ src/
 ### 🔥 Phase 1.2 - Core Infrastructure (IN PROGRESS)
 
 - [ ] CommandProcessor with validation and undo
-- [ ] Basic UI framework with React components  
+- [ ] Basic UI framework with React components
 - [ ] Save System for game persistence
 - [ ] Input layer for user interactions
 
@@ -181,6 +181,7 @@ src/
 ## 🎯 Game Features (Planned)
 
 ### Pet Management
+
 - 31 unique species across 5 rarity tiers
 - Dynamic personality development
 - Stat decay system (hunger, happiness, energy, hygiene, health)
@@ -188,6 +189,7 @@ src/
 - Relationship building between pets
 
 ### World & Exploration
+
 - 10+ unique locations with activities
 - Day/night cycles and weather systems
 - Dynamic NPCs with schedules and dialogue
@@ -195,6 +197,7 @@ src/
 - Resource gathering and environmental storytelling
 
 ### Battle System
+
 - Turn-based strategic combat
 - Elemental type advantages and environmental factors
 - Move combinations and special abilities
@@ -202,6 +205,7 @@ src/
 - Tournament competitions and rankings
 
 ### Economy & Crafting
+
 - Dynamic market with supply/demand pricing
 - Multi-tier crafting system with recipes
 - Item salvaging and upgrading
@@ -218,6 +222,7 @@ The project uses a comprehensive testing strategy:
 - **E2E Tests** - Complete user workflows (planned)
 
 Run tests:
+
 ```bash
 # Run all tests
 bun test
@@ -269,16 +274,19 @@ bun test src/core
 ## 📈 Roadmap
 
 ### Short-term (1-2 weeks)
+
 - Complete Phase 1 infrastructure
 - Implement Pet domain with stat decay
 - Basic pet care UI
 
-### Medium-term (1-2 months)  
+### Medium-term (1-2 months)
+
 - Full domain implementations
 - Activity systems for gameplay
 - Save/load functionality
 
 ### Long-term (3-6 months)
+
 - Complete feature set
 - Performance optimization
 - Mobile PWA support
@@ -291,8 +299,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🎮 Vision
 
 Creating a modern take on the classic digital pet genre with:
+
 - **Deep emotional connections** through personality systems
-- **Strategic gameplay** beyond basic care mechanics  
+- **Strategic gameplay** beyond basic care mechanics
 - **Long-term engagement** with years of meaningful content
 - **Technical excellence** using modern web technologies
 - **Ethical design** without pay-to-win mechanics
