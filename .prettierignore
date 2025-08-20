@@ -1,0 +1,30 @@
+node_modules
+dist
+build
+.bun
+.pnp.*
+coverage
+*.log
+.env
+.vscode
+.idea
+public
+
+# Ignore lockfiles
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Ignore static assets
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.svg
+**/*.ico
+
+# Ignore generated CSS
+*.css
+
+# Keep source code formatted
+!src/**
