@@ -65,10 +65,10 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 - Decay baselines (positive framing):
   - Satiety, Hydration, and Happiness gradually decrease over time
 - Hidden backing ticks for care:
-  - Game tick: 15 seconds. Autosave is triggered every tick.
+  - Game tick: 60 seconds. Autosave is triggered every tick.
   - Each care value has a hidden tick counter, for example satiety ticks, hydration ticks, happiness ticks.
-  - The displayed care value is computed from its ticks using a fixed multiplier per value. Example: if one unit of Hydration represents forty ticks (ten minutes), then the displayed Hydration equals the hidden hydration ticks divided by forty, rounded up.
-  - Restoring care adds ticks directly to the hidden counter. Example: restoring ten Hydration adds four hundred hydration ticks.
+  - The displayed care value is computed from its ticks using a fixed multiplier per value. Example: if one unit of Hydration represents ten ticks (ten minutes), then the displayed Hydration equals the hidden hydration ticks divided by ten, rounded up.
+  - Restoring care adds ticks directly to the hidden counter. Example: restoring ten Hydration adds one hundred hydration ticks.
   - Use similar multipliers for Satiety and Happiness to keep calculations simple, consistent, and performant.
 
 7) Poop and Hygiene
@@ -181,11 +181,11 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 
 15) Timekeeping, Ticks, Offline Catch‑Up, and Autosave
 - Tick cadence:
-  - One game tick occurs every fifteen seconds.
+  - One game tick occurs every sixty seconds.
   - Autosave occurs every tick.
 - Hidden tick counters:
   - Care values use hidden tick counters to streamline calculations and maintain consistent behavior across active and offline time.
-  - Multipliers define how many ticks equal one displayed unit for each care value; examples can use forty ticks per Hydration unit to represent ten minutes.
+  - Multipliers define how many ticks equal one displayed unit for each care value; examples can use ten ticks per Hydration unit to represent ten minutes.
 - Offline catch‑up:
   - On resume, compute elapsed time and mathematically flatten all ticks into a single step update for ongoing sleep, travel, activities, care decay, Poop spawns, sickness checks, and egg incubation. For example, if offline time is 10 minutes, then simply compute (10 * 60 / 15 = 40 ticks) and decrease hidden tick counters for care value by 40.
 
@@ -240,9 +240,9 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Hydration decreases by approximately four per hour.
   - Happiness decreases by approximately two per hour.
 - Hidden tick multipliers:
-  - Satiety decrease by three per hour, equals one per twenty minutes, equals 80 ticks, so satiety multiplier is 80.
-  - Hydration decrease by four per hour, equals one per fifteen minutes, equals 60 ticks, so hydration multiplier is 60.
-  - Happiness decrease by two per hour, equals one per thirty minutes, equals 120 ticks, so happiness multiplier is 120.
+  - Satiety decrease by three per hour, equals one per twenty minutes, equals 20 ticks, so satiety multiplier is 20.
+  - Hydration decrease by four per hour, equals one per fifteen minutes, equals 15 ticks, so hydration multiplier is 15.
+  - Happiness decrease by two per hour, equals one per thirty minutes, equals 30 ticks, so happiness multiplier is 30.
 - Energy:
   - Max Energy by stage: Hatchling 50, Juvenile 80, Adult 120.
   - Sleep regeneration rate increases by stage; Energy boosters restore a significant chunk instantly.
@@ -316,7 +316,7 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Event availability respects the local calendar; joining is restricted to open windows.
   - On closure, ongoing event content ends safely; partial rewards apply; Energy refunds on cancellation occur; token conversion happens.
 - Time and ticks:
-  - Game uses fifteen‑second ticks; autosaves every tick.
+  - Game uses sixty‑second ticks; autosaves every tick.
   - Care calculations use hidden tick counters and multipliers; offline catch‑up simulates the right number of ticks.
 
 24) Content and Tuning Hooks
