@@ -1,12 +1,16 @@
 {
-  "name": "bun-react-template",
+  "name": "digital-pet-game",
   "version": "0.1.0",
+  "description": "A client-only HTML5 digital pet game with care mechanics, exploration, and offline progression",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "bun --hot src/index.tsx",
     "start": "NODE_ENV=production bun src/index.tsx",
     "build": "bun run build.ts",
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
     "lint": "eslint --max-warnings=0 --flag unstable_native_nodejs_ts_config \"src/**/*.{ts,tsx,js,jsx}\"",
     "lint:fix": "eslint --fix --flag unstable_native_nodejs_ts_config \"src/**/*.{ts,tsx,js,jsx}\"",
     "format": "prettier --write .",

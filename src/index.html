@@ -2,12 +2,56 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, shrink-to-fit=no"
+    />
+    <meta
+      name="description"
+      content="A cozy digital pet game where you care for, train, and explore with your virtual companion"
+    />
+    <meta name="keywords" content="digital pet, virtual pet, tamagotchi, care game, browser game" />
+    <meta name="author" content="Digital Pet Game" />
+
+    <!-- Mobile optimizations -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Digital Pet" />
+
+    <!-- Theme colors -->
+    <meta name="theme-color" content="#4ade80" />
+    <meta name="msapplication-TileColor" content="#4ade80" />
+
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="data:" />
+
     <link rel="icon" type="image/svg+xml" href="./logo.svg" />
-    <title>Bun + React</title>
+    <title>Digital Pet Game</title>
+
+    <!-- Game entry point -->
     <script type="module" src="./frontend.tsx" async></script>
   </head>
-  <body>
-    <div id="root"></div>
+  <body class="font-sans antialiased bg-gradient-to-br from-green-50 to-blue-50 min-h-screen">
+    <!-- Game loading indicator -->
+    <div
+      id="loading"
+      class="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 z-50"
+    >
+      <div class="text-center">
+        <div
+          class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-200 animate-pulse flex items-center justify-center"
+        >
+          <div class="w-8 h-8 rounded-full bg-green-400"></div>
+        </div>
+        <p class="text-green-700 font-medium">Loading your digital pet...</p>
+      </div>
+    </div>
+
+    <!-- Main game container -->
+    <div id="root" class="min-h-screen"></div>
+
+    <!-- Accessibility announcements -->
+    <div id="announcements" class="sr-only" aria-live="polite" aria-atomic="true"></div>
   </body>
 </html>

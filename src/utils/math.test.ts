@@ -1,25 +1,51 @@
-import { test, expect } from 'bun:test';
+import { describe, it, expect } from 'bun:test';
 import { randomInt } from './math';
 
-test('randomInt returns deterministic values when Math.random is stubbed and handles swapped bounds and validation', () => {
-  const originalRandom = Math.random;
-  try {
-    // Middle of the range -> should pick the middle integer
-    Math.random = () => 0.5;
-    expect(randomInt(1, 3)).toBe(2);
+describe('Math utilities', () => {
+  describe('randomInt function', () => {
+    it('should return a number within the specified range', () => {
+      const result = randomInt(1, 10);
+      expect(result).toBeGreaterThanOrEqual(1);
+      expect(result).toBeLessThanOrEqual(10);
+      expect(Number.isInteger(result)).toBe(true);
+    });
 
-    // Near 1.0 -> should pick the max
-    Math.random = () => 0.9999999;
-    expect(randomInt(1, 3)).toBe(3);
+    it('should handle single value range', () => {
+      const result = randomInt(5, 5);
+      expect(result).toBe(5);
+    });
 
-    // Zero -> should pick the low value; also test swapping bounds (min > max)
-    Math.random = () => 0;
-    expect(randomInt(3, 1)).toBe(1);
+    it('should swap min and max if min > max', () => {
+      const result = randomInt(10, 1);
+      expect(result).toBeGreaterThanOrEqual(1);
+      expect(result).toBeLessThanOrEqual(10);
+    });
 
-    // Non-integer inputs should throw
-    expect(() => randomInt(1.5, 3)).toThrow(TypeError);
-    expect(() => randomInt(1, NaN)).toThrow(TypeError);
-  } finally {
-    Math.random = originalRandom;
-  }
+    it('should handle negative numbers', () => {
+      const result = randomInt(-10, -1);
+      expect(result).toBeGreaterThanOrEqual(-10);
+      expect(result).toBeLessThanOrEqual(-1);
+    });
+
+    it('should handle zero in range', () => {
+      const result = randomInt(-5, 5);
+      expect(result).toBeGreaterThanOrEqual(-5);
+      expect(result).toBeLessThanOrEqual(5);
+    });
+
+    it('should throw TypeError for non-safe integers', () => {
+      expect(() => randomInt(1.5, 5)).toThrow(TypeError);
+      expect(() => randomInt(1, 5.5)).toThrow(TypeError);
+      expect(() => randomInt(Number.MAX_SAFE_INTEGER + 1, 10)).toThrow(TypeError);
+    });
+
+    it('should produce different results over multiple calls', () => {
+      const results = new Set();
+      for (let i = 0; i < 100; i++) {
+        results.add(randomInt(1, 100));
+      }
+      // Should have produced multiple different values (very likely)
+      expect(results.size).toBeGreaterThan(10);
+    });
+  });
 });

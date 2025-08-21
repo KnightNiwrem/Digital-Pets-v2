@@ -1,12 +1,15 @@
 # Digital Pet Game Implementation Todo
 
 ## Overview
+
 This document outlines the implementation plan for the Digital Pet game, organized into phases that ensure the game remains in a working, testable state at each stage. Each phase builds upon the previous one, adding new features while maintaining stability.
 
 ## Phase 1: Core Infrastructure (Foundation)
+
 **Goal**: Establish the fundamental architecture and ensure basic game loop functionality.
 
 ### 1.1 Project Setup
+
 - [ ] Review existing Bun build configuration in `build.ts`
 - [ ] Update TypeScript configuration for game requirements
 - [ ] Configure Bun development server with hot reload
@@ -15,6 +18,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Configure Bun test framework (`bun:test`)
 
 ### 1.2 Core Systems Implementation
+
 - [ ] **GameEngine**
   - [ ] Implement `initialize()` method
   - [ ] Implement `startGameLoop()` with requestAnimationFrame
@@ -47,6 +51,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Add event history for debugging
 
 ### 1.3 Persistence Layer
+
 - [ ] **PersistenceManager**
   - [ ] Implement `save()` method
   - [ ] Implement `load()` method
@@ -65,6 +70,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement `restoreFromBackup()` method
 
 ### 1.4 Basic Testing & Verification (using Bun:test)
+
 - [ ] Create unit tests for TimeManager (`TimeManager.test.ts`)
 - [ ] Create unit tests for StateManager (`StateManager.test.ts`)
 - [ ] Create integration test for save/load cycle
@@ -77,9 +83,11 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ---
 
 ## Phase 2: Basic Pet System
+
 **Goal**: Implement core pet functionality with basic care mechanics.
 
 ### 2.1 Pet Core Implementation
+
 - [ ] **PetSystem**
   - [ ] Define Pet data model
   - [ ] Implement `createPet()` with species selection
@@ -88,6 +96,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement `updatePetState()` for state changes
 
 ### 2.2 Care System
+
 - [ ] **CareSystem**
   - [ ] Define care value ranges (0-100)
   - [ ] Implement hidden tick counters
@@ -103,6 +112,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement `checkLifeStatus()` for death detection
 
 ### 2.3 Growth System
+
 - [ ] **GrowthSystem**
   - [ ] Define growth stages (Hatchling, Juvenile, Adult)
   - [ ] Implement `getCurrentStage()` method
@@ -112,6 +122,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement `getMaxEnergy()` by stage
 
 ### 2.4 Energy System
+
 - [ ] Implement energy as part of PetState
 - [ ] Add energy consumption logic
 - [ ] Implement sleep state
@@ -120,11 +131,13 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Implement auto-wake conditions
 
 ### 2.5 Starter Selection
+
 - [ ] Define 3 starter species (Common rarity)
 - [ ] Create starter selection logic
 - [ ] Implement first-time player detection
 
 ### 2.6 Basic Testing (using Bun:test)
+
 - [ ] Test pet creation (`PetSystem.test.ts`)
 - [ ] Test care value decay over time (`CareSystem.test.ts`)
 - [ ] Test feeding/drinking/playing
@@ -137,9 +150,11 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ---
 
 ## Phase 3: UI Foundation
+
 **Goal**: Create basic visual interface for interacting with the pet.
 
 ### 3.1 UI Manager Setup
+
 - [ ] **UIManager**
   - [ ] Implement `initialize()` with DOM setup
   - [ ] Implement `setupEventListeners()`
@@ -147,6 +162,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement screen management system
 
 ### 3.2 HUD Implementation
+
 - [ ] **HUDController**
   - [ ] Create pet portrait display
   - [ ] Implement care value bars (Satiety, Hydration, Happiness)
@@ -156,6 +172,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Add growth stage indicator
 
 ### 3.3 Action Panel
+
 - [ ] Create action button layout
 - [ ] Implement Feed button
 - [ ] Implement Drink button
@@ -165,12 +182,14 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Add visual feedback for actions
 
 ### 3.4 Starter Selection Screen
+
 - [ ] Create starter selection UI
 - [ ] Display 3 starter options with sprites
 - [ ] Implement selection confirmation
 - [ ] Add pet naming interface
 
 ### 3.5 Notification System
+
 - [ ] **NotificationSystem**
   - [ ] Implement `showToast()` for notifications
   - [ ] Create low care value alerts
@@ -178,12 +197,14 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement notification queue
 
 ### 3.6 Responsive Design
+
 - [ ] Implement mobile-first layout
 - [ ] Add touch event support
 - [ ] Test on various screen sizes
 - [ ] Add viewport meta tags
 
 ### 3.7 Visual Testing
+
 - [ ] Test all care interactions through UI
 - [ ] Verify bar updates in real-time
 - [ ] Test notification displays
@@ -195,9 +216,11 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ---
 
 ## Phase 4: Advanced Care & Status
+
 **Goal**: Add poop system, sickness, and injuries.
 
 ### 4.1 Poop System
+
 - [ ] **CareSystem** (extend)
   - [ ] Implement poop spawn timer (6-24 hours)
   - [ ] Implement `spawnPoop()` method
@@ -207,6 +230,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Add poop effect on sickness chance
 
 ### 4.2 Status System
+
 - [ ] **StatusSystem**
   - [ ] Define Status types (Sick, Injured)
   - [ ] Implement `applySickness()` method
@@ -217,6 +241,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement `processStatusTick()` for ongoing effects
 
 ### 4.3 UI Updates
+
 - [ ] Add poop count indicator
 - [ ] Add Clean button
 - [ ] Add status icons (sick, injured)
@@ -224,6 +249,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Add medicine/bandage use buttons
 
 ### 4.4 Testing (using Bun:test)
+
 - [ ] Test poop spawn timing (`CareSystem.test.ts`)
 - [ ] Test sickness from high poop (`StatusSystem.test.ts`)
 - [ ] Test treatment mechanics
@@ -234,9 +260,11 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ---
 
 ## Phase 5: Locations & Activities
+
 **Goal**: Implement travel system and basic activities.
 
 ### 5.1 Location System
+
 - [ ] **LocationSystem**
   - [ ] Define location data structure
   - [ ] Create city locations (Square, Shop, Gym, Arena)
@@ -246,6 +274,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement distance calculations
 
 ### 5.2 Travel System
+
 - [ ] **TravelSystem**
   - [ ] Implement `performIntraCityMove()` (instant)
   - [ ] Implement `startInterCityTravel()` (timed)
@@ -255,6 +284,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Add concurrent action validation
 
 ### 5.3 Activity System
+
 - [ ] **ActivitySystem**
   - [ ] Define activity types (Fishing, Foraging, Mining)
   - [ ] Implement `startActivity()` method
@@ -265,6 +295,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement risk calculation (injuries, sickness)
 
 ### 5.4 Activity Implementations
+
 - [ ] Implement Fishing activity
   - [ ] Define fishing rewards (food items)
   - [ ] Add duration tiers (short, medium, long)
@@ -276,6 +307,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Add tool requirements
 
 ### 5.5 UI Updates
+
 - [ ] Create location selection interface
 - [ ] Add travel progress indicator
 - [ ] Create activity selection menu
@@ -284,6 +316,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Update location breadcrumbs
 
 ### 5.6 Testing (using Bun:test)
+
 - [ ] Test instant city movement (`TravelSystem.test.ts`)
 - [ ] Test timed travel
 - [ ] Test activity completion (`ActivitySystem.test.ts`)
@@ -295,9 +328,11 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ---
 
 ## Phase 6: Items & Inventory
+
 **Goal**: Implement full item system and inventory management.
 
 ### 6.1 Item System
+
 - [ ] **ItemSystem**
   - [ ] Define Item base class
   - [ ] Create item categories (Food, Drink, Toy, Medicine, Tool)
@@ -308,6 +343,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement durability system
 
 ### 6.2 Item Definitions
+
 - [ ] Create food items (small, medium, large)
 - [ ] Create drink items
 - [ ] Create toy items with happiness effects
@@ -317,6 +353,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Create tool items (Fishing Rod, Pick)
 
 ### 6.3 Inventory Management
+
 - [ ] Implement inventory data structure
 - [ ] Add inventory capacity limits
 - [ ] Implement `sortInventory()` method
@@ -324,12 +361,14 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Add item tooltips with descriptions
 
 ### 6.4 Currency System
+
 - [ ] Implement Coins as currency
 - [ ] Add coin rewards from activities
 - [ ] Implement `addCoins()` method
 - [ ] Implement `spendCoins()` method
 
 ### 6.5 Shop System
+
 - [ ] **ShopSystem**
   - [ ] Implement shop inventory structure
   - [ ] Implement `refreshShopInventory()` daily rotation
@@ -338,6 +377,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Add rarity-based pricing
 
 ### 6.6 UI Updates
+
 - [ ] Create inventory screen
 - [ ] Add item grid display
 - [ ] Implement drag-and-drop or click to use
@@ -346,6 +386,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Display coin balance
 
 ### 6.7 Testing (using Bun:test)
+
 - [ ] Test item usage effects (`ItemSystem.test.ts`)
 - [ ] Test inventory limits
 - [ ] Test shop purchases (`ShopSystem.test.ts`)
@@ -357,9 +398,11 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ---
 
 ## Phase 7: Battle & Training System
+
 **Goal**: Implement combat mechanics and stat training.
 
 ### 7.1 Battle Stats
+
 - [ ] Add battle stats to Pet model
   - [ ] Health stat
   - [ ] Attack stat
@@ -369,6 +412,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Implement stat display in UI
 
 ### 7.2 Training System
+
 - [ ] **TrainingSystem**
   - [ ] Implement `startTraining()` for each stat
   - [ ] Implement 8-minute training duration
@@ -378,6 +422,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement move replacement flow
 
 ### 7.3 Move System
+
 - [ ] Define Move data structure
 - [ ] Create basic move database
 - [ ] Implement move properties (power, accuracy, action cost)
@@ -385,6 +430,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Limit pet to 4 learned moves
 
 ### 7.4 Battle System
+
 - [ ] **BattleSystem**
   - [ ] Implement `startBattle()` initialization
   - [ ] Implement turn order by Speed
@@ -398,11 +444,13 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement victory/defeat handling
 
 ### 7.5 Battle Triggers
+
 - [ ] Add random encounters during activities
 - [ ] Create wild opponent generation
 - [ ] Implement encounter rate system
 
 ### 7.6 Battle UI
+
 - [ ] Create battle screen layout
 - [ ] Display health bars
 - [ ] Display action points
@@ -411,6 +459,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Create victory/defeat modals
 
 ### 7.7 Testing (using Bun:test)
+
 - [ ] Test stat training progression (`TrainingSystem.test.ts`)
 - [ ] Test move learning
 - [ ] Test battle flow (`BattleSystem.test.ts`)
@@ -423,9 +472,11 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ---
 
 ## Phase 8: Eggs & Advanced Pet Features
+
 **Goal**: Implement egg system and pet lifecycle.
 
 ### 8.1 Egg System
+
 - [ ] Define Egg data structure
 - [ ] Implement egg types with rarity weights
 - [ ] Implement `startIncubation()` method
@@ -434,24 +485,28 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Add egg inventory management
 
 ### 8.2 Egg Sources
+
 - [ ] Add eggs as activity rewards
 - [ ] Add eggs to shop inventory
 - [ ] Implement egg fragments system
 - [ ] Add fragment combination mechanic
 
 ### 8.3 Pet Death & Memorial
+
 - [ ] Implement death from Life depletion
 - [ ] Create death notification
 - [ ] Implement memorial log
 - [ ] Add restart flow with egg grant
 
 ### 8.4 Stage Advancement
+
 - [ ] Implement manual stage advancement button
 - [ ] Add time requirements (24h, 72h)
 - [ ] Add care condition checks
 - [ ] Apply stat bonuses on advancement
 
 ### 8.5 UI Updates
+
 - [ ] Create egg management screen
 - [ ] Add incubation progress display
 - [ ] Create hatching animation/screen
@@ -459,6 +514,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Update pet portrait for stages
 
 ### 8.6 Testing (using Bun:test)
+
 - [ ] Test egg incubation timing
 - [ ] Test species rarity rolls
 - [ ] Test death and restart flow
@@ -469,9 +525,11 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ---
 
 ## Phase 9: Events & Calendar System
+
 **Goal**: Implement time-based events and tournaments.
 
 ### 9.1 Event System
+
 - [ ] **EventSystem**
   - [ ] Implement calendar event structure
   - [ ] Implement `scheduleEvent()` method
@@ -481,6 +539,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Implement partial reward distribution
 
 ### 9.2 Event Types
+
 - [ ] Create Arena events (weekday battles)
 - [ ] Create Tournament events (weekends)
 - [ ] Create Seasonal events
@@ -488,12 +547,14 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Implement event tokens
 
 ### 9.3 Time-Based Features
+
 - [ ] Implement local timezone support
 - [ ] Add event countdown timers
 - [ ] Implement event windows
 - [ ] Add recurring event scheduling
 
 ### 9.4 UI Updates
+
 - [ ] Create calendar view
 - [ ] Add event list with times
 - [ ] Create join event buttons
@@ -501,6 +562,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Display event rewards
 
 ### 9.5 Testing (using Bun:test)
+
 - [ ] Test event scheduling (`EventSystem.test.ts`)
 - [ ] Test timezone handling
 - [ ] Test event participation
@@ -512,9 +574,11 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ---
 
 ## Phase 10: Polish & Accessibility
+
 **Goal**: Final polish, accessibility features, and optimizations.
 
 ### 10.1 Accessibility
+
 - [ ] **AccessibilityController**
   - [ ] Implement color-blind modes
   - [ ] Implement high contrast mode
@@ -524,6 +588,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [ ] Add screen reader support
 
 ### 10.2 Performance Optimization
+
 - [ ] Implement asset lazy loading
 - [ ] Add sprite atlasing
 - [ ] Optimize render cycles
@@ -532,6 +597,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Optimize IndexedDB operations
 
 ### 10.3 Save Import/Export
+
 - [ ] Implement save export to JSON
 - [ ] Implement save import with validation
 - [ ] Add save file versioning
@@ -539,6 +605,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Add checksum validation
 
 ### 10.4 Tutorial & Onboarding
+
 - [ ] Create interactive tutorial
 - [ ] Add tooltip system
 - [ ] Implement guided first quest
@@ -546,12 +613,14 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Create tutorial skip option
 
 ### 10.5 Audio System (Optional)
+
 - [ ] Add background music
 - [ ] Add sound effects
 - [ ] Implement volume controls
 - [ ] Add mute options
 
 ### 10.6 Visual Polish
+
 - [ ] Add animations for actions
 - [ ] Create particle effects
 - [ ] Implement smooth transitions
@@ -559,6 +628,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Polish UI animations
 
 ### 10.7 Error Handling
+
 - [ ] Add comprehensive error boundaries
 - [ ] Implement crash recovery
 - [ ] Add error reporting UI
@@ -566,6 +636,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Add connection loss handling
 
 ### 10.8 Final Testing
+
 - [ ] Complete gameplay testing
 - [ ] Cross-browser testing
 - [ ] Mobile device testing
@@ -578,9 +649,11 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ---
 
 ## Phase 11: Content & Balancing
+
 **Goal**: Add content variety and balance gameplay.
 
 ### 11.1 Content Expansion
+
 - [ ] Add 10+ species per rarity tier
 - [ ] Create 20+ unique moves
 - [ ] Design 30+ items
@@ -589,6 +662,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Design 10+ calendar events
 
 ### 11.2 Balancing
+
 - [ ] Tune care decay rates
 - [ ] Balance activity rewards
 - [ ] Adjust training gains
@@ -597,6 +671,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Adjust shop prices
 
 ### 11.3 Data-Driven Configuration
+
 - [ ] Create JSON configs for species
 - [ ] Create JSON configs for items
 - [ ] Create JSON configs for moves
@@ -605,6 +680,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Add hot-reload for configs
 
 ### 11.4 Testing & QA
+
 - [ ] Progression testing
 - [ ] Balance testing
 - [ ] Edge case testing
@@ -617,6 +693,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 ## Testing Strategy (using Bun:test)
 
 ### Unit Testing Checklist
+
 - [ ] Set up test directory structure (`__tests__/` or `*.test.ts` files)
 - [ ] Configure `bun test` in package.json scripts
 - [ ] Test all pure functions
@@ -627,6 +704,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Test battle calculations
 
 ### Integration Testing Checklist
+
 - [ ] Test system interactions
 - [ ] Test event flow
 - [ ] Test offline processing
@@ -634,12 +712,14 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Test UI updates
 
 ### End-to-End Testing Checklist
+
 - [ ] Test complete game flow
 - [ ] Test all user interactions
 - [ ] Test error recovery
 - [ ] Test performance targets
 
 ### Bun Test Configuration
+
 - [ ] Create test setup file for global test utilities
 - [ ] Configure test coverage reporting
 - [ ] Set up test watch mode for development

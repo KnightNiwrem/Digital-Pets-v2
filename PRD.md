@@ -2,7 +2,8 @@
 
 Scope: Single‑player, client‑only browser game with no server interaction; fully playable offline after initial load
 
-1) Vision, Goals, and Non‑Goals
+1. Vision, Goals, and Non‑Goals
+
 - Vision: A cozy, care‑and‑explore digital pet that fits into short sessions yet supports long‑term engagement through collections, activities, and calendar events.
 - Goals:
   - Clear care loop using positive indicators: Satiety, Hydration, Happiness.
@@ -13,7 +14,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - No pet evolution trees; growth stages only.
   - No monetization or real‑money purchases.
 
-2) Target Platforms, Performance, and Accessibility
+2. Target Platforms, Performance, and Accessibility
+
 - Platforms: Modern desktop/mobile browsers (latest 2 versions of Chromium, WebKit, Gecko).
 - Performance:
   - Target 60 FPS on mid‑range mobile; gracefully degrade on low‑end devices.
@@ -28,12 +30,14 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Visuals: color‑blind safe palette; high‑contrast mode; reduced motion toggle.
   - Text size scaling; readable defaults; screen‑reader friendly UI labels.
 
-3) Core Loops
+3. Core Loops
+
 - Care: Maintain Satiety, Hydration, Happiness; manage Poop with instant cleaning; treat sickness and injuries with items and sleep.
 - Explore: Travel between locations; perform timed activities that yield items, currency, and eggs; occasional battles.
 - Progress: Train battle stats, including the Action stat; occasionally learn new moves; participate in calendar events.
 
-4) Pet: Species, Rarity, Starters, and Eggs
+4. Pet: Species, Rarity, Starters, and Eggs
+
 - Single active pet at a time. Additional eggs may be held until hatched.
 - Rarity tiers: Common, Uncommon, Rare, Epic, Legendary.
 - Starters: Three predefined Common species are always selectable when the player has no pet and no eggs.
@@ -43,7 +47,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - On completion, rolls species based on egg type with rarity‑weighted outcome.
   - Baseline generic egg weights (tunable): Common 60%, Uncommon 25%, Rare 10%, Epic 4%, Legendary 1%.
 
-5) Growth Stages
+5. Growth Stages
+
 - Stages: Hatchling → Juvenile → Adult.
 - Stage gating:
   - Minimum real‑time duration per stage (defaults): Hatchling 24 hours, Juvenile 72 hours.
@@ -54,7 +59,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Activity access: some activities require Juvenile or Adult.
   - Battle stat increases on advancement: modest flat bonuses to Health, Attack, Defense, Speed, and Action.
 
-6) Care Values and Hidden Life
+6. Care Values and Hidden Life
+
 - Visible care values (range 0–100):
   - Satiety
   - Hydration
@@ -71,7 +77,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Restoring care adds ticks directly to the hidden counter. Example: restoring ten Hydration adds one hundred hydration ticks.
   - Use similar multipliers for Satiety and Happiness to keep calculations simple, consistent, and performant.
 
-7) Poop and Hygiene
+7. Poop and Hygiene
+
 - Poop spawn:
   - Spawns infrequently while the pet is awake: between six and twenty‑four hours per occurrence, randomized within that window.
   - There is no cap on total Poop.
@@ -81,7 +88,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Cleaning Poop is instant.
   - Hygiene items can reduce the Poop count by a set amount or reset it to zero.
 
-8) Sickness and Injury
+8. Sickness and Injury
+
 - Sickness:
   - Causes: high Poop count, exposure from activities, small passive chance over time.
   - Effects: reduced activity success, reduced sleep Energy regeneration, small Life decrease over time.
@@ -91,7 +99,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Effects: slower travel, blocks specific activities such as Training, may slightly reduce Happiness and Life until treated.
   - Treatment: Bandage item plus rest; some injuries require both.
 
-9) Energy and Sleep
+9. Energy and Sleep
+
 - Energy consumption: Travel and activities consume Energy according to distance and intensity.
 - Regeneration:
   - Sleeping enables passive Energy regeneration; no passive Energy regeneration while awake.
@@ -101,7 +110,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Forcing the pet to wake early halves the Energy recovered during that sleep session and decreases Happiness.
 - Minimum Energy checks: Prevent starting a travel or activity if Energy is below the required cost.
 
-10) Actions, Time, Concurrency, and Cancellation
+10. Actions, Time, Concurrency, and Cancellation
+
 - Action types:
   - Instant: Feed, Drink, Use Item, Play (toys), Clean Poop, intra‑city movement.
   - Timed: Inter‑city travel and activities such as fishing, foraging, mining, training, and sleeping.
@@ -114,7 +124,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Canceling travel, training, or an activity refunds Energy fully.
   - Instant intra‑city movement is free and non‑cancellable.
 
-11) Locations, Travel, and Activities
+11. Locations, Travel, and Activities
+
 - Locations:
   - Cities (with areas such as Square, Gym, Shop, Arena).
   - Wild biomes (Forest, Mountains, Lake, etc.).
@@ -131,7 +142,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Rewards include currency, food, drink, toys, materials, tools, eggs, and egg fragments.
   - Risks include battle encounters, minor injuries, and sickness exposure.
 
-12) Training and Battle Stats
+12. Training and Battle Stats
+
 - Trainable battle stats:
   - Health, Attack, Defense, Speed, Action.
   - Action is consumed to execute battle moves. Stronger moves generally cost more Action.
@@ -142,7 +154,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 - Stage advancement:
   - Advancing to a new growth stage grants modest flat increases to battle stats, including Action.
 
-13) Battle System
+13. Battle System
+
 - Triggers:
   - Random encounters during activities or travel where applicable.
   - City events such as Arena or Tournaments.
@@ -165,7 +178,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - If a battle triggers during a timed action, the timed action pauses.
   - After battle, if the pet is still active, the paused action resumes; otherwise it cancels with Energy refunds per the cancellation policy.
 
-14) Calendar Events (Real‑Time)
+14. Calendar Events (Real‑Time)
+
 - Scheduling and availability:
   - Events are defined in the local device timezone.
   - Examples: arena windows on specific weekdays, weekend tournaments, seasonal festivals.
@@ -179,7 +193,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
     - Event tokens convert to currency at a fixed rate.
   - Show a summary and return the pet to a safe location.
 
-15) Timekeeping, Ticks, Offline Catch‑Up, and Autosave
+15. Timekeeping, Ticks, Offline Catch‑Up, and Autosave
+
 - Tick cadence:
   - One game tick occurs every sixty seconds.
   - Autosave occurs every tick.
@@ -187,9 +202,10 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Care values use hidden tick counters to streamline calculations and maintain consistent behavior across active and offline time.
   - Multipliers define how many ticks equal one displayed unit for each care value; examples can use ten ticks per Hydration unit to represent ten minutes.
 - Offline catch‑up:
-  - On resume, compute elapsed time and mathematically flatten all ticks into a single step update for ongoing sleep, travel, activities, care decay, Poop spawns, sickness checks, and egg incubation. For example, if offline time is 10 minutes, then simply compute (10 * 60 / 15 = 40 ticks) and decrease hidden tick counters for care value by 40.
+  - On resume, compute elapsed time and mathematically flatten all ticks into a single step update for ongoing sleep, travel, activities, care decay, Poop spawns, sickness checks, and egg incubation. For example, if offline time is 10 minutes, then simply compute (10 \* 60 / 15 = 40 ticks) and decrease hidden tick counters for care value by 40.
 
-16) Items, Inventory, Currency, and Shops
+16. Items, Inventory, Currency, and Shops
+
 - Currency: Coins (in‑game only).
 - Inventory:
   - Most items stack up to a defined limit; some items are not stackable.
@@ -207,7 +223,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Located in city; inventory rotates daily.
   - Prices scale with rarity; event discounts may apply.
 
-17) UI and UX
+17. UI and UX
+
 - Main HUD:
   - Pet portrait with animated state.
   - Bars for Energy, Satiety, Hydration, Happiness. Health is shown in battle contexts only.
@@ -225,7 +242,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Font scaling, color‑blind palettes, reduced motion, and high‑contrast options.
   - Keyboard shortcuts for common actions and visible focus outlines.
 
-18) Onboarding and First‑Run
+18. Onboarding and First‑Run
+
 - First‑run flow:
   - If no pet and no eggs, present a starter selection of three Common species.
   - Guided tooltips for feeding, drinking, playing, cleaning Poop, sleeping, and first activity.
@@ -233,7 +251,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 - Safety:
   - If the pet dies during onboarding due to Life depletion, grant a common egg and re‑enter starter flow.
 
-19) Baseline Tuning (Initial Defaults; all tunable)
+19. Baseline Tuning (Initial Defaults; all tunable)
+
 - Care value ranges: 0 to 100 for Satiety, Hydration, and Happiness.
 - Care decay examples:
   - Satiety decreases by approximately three per hour.
@@ -259,7 +278,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Moves consume Action; stronger moves cost more Action.
   - The special skip turn is always available and restores Action.
 
-20) Data Model (Conceptual)
+20. Data Model (Conceptual)
+
 - Pet:
   - Species, Rarity, Stage, battle stats (Health, Attack, Defense, Speed, Action), Energy, visible care values (Satiety, Hydration, Happiness), hidden Life, statuses (Sick, Injured), known moves up to four.
 - Hidden care counters:
@@ -273,7 +293,8 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 - Meta:
   - Settings and accessibility; tutorial progress; memorial log.
 
-21) Persistence and Backup
+21. Persistence and Backup
+
 - Storage:
   - IndexedDB primary save; autosave every tick; transactional write on critical events.
 - Export and import:
@@ -282,13 +303,15 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 - Versioning:
   - Semantic save version; migrations for schema changes.
 
-22) Error Handling and Edge Cases
+22. Error Handling and Edge Cases
+
 - Corrupted save: keep a rolling backup snapshot and offer rollback.
 - Large offline gaps: process in batches for performance; no anti‑exploit intent.
 - Event closure during critical states: apply immediate closure policy with partial rewards and full Energy refunds on cancel; never soft‑lock.
 - Storage quota exceeded: prompt to export and reduce inventory or snapshots.
 
-23) Acceptance Criteria (Representative)
+23. Acceptance Criteria (Representative)
+
 - Client‑only and persistence:
   - Game loads and plays with network disabled after first load; autosaves every tick.
 - Starters and eggs:
@@ -319,11 +342,13 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Game uses sixty‑second ticks; autosaves every tick.
   - Care calculations use hidden tick counters and multipliers; offline catch‑up simulates the right number of ticks.
 
-24) Content and Tuning Hooks
+24. Content and Tuning Hooks
+
 - Centralized tuning for rates, timers, chances, and costs.
 - Data‑driven definitions for species, moves, tools, activities, and events.
 - Difficulty and progression adjust primarily through yields, encounter rates, stat curves, and event constraints.
 
-25) Technical Notes (Non‑binding)
+25. Technical Notes (Non‑binding)
+
 - IndexedDB for state; tick‑driven autosave.
 - Deterministic RNG seeds for debugging encounters.
