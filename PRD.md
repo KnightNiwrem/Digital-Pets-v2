@@ -18,8 +18,9 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 
 - Platforms: Modern desktop/mobile browsers (latest 2 versions of Chromium, WebKit, Gecko).
 - Performance:
-  - Target 60 FPS on mid‑range mobile; gracefully degrade on low‑end devices.
-  - Idle and background states should minimize CPU/GPU use.
+  - Efficient tick-based architecture (60-second updates only, no unnecessary animation loops).
+  - UI updates only when state changes; no constant rendering overhead.
+  - Idle and background states minimize CPU/GPU use.
 - Storage:
   - Persist saves locally (IndexedDB preferred). Provide export and import of save as a JSON file.
   - Warn users that clearing browser data removes progress.
@@ -196,8 +197,9 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 15. Timekeeping, Ticks, Offline Catch‑Up, and Autosave
 
 - Tick cadence:
-  - One game tick occurs every sixty seconds.
-  - Autosave occurs every tick.
+  - One game tick occurs every sixty seconds (the primary update mechanism).
+  - No continuous animation loop; updates are event-driven and tick-based.
+  - Autosave occurs every tick and on explicit user actions (feed, play, etc.).
 - Hidden tick counters:
   - Care values use hidden tick counters to streamline calculations and maintain consistent behavior across active and offline time.
   - Multipliers define how many ticks equal one displayed unit for each care value; examples can use ten ticks per Hydration unit to represent ten minutes.
@@ -313,7 +315,7 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 23. Acceptance Criteria (Representative)
 
 - Client‑only and persistence:
-  - Game loads and plays with network disabled after first load; autosaves every tick.
+  - Game loads and plays with network disabled after first load; autosaves every tick and on user actions.
 - Starters and eggs:
   - Starter selection appears when appropriate; incubation is real‑time; hatching respects rarity weights.
 - Care and hygiene:
@@ -350,5 +352,7 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 
 25. Technical Notes (Non‑binding)
 
-- IndexedDB for state; tick‑driven autosave.
+- IndexedDB for state; tick‑driven autosave with explicit user action tracking.
 - Deterministic RNG seeds for debugging encounters.
+- Efficient tick-based architecture without unnecessary animation frames.
+- Event-driven UI updates only when state changes.

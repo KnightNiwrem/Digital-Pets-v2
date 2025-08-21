@@ -19,36 +19,36 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 
 ### 1.2 Core Systems Implementation
 
-- [ ] **GameEngine**
-  - [ ] Implement `initialize()` method
-  - [ ] Implement `startGameLoop()` with requestAnimationFrame
-  - [ ] Implement `tick()` method with 60-second timer
-  - [ ] Implement `update(deltaTime)` for frame updates
-  - [ ] Implement `registerSystem()` for system registration
-  - [ ] Implement `getSystem()` for system access
-  - [ ] Implement `triggerAutosave()` with reason tracking
+- [x] **GameEngine**
+  - [x] Implement `initialize()` method
+  - [x] Implement tick-based architecture (no unnecessary 60 FPS loop)
+  - [x] Implement `tick()` method with 60-second timer
+  - [x] Implement `start()` and `stop()` for engine control
+  - [x] Implement `registerSystem()` for system registration
+  - [x] Implement `getSystem()` for system access
+  - [x] Implement `triggerAutosave()` with explicit user action tracking
 
-- [ ] **TimeManager**
-  - [ ] Implement `getCurrentTime()` using Date.now()
-  - [ ] Implement `startTicking()` with setInterval
-  - [ ] Implement `processTick()` to emit tick events
-  - [ ] Implement `calculateOfflineTicks()` for offline time calculation
-  - [ ] Implement `formatTimeRemaining()` utility
+- [x] **TimeManager**
+  - [x] Implement `getCurrentTime()` using Date.now()
+  - [x] Implement `startTicking()` with setInterval
+  - [x] Implement `processTick()` to emit tick events
+  - [x] Implement `calculateOfflineTicks()` for offline time calculation
+  - [x] Implement `formatTimeRemaining()` utility
 
-- [ ] **StateManager**
-  - [ ] Define GameState interface
-  - [ ] Implement `getState()` for state access
-  - [ ] Implement `dispatch()` for state mutations
-  - [ ] Implement `subscribe()` for state change listeners
-  - [ ] Implement `createSnapshot()` for saving
-  - [ ] Implement state validation logic
+- [x] **StateManager**
+  - [x] Define GameState interface
+  - [x] Implement `getState()` for state access
+  - [x] Implement `dispatch()` for state mutations
+  - [x] Implement `subscribe()` for state change listeners
+  - [x] Implement `createSnapshot()` for saving
+  - [x] Implement state validation logic
 
-- [ ] **EventManager**
-  - [ ] Implement `emit()` for synchronous events
-  - [ ] Implement `on()` for event subscription
-  - [ ] Implement `off()` for unsubscription
-  - [ ] Implement event queue system
-  - [ ] Add event history for debugging
+- [x] **EventManager**
+  - [x] Implement `emit()` for synchronous events
+  - [x] Implement `on()` for event subscription
+  - [x] Implement `off()` for unsubscription
+  - [x] Implement event queue system
+  - [x] Add event history for debugging
 
 ### 1.3 Persistence Layer
 
@@ -71,14 +71,14 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 
 ### 1.4 Basic Testing & Verification (using Bun:test)
 
+- [x] Create integration tests for core systems (`core-integration.test.ts`)
 - [ ] Create unit tests for TimeManager (`TimeManager.test.ts`)
 - [ ] Create unit tests for StateManager (`StateManager.test.ts`)
 - [ ] Create integration test for save/load cycle
-- [ ] Verify game loop runs at 60 FPS
-- [ ] Verify tick fires every 60 seconds
-- [ ] Test offline time calculation
+- [x] Verify tick-based system fires every 60 seconds
+- [x] Test offline time calculation
 
-**Deliverable**: Console-based game that initializes, runs game loop, and saves/loads empty state.
+**Deliverable**: Console-based game that initializes, runs tick-based updates, and saves/loads empty state.
 
 ---
 
@@ -729,7 +729,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 
 ## Performance Targets
 
-- [ ] 60 FPS on mid-range mobile devices
+- [ ] Efficient CPU usage (tick-based updates only, no unnecessary animation frames)
 - [ ] < 100ms UI response time
 - [ ] < 500ms save operation
 - [ ] < 1s initial load time
@@ -740,7 +740,7 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 
 ## Development Milestones
 
-1. **Milestone 1** (Phase 1-2): Core game loop with basic pet
+1. **Milestone 1** (Phase 1-2): Core tick-based engine with basic pet
 2. **Milestone 2** (Phase 3-4): Playable UI with care mechanics
 3. **Milestone 3** (Phase 5-6): World exploration and items
 4. **Milestone 4** (Phase 7-8): Combat and pet lifecycle
