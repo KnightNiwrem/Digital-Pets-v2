@@ -10,17 +10,26 @@
 
 ## Architecture Overview
 
-The Digital Pet game is built around a central GameEngine that coordinates all game systems. The architecture follows a component-based design with clear separation of concerns, event-driven communication, and deterministic state management suitable for a client-only HTML5 game.
+The Digital Pet game is built around a central GameEngine that acts as the ultimate orchestrator for all game systems. The architecture follows a pure system design pattern where Systems are isolated entities that cannot communicate directly with each other. All communication flows through the GameEngine using a sequential event processing model, ensuring deterministic behavior and eliminating race conditions.
+
+### Key Architectural Principles
+
+1. **GameEngine as Central Orchestrator**: All control flow and system coordination goes through GameEngine
+2. **Pure System Design**: Systems are stateless transformers that only own data from their domain
+3. **Sequential Event Processing**: Events are processed one at a time in order, preventing race conditions
+4. **Write-Only Event Interface**: Systems that need to emit events receive a write-only interface from GameEngine
+5. **State Injection**: GameEngine provides state or partial state to systems when invoking them
+6. **No Direct System Communication**: Systems cannot reference or call each other directly
 
 ### High-Level Architecture Diagram
 
 ```mermaid
 graph TB
-    subgraph Core Systems
-        GE[GameEngine]
-        TM[TimeManager]
-        SM[StateManager]
-        EM[EventManager]
+    subgraph Core
+        GE[GameEngine<br/>Central Orchestrator]
+        EM[EventManager<br/>Event Queue]
+        SM[StateManager<br/>State Store]
+        TM[TimeManager<br/>Time System]
     end
 
     subgraph Pet Systems
@@ -57,33 +66,55 @@ graph TB
         BM[BackupManager]
     end
 
-    GE --> TM
-    GE --> SM
-    GE --> EM
-    GE --> PS
-    GE --> AS
-    GE --> LS
-    GE --> UI
-    GE --> PM
-
-    PS --> CS
-    PS --> GS
-    PS --> SS
-
-    AS --> TS
-    AS --> TRS
-    AS --> BS
-
-    LS --> ES
-    LS --> IS
-    LS --> SH
-
-    UI --> HUD
-    UI --> NS
-    UI --> AC
-
-    PM --> SM2
-    PM --> BM
+    %% GameEngine owns and controls all systems
+    GE -.->|owns| EM
+    GE -.->|owns| SM
+    GE -.->|owns| TM
+    
+    %% GameEngine invokes systems with state
+    GE ==>|invokes with state| PS
+    GE ==>|invokes with state| AS
+    GE ==>|invokes with state| LS
+    GE ==>|invokes with state| UI
+    GE ==>|invokes with state| PM
+    
+    %% Systems return results to GameEngine
+    PS -.->|returns result| GE
+    AS -.->|returns result| GE
+    LS -.->|returns result| GE
+    UI -.->|returns result| GE
+    PM -.->|returns result| GE
+    
+    %% Event flow through write-only interface
+    PS -->|write event| EM
+    AS -->|write event| EM
+    UI -->|write event| EM
+    
+    %% GameEngine processes events from queue
+    EM -->|event queue| GE
+    
+    %% Subsystem organization (no direct communication)
+    PS -.-> CS
+    PS -.-> GS
+    PS -.-> SS
+    
+    AS -.-> TS
+    AS -.-> TRS
+    AS -.-> BS
+    
+    LS -.-> ES
+    LS -.-> IS
+    LS -.-> SH
+    
+    UI -.-> HUD
+    UI -.-> NS
+    UI -.-> AC
+    
+    PM -.-> SM2
+    PM -.-> BM
+    
+    style GE fill:#f9f,stroke:#333,stroke-width:4px
+    style EM fill:#bbf,stroke:#333,stroke-width:2px
 ```
 
 ## Core Components
@@ -96,9 +127,12 @@ graph TB
 
 - Initialize all game systems in correct order
 - Manage the main game loop and tick system
-- Coordinate cross-system interactions
-- Handle global game state transitions
+- Process events sequentially from the event queue
+- Invoke systems with appropriate state context
+- Handle all cross-system coordination
+- Validate and orchestrate user actions
 - Trigger autosaves on ticks and user actions
+- Provide write-only event interfaces to systems
 
 **Functions**:
 
@@ -113,34 +147,53 @@ class GameEngine {
   startGameLoop(): void;
   stopGameLoop(): void;
   tick(): void; // Called every 60 seconds
-  update(deltaTime: number): void; // Frame updates for UI
-
-  // System Management
-  registerSystem(system: GameSystem): void;
-  getSystem<T extends GameSystem>(type: SystemType): T;
-
+  
+  // Event Processing (Sequential)
+  processEventQueue(): void;
+  processEvent(event: GameEvent): void;
+  
+  // System Invocation
+  invokePetSystem(action: string, state: PetState): SystemResult;
+  invokeActivitySystem(action: string, state: GameState): SystemResult;
+  invokeUISystem(action: string, state: Partial<GameState>): void;
+  
+  // Event Write Interface Provider
+  getEventWriter(): EventWriter; // Write-only interface for systems
+  
+  // User Action Processing
+  processUserAction(action: GameAction): Promise<ActionResult>;
+  validateAction(action: GameAction): ValidationResult;
+  
   // State Management
+  getState(): GameState;
+  updateState(changes: StateChanges): void;
   triggerAutosave(reason: AutosaveReason): Promise<void>;
-  handleStateChange(change: StateChange): void;
 
   // Lifecycle
   pause(): void;
   resume(): void;
   shutdown(): Promise<void>;
 }
+
+// Write-only event interface provided to systems
+interface EventWriter {
+  writeEvent(event: GameEvent): void;
+  // No read methods - systems cannot query or process events
+}
 ```
 
 ### 2. TimeManager
 
-**Role**: Manages all time-related operations including real-time tracking, offline catch-up, and tick scheduling.
+**Role**: Manages all time-related operations including real-time tracking, offline catch-up, and tick scheduling. Owned and controlled exclusively by GameEngine.
 
 **Key Responsibilities**:
 
 - Track real-time using device clock
 - Calculate offline time on resume
 - Manage game ticks (60-second intervals)
-- Handle time-based event scheduling
+- Calculate time deltas for GameEngine
 - Process offline catch-up calculations
+- No direct communication with other systems
 
 **Functions**:
 
@@ -175,15 +228,16 @@ class TimeManager {
 
 ### 3. StateManager
 
-**Role**: Centralized state management system that maintains the entire game state and handles state mutations.
+**Role**: Centralized state store that maintains the entire game state. Only GameEngine can directly modify state.
 
 **Key Responsibilities**:
 
 - Maintain single source of truth for game state
-- Process state mutations through actions
-- Emit state change events
+- Process state mutations from GameEngine only
 - Provide state snapshots for saves
 - Handle state validation
+- No event emission - state changes are handled by GameEngine
+- No direct system access - only GameEngine can read/write
 
 **Functions**:
 
@@ -220,41 +274,49 @@ class StateManager {
 
 ### 4. EventManager
 
-**Role**: Manages event-driven communication between systems using a publish-subscribe pattern.
+**Role**: Maintains the event queue for sequential processing by GameEngine. Systems write events, GameEngine processes them.
 
 **Key Responsibilities**:
 
-- Handle event registration and dispatching
-- Manage event listeners
-- Process event queues
-- Handle priority events
+- Maintain FIFO event queue
+- Accept events from write-only interfaces
+- Provide events to GameEngine for processing
 - Log event history for debugging
+- No direct event dispatching - GameEngine handles all processing
+- Ensure sequential processing (no concurrent event handling)
 
 **Functions**:
 
 ```typescript
 class EventManager {
-  // Event Publishing
-  emit(event: GameEvent): void;
-  emitAsync(event: GameEvent): Promise<void>;
-  emitDelayed(event: GameEvent, delayMs: number): void;
+  // Event Queue Management (used by GameEngine only)
+  enqueueEvent(event: GameEvent): void;
+  dequeueEvent(): GameEvent | null;
+  peekEvent(): GameEvent | null;
+  hasEvents(): boolean;
+  getQueueLength(): number;
+  clearQueue(): void;
 
-  // Event Subscription
-  on(eventType: EventType, handler: EventHandler): Unsubscribe;
-  once(eventType: EventType, handler: EventHandler): Unsubscribe;
-  off(eventType: EventType, handler: EventHandler): void;
-
-  // Event Queue
-  queueEvent(event: GameEvent): void;
-  processEventQueue(): void;
-  clearEventQueue(): void;
-
-  // Priority Events
-  registerPriorityHandler(eventType: EventType, handler: EventHandler): void;
-
-  // Event History
+  // Write-Only Interface (provided to systems)
+  createEventWriter(): EventWriter;
+  
+  // Event History (for debugging)
   getEventHistory(limit: number): GameEvent[];
   clearEventHistory(): void;
+  
+  // Processing State
+  isProcessing(): boolean;
+  setProcessing(processing: boolean): void;
+}
+
+// The EventWriter interface that systems receive
+class EventWriter {
+  constructor(private eventManager: EventManager);
+  
+  // Only write method available to systems
+  writeEvent(event: GameEvent): void {
+    this.eventManager.enqueueEvent(event);
+  }
 }
 ```
 
@@ -264,29 +326,34 @@ class EventManager {
 
 #### PetSystem
 
-**Role**: Core system managing all pet-related functionality and coordinating pet subsystems.
+**Role**: Pure system managing pet-related transformations. Receives state from GameEngine and returns results.
 
 **Functions**:
 
 ```typescript
 class PetSystem {
-  // Pet Lifecycle
-  createPet(species: Species, fromEgg?: Egg): Pet;
-  activatePet(pet: Pet): void;
-  deactivatePet(): void;
-  handlePetDeath(cause: DeathCause): void;
-
-  // Pet State
-  getPet(): Pet | null;
-  updatePetState(updates: Partial<PetState>): void;
-
-  // Subsystem Coordination
-  processCare(): void;
-  processGrowth(): void;
-  processStatus(): void;
-
+  // Pure transformations - no side effects
+  createPet(species: Species, fromEgg?: Egg): PetCreationResult;
+  
+  // State transformations (receives state, returns changes)
+  processFeed(petState: PetState, foodItem: Item): StateChanges;
+  processDrink(petState: PetState, drinkItem: Item): StateChanges;
+  processPlay(petState: PetState, toy: Item): StateChanges;
+  processSleep(petState: PetState): StateChanges;
+  processWake(petState: PetState, sleepDuration: number): StateChanges;
+  
+  // Care calculations
+  calculateCareDecay(petState: PetState, ticks: number): CareDecayResult;
+  calculateLifeStatus(petState: PetState): LifeStatus;
+  
+  // Validation
+  validatePetAction(petState: PetState, action: PetAction): ValidationResult;
+  
   // Offline Processing
-  processOfflineUpdates(ticks: number): void;
+  processOfflineUpdates(petState: PetState, ticks: number): StateChanges;
+  
+  // Event generation (returns events to write)
+  generatePetEvents(petState: PetState, changes: StateChanges): GameEvent[];
 }
 ```
 
@@ -920,21 +987,34 @@ class BackupManager {
 sequenceDiagram
     participant M as Main
     participant GE as GameEngine
-    participant PM as PersistenceManager
+    participant EM as EventManager
     participant SM as StateManager
     participant TM as TimeManager
+    participant PS as PetSystem
     participant UI as UIManager
 
     M->>GE: initialize()
-    GE->>PM: load()
-    PM-->>GE: GameState
-    GE->>SM: restoreState(GameState)
-    GE->>TM: initialize(lastSaveTime)
-    TM->>TM: calculateOfflineTime()
+    GE->>SM: createInitialState()
+    GE->>EM: initialize()
+    GE->>TM: initialize()
+    
+    Note over GE: Load saved state
+    GE->>SM: loadState()
+    SM-->>GE: GameState
+    
+    Note over GE: Process offline time
+    GE->>TM: getOfflineTime()
     TM-->>GE: offlineSeconds
-    GE->>GE: processOfflineUpdates(offlineSeconds)
-    GE->>UI: initialize()
-    GE->>GE: startGameLoop()
+    GE->>PS: processOfflineUpdates(state, offlineSeconds)
+    PS-->>GE: StateChanges
+    GE->>SM: applyChanges(StateChanges)
+    
+    Note over GE: Initialize UI with state
+    GE->>UI: initialize(state)
+    
+    Note over GE: Start game loop
+    GE->>GE: startEventProcessing()
+    GE->>TM: startTicking()
 ```
 
 ### Game Tick Flow
@@ -943,104 +1023,186 @@ sequenceDiagram
 sequenceDiagram
     participant TM as TimeManager
     participant GE as GameEngine
-    participant CS as CareSystem
+    participant EM as EventManager
+    participant PS as PetSystem
     participant AS as ActivitySystem
-    participant PM as PersistenceManager
+    participant SM as StateManager
 
-    TM->>GE: onTick()
-    GE->>CS: processCareDecay(1)
-    CS->>CS: updateHiddenTicks()
-    GE->>AS: processActivityTick()
-    AS->>AS: updateProgress()
-    GE->>PM: autosave(TICK)
-    PM->>PM: save(state)
+    TM->>EM: writeEvent(TICK_EVENT)
+    
+    Note over GE: Process event queue
+    GE->>EM: dequeueEvent()
+    EM-->>GE: TICK_EVENT
+    
+    Note over GE: Get current state
+    GE->>SM: getState()
+    SM-->>GE: GameState
+    
+    Note over GE: Process care decay
+    GE->>PS: calculateCareDecay(petState, 1)
+    PS-->>GE: CareDecayResult
+    
+    Note over GE: Process activities
+    GE->>AS: processActivityTick(activityState)
+    AS-->>GE: ActivityResult
+    
+    Note over GE: Update state
+    GE->>SM: applyChanges(changes)
+    
+    Note over GE: Trigger autosave
+    GE->>GE: autosave(TICK)
 ```
 
 ### User Action Flow (Feed Pet)
 
 ```mermaid
 sequenceDiagram
-    participant UI as UI
+    participant User as User
+    participant UI as UIManager
+    participant EM as EventManager
     participant GE as GameEngine
+    participant PS as PetSystem
     participant IS as ItemSystem
-    participant CS as CareSystem
     participant SM as StateManager
-    participant PM as PersistenceManager
 
-    UI->>GE: feedPet(foodItem)
-    GE->>IS: canUseItem(foodItem)
-    IS-->>GE: true
-    GE->>CS: feed(foodItem)
-    CS->>CS: addSatietyTicks()
-    CS->>SM: dispatch(UPDATE_SATIETY)
-    GE->>IS: removeItem(foodItem, 1)
-    GE->>PM: autosave(USER_ACTION)
-    UI->>UI: updateHUD()
+    User->>UI: clickFeedButton(foodItem)
+    UI->>EM: writeEvent(FEED_ACTION)
+    
+    Note over GE: Process event queue
+    GE->>EM: dequeueEvent()
+    EM-->>GE: FEED_ACTION
+    
+    Note over GE: Validate action
+    GE->>SM: getState()
+    SM-->>GE: GameState
+    GE->>PS: validatePetAction(petState, FEED)
+    PS-->>GE: Valid
+    GE->>IS: validateItem(inventory, foodItem)
+    IS-->>GE: Valid
+    
+    Note over GE: Process feeding
+    GE->>PS: processFeed(petState, foodItem)
+    PS-->>GE: StateChanges + Events
+    GE->>IS: consumeItem(inventory, foodItem)
+    IS-->>GE: InventoryChanges
+    
+    Note over GE: Update state
+    GE->>SM: applyChanges(allChanges)
+    
+    Note over GE: Write resulting events
+    GE->>EM: enqueueEvent(PET_FED_EVENT)
+    
+    Note over GE: Update UI
+    GE->>UI: updatePetDisplay(newPetState)
+    
+    Note over GE: Autosave
+    GE->>GE: autosave(USER_ACTION)
 ```
 
 ### Battle Flow
 
 ```mermaid
 sequenceDiagram
-    participant AS as ActivitySystem
+    participant GE as GameEngine
+    participant EM as EventManager
     participant BS as BattleSystem
     participant UI as UIManager
     participant SM as StateManager
 
-    AS->>BS: startBattle(opponent)
-    BS->>AS: pauseActivity()
-    BS->>UI: showBattleScreen()
-
+    Note over GE: Battle triggered
+    GE->>SM: getState()
+    SM-->>GE: GameState
+    
+    GE->>BS: initializeBattle(petState, opponent)
+    BS-->>GE: BattleState + BATTLE_START event
+    
+    GE->>SM: setBattleState(battleState)
+    GE->>UI: showBattleScreen(battleState)
+    
     loop Each Turn
-        BS->>BS: determineTurnOrder()
-        BS->>UI: requestPlayerAction()
-        UI-->>BS: useMove(move)
-        BS->>BS: executeMove()
-        BS->>SM: updateBattleState()
-        BS->>BS: checkFaintCondition()
+        Note over GE: Wait for player action
+        UI->>EM: writeEvent(USE_MOVE)
+        
+        GE->>EM: dequeueEvent()
+        EM-->>GE: USE_MOVE
+        
+        GE->>BS: processTurn(battleState, move)
+        BS-->>GE: TurnResult + Events
+        
+        GE->>SM: updateBattleState(turnResult)
+        GE->>UI: updateBattleDisplay(battleState)
+        
+        GE->>BS: checkBattleEnd(battleState)
+        BS-->>GE: BattleStatus
     end
-
-    BS->>UI: showBattleSummary()
-    BS->>AS: resumeActivity()
+    
+    GE->>BS: finalizeBattle(battleState)
+    BS-->>GE: BattleRewards + Events
+    
+    GE->>SM: applyRewards(rewards)
+    GE->>UI: showBattleSummary(results)
 ```
 
 ### Offline Catch-up Flow
 
 ```mermaid
 sequenceDiagram
-    participant TM as TimeManager
     participant GE as GameEngine
-    participant CS as CareSystem
+    participant TM as TimeManager
+    participant SM as StateManager
+    participant PS as PetSystem
     participant AS as ActivitySystem
     participant ES as EventSystem
 
-    TM->>TM: calculateOfflineTicks()
+    Note over GE: Game resuming
+    GE->>TM: calculateOfflineTime()
+    TM-->>GE: offlineSeconds
+    
+    GE->>TM: calculateOfflineTicks(offlineSeconds)
     TM-->>GE: offlineTicks
-
-    GE->>CS: processOfflineUpdates(offlineTicks)
-    CS->>CS: decrementCareTicks(offlineTicks)
-    CS->>CS: calculatePoopSpawns(offlineTicks)
-
-    GE->>AS: processOfflineActivity(offlineTicks)
-    AS->>AS: completeOrProgress()
-
-    GE->>ES: checkEventClosures()
-    ES->>ES: handleExpiredEvents()
+    
+    Note over GE: Get current state
+    GE->>SM: getState()
+    SM-->>GE: GameState
+    
+    Note over GE: Process pet updates
+    GE->>PS: processOfflineUpdates(petState, offlineTicks)
+    PS-->>GE: PetChanges + Events
+    
+    Note over GE: Process activities
+    GE->>AS: processOfflineActivity(activityState, offlineTicks)
+    AS-->>GE: ActivityChanges + Events
+    
+    Note over GE: Check events
+    GE->>ES: checkEventClosures(eventState, currentTime)
+    ES-->>GE: EventChanges + Events
+    
+    Note over GE: Apply all changes
+    GE->>SM: batchApplyChanges(allChanges)
+    
+    Note over GE: Queue events for processing
+    GE->>EM: enqueueEvents(offlineEvents)
 ```
 
 ## Implementation Notes
 
 ### Critical Design Decisions
 
-1. **Tick-Based System**: The 60-second tick serves as the primary update mechanism for care decay and autosaves. However, user actions trigger immediate autosaves to prevent data loss.
+1. **Sequential Event Processing**: All events are processed one at a time by GameEngine, eliminating race conditions and ensuring deterministic behavior. This is crucial for maintaining game state consistency.
 
-2. **Hidden Tick Counters**: Care values use hidden tick counters for precise calculations. Display values are computed from ticks using multipliers (e.g., 1 Hydration = 15 ticks = 15 minutes).
+2. **Pure System Design**: Systems are stateless transformers that receive state and return changes. They cannot directly modify state or communicate with other systems, ensuring predictable behavior and easier testing.
 
-3. **Offline Processing**: All offline calculations are deterministic and batched into a single update to maintain consistency and performance.
+3. **Write-Only Event Interface**: Systems that need to emit events receive a write-only interface from GameEngine. They cannot read or process events, maintaining the unidirectional data flow.
 
-4. **State Management**: Single source of truth pattern with immutable updates ensures predictable state changes and easy debugging.
+4. **GameEngine as Ultimate Orchestrator**: All control flow goes through GameEngine. It owns the EventManager, StateManager, and TimeManager, and coordinates all system interactions.
 
-5. **Event-Driven Architecture**: Loose coupling between systems through events allows for flexible feature additions and modifications.
+5. **Tick-Based System**: The 60-second tick serves as the primary update mechanism for care decay and autosaves. User actions trigger immediate processing through the event queue.
+
+6. **Hidden Tick Counters**: Care values use hidden tick counters for precise calculations. Display values are computed from ticks using multipliers (e.g., 1 Hydration = 15 ticks = 15 minutes).
+
+7. **Offline Processing**: All offline calculations are deterministic and batched into a single update to maintain consistency and performance.
+
+8. **State Management**: Single source of truth owned by GameEngine. Only GameEngine can modify state through StateManager.
 
 ### Performance Considerations
 

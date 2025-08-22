@@ -24,31 +24,51 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [x] Implement tick-based architecture (no unnecessary 60 FPS loop)
   - [x] Implement `tick()` method with 60-second timer
   - [x] Implement `start()` and `stop()` for engine control
-  - [x] Implement `registerSystem()` for system registration
-  - [x] Implement `getSystem()` for system access
+  - [x] Implement `registerSystem()` for system registration ⚠️ *Needs refactoring - systems should not have direct references*
+  - [x] Implement `getSystem()` for system access ⚠️ *Needs removal - violates pure system design*
   - [x] Implement `triggerAutosave()` with explicit user action tracking
+  - [ ] **Refactor for Pure System Design**
+    - [ ] Remove cross-system references (lines 49-52 in GameEngine.ts)
+    - [ ] Implement `getEventWriter()` to provide write-only interface
+    - [ ] Implement `processEventQueue()` for sequential event processing
+    - [ ] Implement system invocation methods with state injection
+    - [ ] Remove direct system-to-system communication
 
 - [x] **TimeManager**
   - [x] Implement `getCurrentTime()` using Date.now()
   - [x] Implement `startTicking()` with setInterval
-  - [x] Implement `processTick()` to emit tick events
+  - [x] Implement `processTick()` to emit tick events ⚠️ *Should write events to queue, not emit*
   - [x] Implement `calculateOfflineTicks()` for offline time calculation
   - [x] Implement `formatTimeRemaining()` utility
+  - [ ] **Refactor for Isolation**
+    - [ ] Remove EventManager reference
+    - [ ] Remove StateManager reference
+    - [ ] Return time calculations to GameEngine instead of emitting events
 
 - [x] **StateManager**
   - [x] Define GameState interface
   - [x] Implement `getState()` for state access
-  - [x] Implement `dispatch()` for state mutations
+  - [x] Implement `dispatch()` for state mutations ⚠️ *Should only accept from GameEngine*
   - [x] Implement `subscribe()` for state change listeners
   - [x] Implement `createSnapshot()` for saving
   - [x] Implement state validation logic
+  - [ ] **Refactor for GameEngine-Only Access**
+    - [ ] Remove EventManager reference
+    - [ ] Make dispatch() private or GameEngine-only
+    - [ ] Remove event emissions from state changes
 
 - [x] **EventManager**
-  - [x] Implement `emit()` for synchronous events
-  - [x] Implement `on()` for event subscription
-  - [x] Implement `off()` for unsubscription
+  - [x] Implement `emit()` for synchronous events ⚠️ *Should be replaced with enqueue*
+  - [x] Implement `on()` for event subscription ⚠️ *Should be removed - only GameEngine processes*
+  - [x] Implement `off()` for unsubscription ⚠️ *Should be removed*
   - [x] Implement event queue system
   - [x] Add event history for debugging
+  - [ ] **Refactor for Sequential Processing**
+    - [ ] Replace emit() with enqueueEvent()
+    - [ ] Remove all subscription methods
+    - [ ] Implement dequeueEvent() for GameEngine
+    - [ ] Implement createEventWriter() for write-only interface
+    - [ ] Remove direct event processing
 
 ### 1.3 Persistence Layer
 
@@ -82,44 +102,88 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 
 ---
 
+## Phase 1.5: Architecture Refactoring (PRIORITY)
+
+**Goal**: Refactor existing systems to implement pure system design pattern before continuing with new features.
+
+### 1.5.1 Core System Refactoring
+
+- [ ] **GameEngine Refactoring**
+  - [ ] Remove direct system references (no more getSystem())
+  - [ ] Create EventWriter interface for write-only event access
+  - [ ] Implement sequential event processing loop
+  - [ ] Create system invocation methods that pass state
+  - [ ] Remove system-to-system communication paths
+  - [ ] Implement centralized action validation
+  
+- [ ] **EventManager Refactoring**
+  - [ ] Convert to pure queue management
+  - [ ] Remove emit(), on(), off() methods
+  - [ ] Implement enqueueEvent() and dequeueEvent()
+  - [ ] Create EventWriter factory method
+  - [ ] Remove listener/subscription system
+  
+- [ ] **StateManager Refactoring**
+  - [ ] Make state mutations GameEngine-only
+  - [ ] Remove EventManager dependency
+  - [ ] Convert dispatch() to internal-only method
+  - [ ] Remove state change event emissions
+  
+- [ ] **TimeManager Refactoring**
+  - [ ] Remove EventManager dependency
+  - [ ] Remove StateManager dependency
+  - [ ] Convert to pure time calculation service
+  - [ ] Return results instead of emitting events
+
+### 1.5.2 Testing After Refactoring
+
+- [ ] Update core-integration.test.ts for new architecture
+- [ ] Test sequential event processing
+- [ ] Test state isolation
+- [ ] Test event writer interface
+- [ ] Verify no direct system communication
+
+---
+
 ## Phase 2: Basic Pet System
 
-**Goal**: Implement core pet functionality with basic care mechanics.
+**Goal**: Implement core pet functionality with basic care mechanics using pure system design.
 
 ### 2.1 Pet Core Implementation
 
-- [ ] **PetSystem**
+- [ ] **PetSystem (Pure Design)**
   - [ ] Define Pet data model
-  - [ ] Implement `createPet()` with species selection
-  - [ ] Implement `activatePet()` for pet activation
-  - [ ] Implement `getPet()` for current pet access
-  - [ ] Implement `updatePetState()` for state changes
+  - [ ] Implement `createPet(species, eggData)` returns PetCreationResult
+  - [ ] Implement `processFeed(petState, foodItem)` returns StateChanges
+  - [ ] Implement `processDrink(petState, drinkItem)` returns StateChanges
+  - [ ] Implement `processPlay(petState, toy)` returns StateChanges
+  - [ ] Implement `validatePetAction(petState, action)` returns ValidationResult
+  - [ ] No direct state modifications - only return changes
 
 ### 2.2 Care System
 
-- [ ] **CareSystem**
+- [ ] **CareSystem (Pure Functions)**
   - [ ] Define care value ranges (0-100)
   - [ ] Implement hidden tick counters
-  - [ ] Implement `getSatiety()` with tick conversion
-  - [ ] Implement `getHydration()` with tick conversion
-  - [ ] Implement `getHappiness()` with tick conversion
-  - [ ] Implement `feed()` to add satiety ticks
-  - [ ] Implement `drink()` to add hydration ticks
-  - [ ] Implement `play()` to add happiness ticks
-  - [ ] Implement `processCareDecay()` for tick-based decay
-  - [ ] Implement `calculateDisplayValue()` with multipliers
-  - [ ] Implement hidden Life stat management
-  - [ ] Implement `checkLifeStatus()` for death detection
+  - [ ] Implement `calculateSatiety(ticks)` pure calculation
+  - [ ] Implement `calculateHydration(ticks)` pure calculation
+  - [ ] Implement `calculateHappiness(ticks)` pure calculation
+  - [ ] Implement `calculateCareDecay(petState, ticks)` returns decay amounts
+  - [ ] Implement `calculateDisplayValue(ticks, multiplier)` pure function
+  - [ ] Implement `calculateLifeStatus(petState)` returns life status
+  - [ ] Implement `checkDeathCondition(petState)` returns boolean
+  - [ ] No state mutations - only calculations and returns
 
 ### 2.3 Growth System
 
-- [ ] **GrowthSystem**
+- [ ] **GrowthSystem (Pure Functions)**
   - [ ] Define growth stages (Hatchling, Juvenile, Adult)
-  - [ ] Implement `getCurrentStage()` method
-  - [ ] Implement `getTimeInStage()` tracking
-  - [ ] Implement `checkAdvancementEligibility()`
-  - [ ] Implement `advanceStage()` with stat bonuses
-  - [ ] Implement `getMaxEnergy()` by stage
+  - [ ] Implement `calculateStage(petState)` returns current stage
+  - [ ] Implement `calculateTimeInStage(petState, currentTime)` returns duration
+  - [ ] Implement `checkAdvancementEligibility(petState, currentTime)` returns boolean
+  - [ ] Implement `calculateStageAdvancement(petState)` returns StateChanges
+  - [ ] Implement `getStageMaxEnergy(stage)` returns energy value
+  - [ ] All methods are pure calculations without side effects
 
 ### 2.4 Energy System
 

@@ -356,3 +356,10 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 - Deterministic RNG seeds for debugging encounters.
 - Efficient tick-based architecture without unnecessary animation frames.
 - Event-driven UI updates only when state changes.
+- Sequential event processing architecture with GameEngine as the central orchestrator:
+  - Systems are pure, isolated entities with no direct cross-system communication
+  - GameEngine provides write-only event interfaces to systems that need to push events
+  - All events flow through a centralized queue that GameEngine processes sequentially
+  - GameEngine provides state or partial state to systems when invoking them
+  - Systems act as pure transformers that only own data from their domain
+  - This design eliminates race conditions and ensures deterministic event processing
