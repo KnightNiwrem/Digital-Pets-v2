@@ -16,18 +16,18 @@
   - [x] `/src/utils` - Helper functions and utilities
 
 ### 1.2 Core Data Models
-- [ ] Define TypeScript interfaces for all data models
-  - [ ] Create `GameState` interface with all properties
-  - [ ] Define `Pet` model with species, stats, care values
-  - [ ] Define `Item` model with categories and properties
-  - [ ] Define `Location` model for cities and biomes
-  - [ ] Define `BattleMove` model with action costs
-  - [ ] Define `Species` model with rarity tiers
-- [ ] Create type definitions for all constants
-  - [ ] Define `UPDATE_TYPES` const object
-  - [ ] Define `RARITY_TIERS` const object
-  - [ ] Define `GROWTH_STAGES` const object
-  - [ ] Define `ITEM_CATEGORIES` const object
+- [x] Define TypeScript interfaces for all data models
+  - [x] Create `GameState` interface with all properties
+  - [x] Define `Pet` model with species, stats, care values
+  - [x] Define `Item` model with categories and properties
+  - [x] Define `Location` model for cities and biomes
+  - [x] Define `BattleMove` model with action costs
+  - [x] Define `Species` model with rarity tiers
+- [x] Create type definitions for all constants
+  - [x] Define `UPDATE_TYPES` const object
+  - [x] Define `RARITY_TIERS` const object
+  - [x] Define `GROWTH_STAGES` const object
+  - [x] Define `ITEM_CATEGORIES` const object
 
 ### 1.3 Configuration System
 - [ ] Implement `ConfigSystem` class

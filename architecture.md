@@ -161,12 +161,12 @@ interface SaveState {
 **Responsibility**: Manage pet state, care values, growth stages, and wellness.
 
 **Key Functions**:
-- Track and update care values (Satiety, Hydration, Happiness)
+- Track and update care values (Satiety, Hydration, Happiness) - computed from tick counters
 - Manage hidden Life value and tick counters
 - Handle growth stage transitions
 - Process feeding, drinking, playing actions
 - Calculate care decay over time
-- Manage pet death and revival
+- Manage pet death and revival (death from neglect only, not battle)
 
 **State Management**:
 ```typescript
@@ -425,11 +425,7 @@ interface GameState {
     stage: GrowthStage;
     stats: BattleStats;
     energy: number;
-    careValues: {
-      satiety: number;
-      hydration: number;
-      happiness: number;
-    };
+    // Note: careValues are computed from hiddenCounters, not stored
     hiddenCounters: {
       satietyTicks: number;
       hydrationTicks: number;
