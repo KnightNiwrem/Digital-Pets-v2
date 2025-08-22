@@ -21,7 +21,7 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Target 60 FPS on mid‑range mobile; gracefully degrade on low‑end devices.
   - Idle and background states should minimize CPU/GPU use.
 - Storage:
-  - Persist saves locally (IndexedDB preferred). Provide export and import of save as a JSON file.
+  - Persist saves locally (localStorage). Provide export and import of save as a JSON file.
   - Warn users that clearing browser data removes progress.
 - Time:
   - Uses device real‑time clock.
@@ -296,7 +296,7 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 21. Persistence and Backup
 
 - Storage:
-  - IndexedDB primary save; autosave every tick; transactional write on critical events.
+  - localStorage primary save; autosave every tick; transactional write on critical events.
 - Export and import:
   - Export produces a JSON file with checksum and version.
   - Import validates checksum and version and shows a summary before overwrite.
