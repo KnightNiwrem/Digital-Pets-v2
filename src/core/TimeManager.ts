@@ -1,123 +1,158 @@
-import type { GameSystem, OfflineUpdate, ScheduledEvent, TickHandler, Unsubscribe } from '../types';
-import { EventType, TIME_CONSTANTS, CARE_CONSTANTS } from '../types';
-import type { EventManager } from './EventManager';
-import type { StateManager } from './StateManager';
+import type { GameSystem, Unsubscribe, TimeState } from '../types';
 
 /**
- * TimeManager handles all time-related operations including real-time tracking,
- * offline catch-up, and tick scheduling.
+ * TimeManager manages all time-related operations as a pure calculation service.
+ * It tracks real-time, calculates offline time, and manages tick scheduling.
+ * 
+ * This is now a pure system with no dependencies on other systems.
+ * It returns time calculations to GameEngine instead of emitting events.
  */
 export class TimeManager implements GameSystem {
+  private lastSaveTime: number = Date.now();
+  private tickHandlers: Set<() => void> = new Set();
   private tickInterval: number | null = null;
-  private tickHandlers: Set<TickHandler> = new Set();
-  private scheduledEvents: Map<string, ScheduledEvent> = new Map();
-  private eventManager: EventManager | null = null;
-  private stateManager: StateManager | null = null;
-  private lastTickTime: number = 0;
-  private isRunning = false;
-
-  constructor() {
-    this.lastTickTime = Date.now();
-  }
+  private tickDuration = 60000; // 60 seconds in milliseconds
 
   async initialize(): Promise<void> {
-    this.lastTickTime = Date.now();
-    this.isRunning = false;
-
-    console.log('TimeManager initialized');
+    this.lastSaveTime = Date.now();
+    console.log('TimeManager initialized as pure time service');
   }
 
   /**
-   * Set the event manager reference
-   */
-  setEventManager(eventManager: EventManager): void {
-    this.eventManager = eventManager;
-  }
-
-  /**
-   * Set the state manager reference
-   */
-  setStateManager(stateManager: StateManager): void {
-    this.stateManager = stateManager;
-  }
-
-  /**
-   * Get current time
+   * Get the current time
    */
   getCurrentTime(): Date {
     return new Date();
   }
 
   /**
-   * Get the last save time from state
+   * Get the last save time
    */
   getLastSaveTime(): Date {
-    if (!this.stateManager) {
-      return new Date();
-    }
-
-    const state = this.stateManager.getState();
-    return new Date(state.meta.lastSaveTime);
+    return new Date(this.lastSaveTime);
   }
 
   /**
-   * Get elapsed time since last save
+   * Update the last save time (called by GameEngine after successful save)
+   */
+  updateLastSaveTime(timestamp?: number): void {
+    this.lastSaveTime = timestamp || Date.now();
+  }
+
+  /**
+   * Get elapsed time since last save in seconds
    */
   getElapsedTime(): number {
-    const now = Date.now();
-    const lastSave = this.getLastSaveTime().getTime();
-    return Math.max(0, now - lastSave);
+    return Math.floor((Date.now() - this.lastSaveTime) / 1000);
   }
 
   /**
-   * Calculate offline time in seconds
+   * Get offline time in seconds (time since last save)
    */
   getOfflineTime(): number {
-    return Math.floor(this.getElapsedTime() / 1000);
+    return this.getElapsedTime();
   }
 
   /**
-   * Start the tick system
+   * Calculate the number of ticks that occurred during offline time
    */
-  startTicking(): void {
-    if (this.isRunning) {
-      console.warn('TimeManager is already running');
-      return;
+  calculateOfflineTicks(offlineSeconds: number): number {
+    const ticksPerSecond = 1 / 60; // 1 tick per 60 seconds
+    return Math.floor(offlineSeconds * ticksPerSecond);
+  }
+
+  /**
+   * Process offline time and return what needs to be updated
+   * This is now a pure function that returns calculations
+   */
+  processOfflineTime(offlineSeconds: number): {
+    ticksProcessed: number;
+    careDecay: {
+      satietyDecay: number;
+      hydrationDecay: number;
+      happinessDecay: number;
+    };
+    poopSpawned: number;
+    sleepCompleted: boolean;
+    energyRecovered: number;
+  } {
+    const ticks = this.calculateOfflineTicks(offlineSeconds);
+
+    // Calculate care decay (1 tick per care value per game tick)
+    const careDecay = {
+      satietyDecay: ticks,
+      hydrationDecay: ticks,
+      happinessDecay: ticks,
+    };
+
+    // Calculate poop spawns (average 1 every 6 hours = 360 ticks)
+    // Use simple approximation for offline calculation
+    const avgPoopPerTick = 1 / 360;
+    const poopSpawned = Math.floor(ticks * avgPoopPerTick);
+
+    // Sleep calculations (these would be based on pet state in real implementation)
+    const maxSleepDuration = 8 * 60 * 60; // 8 hours in seconds
+    const sleepCompleted = offlineSeconds >= maxSleepDuration;
+    const energyRecovered = sleepCompleted ? 100 : Math.floor((offlineSeconds / maxSleepDuration) * 100);
+
+    return {
+      ticksProcessed: ticks,
+      careDecay,
+      poopSpawned,
+      sleepCompleted,
+      energyRecovered,
+    };
+  }
+
+  /**
+   * Start the tick timer
+   * Returns true if started successfully, false if already running
+   */
+  startTicking(): boolean {
+    if (this.tickInterval !== null) {
+      console.warn('Tick timer is already running');
+      return false;
     }
 
-    this.isRunning = true;
-    this.lastTickTime = Date.now();
-
-    // Set up the main tick interval (60 seconds)
     this.tickInterval = setInterval(() => {
       this.processTick();
-    }, TIME_CONSTANTS.TICK_INTERVAL) as any;
+    }, this.tickDuration) as any;
 
-    console.log('TimeManager started ticking');
+    console.log('Tick timer started (60-second intervals)');
+    return true;
   }
 
   /**
-   * Stop the tick system
+   * Stop the tick timer
    */
   stopTicking(): void {
-    if (!this.isRunning) {
-      return;
-    }
-
-    this.isRunning = false;
-
-    if (this.tickInterval) {
+    if (this.tickInterval !== null) {
       clearInterval(this.tickInterval);
       this.tickInterval = null;
+      console.log('Tick timer stopped');
     }
+  }
 
-    console.log('TimeManager stopped ticking');
+  /**
+   * Process a tick by notifying all registered handlers
+   * GameEngine should be the only handler
+   */
+  private processTick(): void {
+    // Notify all tick handlers
+    this.tickHandlers.forEach(handler => {
+      try {
+        handler();
+      } catch (error) {
+        console.error('Tick handler error:', error);
+      }
+    });
   }
 
   /**
    * Register a tick handler
+   * GameEngine uses this to be notified of ticks
    */
-  registerTickHandler(handler: TickHandler): Unsubscribe {
+  registerTickHandler(handler: () => void): Unsubscribe {
     this.tickHandlers.add(handler);
 
     return () => {
@@ -126,188 +161,28 @@ export class TimeManager implements GameSystem {
   }
 
   /**
-   * Process a single tick
-   */
-  processTick(): void {
-    const now = Date.now();
-
-    // Update last tick time
-    this.lastTickTime = now;
-
-    // Emit tick event
-    if (this.eventManager) {
-      this.eventManager.emit({
-        type: EventType.TICK,
-        timestamp: now,
-      });
-    }
-
-    // Execute all tick handlers
-    this.tickHandlers.forEach((handler) => {
-      try {
-        handler();
-      } catch (error) {
-        console.error('Tick handler error:', error);
-      }
-    });
-
-    // Process scheduled events
-    this.processScheduledEvents(now);
-
-    console.log(`Tick processed at ${new Date(now).toLocaleTimeString()}`);
-  }
-
-  /**
-   * Calculate how many ticks occurred during offline time
-   */
-  calculateOfflineTicks(offlineSeconds: number): number {
-    return Math.floor(offlineSeconds / (TIME_CONSTANTS.TICK_INTERVAL / 1000));
-  }
-
-  /**
-   * Process offline time and return what happened
-   */
-  processOfflineTime(offlineSeconds: number): OfflineUpdate {
-    if (offlineSeconds <= 0) {
-      return {
-        ticksProcessed: 0,
-        careDecay: { satiety: 0, hydration: 0, happiness: 0 },
-        poopSpawned: 0,
-        activitiesCompleted: [],
-        sleepCompleted: false,
-        energyRecovered: 0,
-      };
-    }
-
-    const ticksProcessed = this.calculateOfflineTicks(offlineSeconds);
-
-    // Calculate care decay based on ticks
-    const careDecay = {
-      satiety: ticksProcessed * CARE_CONSTANTS.SATIETY_DECAY_RATE,
-      hydration: ticksProcessed * CARE_CONSTANTS.HYDRATION_DECAY_RATE,
-      happiness: ticksProcessed * CARE_CONSTANTS.HAPPINESS_DECAY_RATE,
-    };
-
-    // Calculate poop spawns
-    const hoursOffline = offlineSeconds / 3600;
-    const poopSpawned = this.calculatePoopSpawns(hoursOffline);
-
-    // Check for completed sleep
-    let sleepCompleted = false;
-    let energyRecovered = 0;
-
-    if (this.stateManager) {
-      const petState = this.stateManager.getPetState();
-      if (petState?.isSleeping && petState.sleepStartTime) {
-        const sleepDuration = offlineSeconds; // Keep in seconds
-        const maxSleepTime = 8 * 60 * 60; // 8 hours in seconds (from ENERGY_CONSTANTS.SLEEP_MAX_DURATION)
-
-        if (sleepDuration >= maxSleepTime) {
-          sleepCompleted = true;
-          energyRecovered = petState.maxEnergy - petState.energy;
-        } else {
-          // Calculate partial energy recovery
-          const sleepHours = sleepDuration / (60 * 60); // Convert seconds to hours
-          const baseRegenRate = CARE_CONSTANTS.LIFE_RECOVERY_RATE * 10; // Base energy regen
-          const stageMultiplier = this.getSleepRegenMultiplier(petState.stage);
-          energyRecovered = Math.floor(sleepHours * baseRegenRate * stageMultiplier);
-          energyRecovered = Math.min(energyRecovered, petState.maxEnergy - petState.energy);
-        }
-      }
-    }
-
-    const result: OfflineUpdate = {
-      ticksProcessed,
-      careDecay,
-      poopSpawned,
-      activitiesCompleted: [], // TODO: Implement activity completion in later phases
-      sleepCompleted,
-      energyRecovered,
-    };
-
-    // Emit offline catchup event
-    if (this.eventManager) {
-      this.eventManager.emit({
-        type: EventType.OFFLINE_CATCHUP,
-        payload: result,
-        timestamp: Date.now(),
-      });
-    }
-
-    console.log(`Processed offline time: ${offlineSeconds}s (${ticksProcessed} ticks)`);
-
-    return result;
-  }
-
-  /**
-   * Schedule an event to fire at a specific time
-   */
-  scheduleEvent(time: Date, callback: Function): string {
-    const eventId = `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    const scheduledEvent: ScheduledEvent = {
-      id: eventId,
-      triggerTime: time.getTime(),
-      callback: callback as () => void,
-      recurring: false,
-    };
-
-    this.scheduledEvents.set(eventId, scheduledEvent);
-
-    return eventId;
-  }
-
-  /**
-   * Schedule a recurring event
-   */
-  scheduleRecurringEvent(firstTime: Date, interval: number, callback: Function): string {
-    const eventId = `recurring_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    const scheduledEvent: ScheduledEvent = {
-      id: eventId,
-      triggerTime: firstTime.getTime(),
-      callback: callback as () => void,
-      recurring: true,
-      interval,
-    };
-
-    this.scheduledEvents.set(eventId, scheduledEvent);
-
-    return eventId;
-  }
-
-  /**
-   * Cancel a scheduled event
-   */
-  cancelScheduledEvent(eventId: string): void {
-    this.scheduledEvents.delete(eventId);
-  }
-
-  /**
    * Format time remaining in a human-readable format
    */
   formatTimeRemaining(seconds: number): string {
-    if (seconds <= 0) {
-      return '0s';
+    if (seconds < 60) {
+      return `${seconds}s`;
     }
 
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-
-    const parts: string[] = [];
-
-    if (hours > 0) {
-      parts.push(`${hours}h`);
-    }
-    if (minutes > 0) {
-      parts.push(`${minutes}m`);
-    }
-    if (remainingSeconds > 0 || parts.length === 0) {
-      parts.push(`${remainingSeconds}s`);
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) {
+      const remainingSeconds = seconds % 60;
+      return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
     }
 
-    return parts.join(' ');
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (hours < 24) {
+      return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+    }
+
+    const days = Math.floor(hours / 24);
+    const remainingHours = hours % 24;
+    return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
   }
 
   /**
@@ -325,113 +200,44 @@ export class TimeManager implements GameSystem {
   }
 
   /**
-   * Get time until next tick
+   * Check if tick timer is running
    */
-  getTimeUntilNextTick(): number {
-    const now = Date.now();
-    const timeSinceLastTick = now - this.lastTickTime;
-    const timeUntilNext = TIME_CONSTANTS.TICK_INTERVAL - timeSinceLastTick;
-    return Math.max(0, timeUntilNext);
+  isTickingActive(): boolean {
+    return this.tickInterval !== null;
   }
 
   /**
-   * Force a tick (for testing purposes)
+   * Get tick duration in milliseconds
    */
-  forceTick(): void {
-    this.processTick();
+  getTickDuration(): number {
+    return this.tickDuration;
   }
 
   /**
-   * Check if time manager is running
+   * Get time state for persistence
    */
-  isActive(): boolean {
-    return this.isRunning;
+  getTimeState(): TimeState {
+    return {
+      lastTickTime: this.lastSaveTime,
+      tickCount: 0, // This would be tracked if needed
+      offlineTime: 0,
+      scheduledEvents: [],
+    };
   }
 
   /**
-   * Get current tick count from state
+   * Restore time state from persistence
    */
-  getCurrentTickCount(): number {
-    if (!this.stateManager) {
-      return 0;
-    }
-
-    return this.stateManager.getTimeState().tickCount;
+  restoreTimeState(state: TimeState): void {
+    this.lastSaveTime = state.lastTickTime;
   }
 
   /**
-   * Process scheduled events
+   * Shutdown and cleanup
    */
-  private processScheduledEvents(currentTime: number): void {
-    const toRemove: string[] = [];
-
-    this.scheduledEvents.forEach((event, eventId) => {
-      if (currentTime >= event.triggerTime) {
-        try {
-          event.callback();
-
-          if (event.recurring && event.interval) {
-            // Reschedule recurring event
-            event.triggerTime = currentTime + event.interval;
-          } else {
-            // Mark one-time event for removal
-            toRemove.push(eventId);
-          }
-        } catch (error) {
-          console.error(`Scheduled event ${eventId} error:`, error);
-          toRemove.push(eventId);
-        }
-      }
-    });
-
-    // Remove completed one-time events
-    toRemove.forEach((eventId) => {
-      this.scheduledEvents.delete(eventId);
-    });
-  }
-
-  /**
-   * Calculate how many poops spawn during offline hours
-   */
-  private calculatePoopSpawns(hoursOffline: number): number {
-    if (hoursOffline < TIME_CONSTANTS.POOP_SPAWN_MIN_HOURS) {
-      return 0;
-    }
-
-    // Average spawn rate: once every 15 hours (midpoint between 6-24)
-    const averageSpawnRate =
-      (TIME_CONSTANTS.POOP_SPAWN_MIN_HOURS + TIME_CONSTANTS.POOP_SPAWN_MAX_HOURS) / 2;
-    const expectedPoops = Math.floor(hoursOffline / averageSpawnRate);
-
-    // Add some randomness
-    const randomFactor = Math.random() * 0.5 + 0.75; // 0.75 to 1.25 multiplier
-
-    return Math.max(0, Math.floor(expectedPoops * randomFactor));
-  }
-
-  /**
-   * Get sleep regeneration multiplier based on growth stage
-   */
-  private getSleepRegenMultiplier(stage: string): number {
-    switch (stage) {
-      case 'hatchling':
-        return 1.0;
-      case 'juvenile':
-        return 1.2;
-      case 'adult':
-        return 1.5;
-      default:
-        return 1.0;
-    }
-  }
-
   async shutdown(): Promise<void> {
     this.stopTicking();
     this.tickHandlers.clear();
-    this.scheduledEvents.clear();
-    this.eventManager = null;
-    this.stateManager = null;
-
     console.log('TimeManager shutdown complete');
   }
 }

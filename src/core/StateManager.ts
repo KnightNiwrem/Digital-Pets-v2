@@ -12,12 +12,14 @@ import type {
   SettingsState,
   TimeState,
 } from '../types';
-import { ActionType, EventType } from '../types';
-import type { EventManager } from './EventManager';
+import { ActionType } from '../types';
 
 /**
- * StateManager maintains the single source of truth for all game state
- * and handles state mutations through actions.
+ * StateManager maintains the single source of truth for all game state.
+ * Only GameEngine can directly modify state through this manager.
+ * 
+ * This is now a pure state store with no event emission capabilities.
+ * All state change notifications are handled by GameEngine.
  */
 export class StateManager implements GameSystem {
   private state: GameState;
@@ -26,7 +28,6 @@ export class StateManager implements GameSystem {
   private pathListeners: Map<string, Set<StateListener>> = new Map();
   private transactionState: GameState | null = null;
   private isInTransaction = false;
-  private eventManager: EventManager | null = null;
 
   constructor(initialState?: Partial<GameState>) {
     this.state = this.createDefaultState();
@@ -37,14 +38,7 @@ export class StateManager implements GameSystem {
   }
 
   async initialize(): Promise<void> {
-    console.log('StateManager initialized');
-  }
-
-  /**
-   * Set the event manager reference for emitting state change events
-   */
-  setEventManager(eventManager: EventManager): void {
-    this.eventManager = eventManager;
+    console.log('StateManager initialized as pure state store');
   }
 
   /**
@@ -91,6 +85,7 @@ export class StateManager implements GameSystem {
 
   /**
    * Dispatch an action to update the state
+   * NOTE: This should only be called by GameEngine
    */
   dispatch(action: GameAction): void {
     if (!action.timestamp) {
@@ -103,6 +98,7 @@ export class StateManager implements GameSystem {
 
   /**
    * Dispatch multiple actions as a batch
+   * NOTE: This should only be called by GameEngine
    */
   batchDispatch(actions: GameAction[]): void {
     this.beginTransaction();
@@ -208,6 +204,7 @@ export class StateManager implements GameSystem {
 
   /**
    * Subscribe to state changes
+   * NOTE: In the pure architecture, only GameEngine should use this
    */
   subscribe(listener: StateListener): Unsubscribe {
     this.listeners.add(listener);
@@ -219,6 +216,7 @@ export class StateManager implements GameSystem {
 
   /**
    * Subscribe to changes in a specific state path
+   * NOTE: In the pure architecture, only GameEngine should use this
    */
   subscribeToPath(path: string, listener: StateListener): Unsubscribe {
     if (!this.pathListeners.has(path)) {
@@ -325,15 +323,9 @@ export class StateManager implements GameSystem {
     // Don't notify listeners during transactions
     if (!this.isInTransaction) {
       this.notifyListeners();
-
-      // Emit state updated event if event manager is available
-      if (this.eventManager) {
-        this.eventManager.emit({
-          type: EventType.STATE_UPDATED,
-          payload: { action, newState, previousState: this.previousState },
-          timestamp: Date.now(),
-        });
-      }
+      
+      // No event emission - GameEngine handles all events
+      // Previous event emission code has been removed
     }
   }
 
@@ -399,7 +391,7 @@ export class StateManager implements GameSystem {
           // Convert foodAmount to ticks (foodAmount * SATIETY_MULTIPLIER)
           const ticksToAdd = (action.payload.foodAmount || 0) * 20;
           newState.pet.satietyTicks += ticksToAdd;
-          newState.pet.satiety = this.calculateDisplayValue(newState.pet.satietyTicks, 20); // SATIETY_MULTIPLIER
+          newState.pet.satiety = this.calculateDisplayValue(newState.pet.satietyTicks, 20);
           newState.pet.lastInteractionTime = Date.now();
         }
         break;
@@ -409,7 +401,7 @@ export class StateManager implements GameSystem {
           // Convert drinkAmount to ticks (drinkAmount * HYDRATION_MULTIPLIER)
           const ticksToAdd = (action.payload.drinkAmount || 0) * 15;
           newState.pet.hydrationTicks += ticksToAdd;
-          newState.pet.hydration = this.calculateDisplayValue(newState.pet.hydrationTicks, 15); // HYDRATION_MULTIPLIER
+          newState.pet.hydration = this.calculateDisplayValue(newState.pet.hydrationTicks, 15);
           newState.pet.lastInteractionTime = Date.now();
         }
         break;
@@ -419,7 +411,7 @@ export class StateManager implements GameSystem {
           // Convert playAmount to ticks (playAmount * HAPPINESS_MULTIPLIER)
           const ticksToAdd = (action.payload.playAmount || 10) * 30;
           newState.pet.happinessTicks += ticksToAdd;
-          newState.pet.happiness = this.calculateDisplayValue(newState.pet.happinessTicks, 30); // HAPPINESS_MULTIPLIER
+          newState.pet.happiness = this.calculateDisplayValue(newState.pet.happinessTicks, 30);
           newState.pet.energy = Math.max(0, newState.pet.energy - (action.payload.energyCost || 5));
           newState.pet.lastInteractionTime = Date.now();
         }
@@ -454,7 +446,7 @@ export class StateManager implements GameSystem {
           }
           if (action.payload.wasEarlyWake) {
             // Reduce happiness for early wake
-            newState.pet.happinessTicks = Math.max(0, newState.pet.happinessTicks - 30); // Reduce by 1 happiness
+            newState.pet.happinessTicks = Math.max(0, newState.pet.happinessTicks - 30);
             newState.pet.happiness = this.calculateDisplayValue(newState.pet.happinessTicks, 30);
           }
         }
@@ -620,7 +612,6 @@ export class StateManager implements GameSystem {
     this.pathListeners.clear();
     this.transactionState = null;
     this.isInTransaction = false;
-    this.eventManager = null;
 
     console.log('StateManager shutdown complete');
   }

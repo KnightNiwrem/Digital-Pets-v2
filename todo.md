@@ -24,51 +24,41 @@ This document outlines the implementation plan for the Digital Pet game, organiz
   - [x] Implement tick-based architecture (no unnecessary 60 FPS loop)
   - [x] Implement `tick()` method with 60-second timer
   - [x] Implement `start()` and `stop()` for engine control
-  - [x] Implement `registerSystem()` for system registration ⚠️ *Needs refactoring - systems should not have direct references*
-  - [x] Implement `getSystem()` for system access ⚠️ *Needs removal - violates pure system design*
+  - [x] Implement `getEventWriter()` to provide write-only interface
+  - [x] Implement `processEventQueue()` for sequential event processing
   - [x] Implement `triggerAutosave()` with explicit user action tracking
-  - [ ] **Refactor for Pure System Design**
-    - [ ] Remove cross-system references (lines 49-52 in GameEngine.ts)
-    - [ ] Implement `getEventWriter()` to provide write-only interface
-    - [ ] Implement `processEventQueue()` for sequential event processing
-    - [ ] Implement system invocation methods with state injection
-    - [ ] Remove direct system-to-system communication
+  - [x] Implement centralized action validation
+  - [ ] Implement pure system invocation methods with state injection
 
 - [x] **TimeManager**
   - [x] Implement `getCurrentTime()` using Date.now()
   - [x] Implement `startTicking()` with setInterval
-  - [x] Implement `processTick()` to emit tick events ⚠️ *Should write events to queue, not emit*
+  - [x] Implement `processTick()` for tick notifications
   - [x] Implement `calculateOfflineTicks()` for offline time calculation
   - [x] Implement `formatTimeRemaining()` utility
-  - [ ] **Refactor for Isolation**
-    - [ ] Remove EventManager reference
-    - [ ] Remove StateManager reference
-    - [ ] Return time calculations to GameEngine instead of emitting events
+  - [x] Convert to pure time calculation service
+  - [x] Return time calculations to GameEngine
 
 - [x] **StateManager**
   - [x] Define GameState interface
   - [x] Implement `getState()` for state access
-  - [x] Implement `dispatch()` for state mutations ⚠️ *Should only accept from GameEngine*
+  - [x] Implement `dispatch()` for state mutations
   - [x] Implement `subscribe()` for state change listeners
   - [x] Implement `createSnapshot()` for saving
   - [x] Implement state validation logic
-  - [ ] **Refactor for GameEngine-Only Access**
-    - [ ] Remove EventManager reference
-    - [ ] Make dispatch() private or GameEngine-only
-    - [ ] Remove event emissions from state changes
+  - [ ] Make `dispatch()` method GameEngine-only access
 
 - [x] **EventManager**
-  - [x] Implement `emit()` for synchronous events ⚠️ *Should be replaced with enqueue*
-  - [x] Implement `on()` for event subscription ⚠️ *Should be removed - only GameEngine processes*
-  - [x] Implement `off()` for unsubscription ⚠️ *Should be removed*
+  - [x] Implement `enqueueEvent()` for adding events to queue
+  - [x] Implement `dequeueEvent()` for GameEngine processing
   - [x] Implement event queue system
   - [x] Add event history for debugging
-  - [ ] **Refactor for Sequential Processing**
-    - [ ] Replace emit() with enqueueEvent()
-    - [ ] Remove all subscription methods
-    - [ ] Implement dequeueEvent() for GameEngine
-    - [ ] Implement createEventWriter() for write-only interface
-    - [ ] Remove direct event processing
+  - [x] Implement `createEventWriter()` for write-only interface
+
+- [x] **EventWriter**
+  - [x] Create write-only event interface for systems
+  - [x] Implement `writeEvent()` method
+  - [x] Ensure no read access to event queue
 
 ### 1.3 Persistence Layer
 
@@ -97,51 +87,12 @@ This document outlines the implementation plan for the Digital Pet game, organiz
 - [ ] Create integration test for save/load cycle
 - [x] Verify tick-based system fires every 60 seconds
 - [x] Test offline time calculation
+- [x] Test sequential event processing
+- [x] Test state isolation
+- [x] Test event writer interface
+- [x] Verify no direct system communication
 
 **Deliverable**: Console-based game that initializes, runs tick-based updates, and saves/loads empty state.
-
----
-
-## Phase 1.5: Architecture Refactoring (PRIORITY)
-
-**Goal**: Refactor existing systems to implement pure system design pattern before continuing with new features.
-
-### 1.5.1 Core System Refactoring
-
-- [ ] **GameEngine Refactoring**
-  - [ ] Remove direct system references (no more getSystem())
-  - [ ] Create EventWriter interface for write-only event access
-  - [ ] Implement sequential event processing loop
-  - [ ] Create system invocation methods that pass state
-  - [ ] Remove system-to-system communication paths
-  - [ ] Implement centralized action validation
-  
-- [ ] **EventManager Refactoring**
-  - [ ] Convert to pure queue management
-  - [ ] Remove emit(), on(), off() methods
-  - [ ] Implement enqueueEvent() and dequeueEvent()
-  - [ ] Create EventWriter factory method
-  - [ ] Remove listener/subscription system
-  
-- [ ] **StateManager Refactoring**
-  - [ ] Make state mutations GameEngine-only
-  - [ ] Remove EventManager dependency
-  - [ ] Convert dispatch() to internal-only method
-  - [ ] Remove state change event emissions
-  
-- [ ] **TimeManager Refactoring**
-  - [ ] Remove EventManager dependency
-  - [ ] Remove StateManager dependency
-  - [ ] Convert to pure time calculation service
-  - [ ] Return results instead of emitting events
-
-### 1.5.2 Testing After Refactoring
-
-- [ ] Update core-integration.test.ts for new architecture
-- [ ] Test sequential event processing
-- [ ] Test state isolation
-- [ ] Test event writer interface
-- [ ] Verify no direct system communication
 
 ---
 

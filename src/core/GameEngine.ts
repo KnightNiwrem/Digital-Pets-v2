@@ -1,4 +1,5 @@
-import type { GameSystem, GameState, GameAction, Unsubscribe } from '../types';
+import type { GameSystem, GameState, GameAction, Unsubscribe, GameEvent } from '../types';
+import { EventWriter } from './EventWriter';
 import {
   EventType,
   ActionType,
@@ -13,43 +14,57 @@ import { StateManager } from './StateManager';
 import { TimeManager } from './TimeManager';
 
 /**
- * GameEngine is the central coordinator that manages the game,
- * orchestrates all subsystems, and ensures proper initialization and shutdown sequences.
- *
- * All user actions flow through the GameEngine for validation and processing.
- * This is a singleton to ensure only one game instance exists.
+ * GameEngine is the ultimate central orchestrator that manages the game.
+ * All control flow goes through GameEngine - systems cannot communicate directly.
+ * 
+ * Key architectural principles:
+ * 1. Systems are pure, isolated entities with no cross-references
+ * 2. GameEngine provides write-only event interfaces to systems
+ * 3. All events are processed sequentially from the queue
+ * 4. GameEngine invokes systems with state and collects results
+ * 5. No concurrent event processing to prevent race conditions
  */
 export class GameEngine implements GameSystem {
   private static instance: GameEngine | null = null;
 
-  private systems: Map<SystemType, GameSystem> = new Map();
+  // Core managers owned by GameEngine
   private eventManager: EventManager;
   private stateManager: StateManager;
   private timeManager: TimeManager;
 
+  // Event writer for internal use
+  private eventWriter: EventWriter;
+
+  // System registry (for future pure systems)
+  private systems: Map<SystemType, GameSystem> = new Map();
+
+  // Engine state
   private isRunning = false;
   private isInitialized = false;
-  private isProcessingAction = false;
+  private isProcessingEvents = false;
+  private eventProcessingInterval: number | null = null;
 
+  // Tick management
   private tickUnsubscribe: Unsubscribe | null = null;
   private autosaveDebounceTimer: number | null = null;
   private pendingAutosave = false;
 
   private constructor(initialState?: Partial<GameState>) {
-    // Initialize core systems
+    // Initialize core systems - these are owned by GameEngine
     this.eventManager = new EventManager();
     this.stateManager = new StateManager(initialState);
     this.timeManager = new TimeManager();
 
-    // Register core systems
+    // Create event writer for internal use
+    this.eventWriter = this.eventManager.createEventWriter();
+
+    // Register core systems (for compatibility during refactoring)
     this.systems.set(SystemType.EVENT_MANAGER, this.eventManager);
     this.systems.set(SystemType.STATE_MANAGER, this.stateManager);
     this.systems.set(SystemType.TIME_MANAGER, this.timeManager);
 
-    // Set up cross-system references
-    this.stateManager.setEventManager(this.eventManager);
-    this.timeManager.setEventManager(this.eventManager);
-    this.timeManager.setStateManager(this.stateManager);
+    // NO CROSS-SYSTEM REFERENCES! Systems are isolated
+    // Previous problematic lines 49-52 have been removed
   }
 
   /**
@@ -67,7 +82,6 @@ export class GameEngine implements GameSystem {
    */
   static reset(): void {
     if (GameEngine.instance) {
-      // Ensure proper cleanup before resetting
       if (GameEngine.instance.isInitialized) {
         console.warn('Resetting GameEngine without proper shutdown');
       }
@@ -95,16 +109,16 @@ export class GameEngine implements GameSystem {
       // Process offline time if any
       await this.handleOfflineTime();
 
-      // Set up event subscriptions
-      this.setupEventListeners();
-
       // Set up tick processing
       this.setupTickProcessing();
 
+      // Start event processing loop
+      this.startEventProcessing();
+
       this.isInitialized = true;
 
-      // Emit system initialized event
-      this.eventManager.emit({
+      // Write system initialized event
+      this.eventWriter.writeEvent({
         type: EventType.SYSTEM_INITIALIZED,
         payload: { system: 'GameEngine' },
         timestamp: Date.now(),
@@ -114,7 +128,7 @@ export class GameEngine implements GameSystem {
     } catch (error) {
       console.error('GameEngine initialization failed:', error);
 
-      this.eventManager.emit({
+      this.eventWriter.writeEvent({
         type: EventType.SYSTEM_ERROR,
         payload: { system: 'GameEngine', error: String(error) },
         timestamp: Date.now(),
@@ -125,11 +139,160 @@ export class GameEngine implements GameSystem {
   }
 
   /**
+   * Start the sequential event processing loop
+   */
+  private startEventProcessing(): void {
+    if (this.eventProcessingInterval !== null) {
+      return;
+    }
+
+    // Process events every 10ms (100 times per second max)
+    // This is still efficient as it only processes if there are events
+    this.eventProcessingInterval = setInterval(() => {
+      this.processEventQueue();
+    }, 10) as any;
+
+    console.log('Event processing loop started');
+  }
+
+  /**
+   * Stop the event processing loop
+   */
+  private stopEventProcessing(): void {
+    if (this.eventProcessingInterval !== null) {
+      clearInterval(this.eventProcessingInterval);
+      this.eventProcessingInterval = null;
+      console.log('Event processing loop stopped');
+    }
+  }
+
+  /**
+   * Process events from the queue sequentially
+   */
+  private processEventQueue(): void {
+    // Prevent concurrent processing
+    if (this.isProcessingEvents || !this.eventManager.hasEvents()) {
+      return;
+    }
+
+    this.isProcessingEvents = true;
+
+    try {
+      // Process up to 10 events per cycle to prevent blocking
+      let eventsProcessed = 0;
+      const maxEventsPerCycle = 10;
+
+      while (this.eventManager.hasEvents() && eventsProcessed < maxEventsPerCycle) {
+        const event = this.eventManager.dequeueEvent();
+        if (!event) break;
+
+        this.processEvent(event);
+        eventsProcessed++;
+      }
+    } finally {
+      this.isProcessingEvents = false;
+    }
+  }
+
+  /**
+   * Process a single event
+   */
+  private processEvent(event: GameEvent): void {
+    try {
+      // Handle different event types
+      switch (event.type) {
+        case EventType.TICK:
+          this.handleTickEvent();
+          break;
+        
+        case EventType.USER_ACTION:
+          this.handleUserActionEvent(event.payload);
+          break;
+
+        case EventType.SYSTEM_INITIALIZED:
+        case EventType.SYSTEM_ERROR:
+        case EventType.STATE_UPDATED:
+        case EventType.SAVE_COMPLETED:
+          // System events - log for debugging
+          console.log(`System event: ${event.type}`, event.payload);
+          break;
+
+        case EventType.PET_CREATED:
+        case EventType.PET_FED:
+        case EventType.PET_DRANK:
+        case EventType.PET_PLAYED:
+        case EventType.PET_SLEPT:
+        case EventType.PET_AWAKENED:
+          // Pet events - these might trigger UI updates
+          this.handlePetEvent(event);
+          break;
+
+        case EventType.SATIETY_LOW:
+        case EventType.HYDRATION_LOW:
+        case EventType.HAPPINESS_LOW:
+        case EventType.LIFE_CRITICAL:
+          // Warning events - might trigger notifications
+          this.handleWarningEvent(event);
+          break;
+
+        default:
+          console.warn(`Unhandled event type: ${event.type}`);
+      }
+    } catch (error) {
+      console.error(`Error processing event ${event.type}:`, error);
+    }
+  }
+
+  /**
+   * Handle tick events
+   */
+  private handleTickEvent(): void {
+    // Tick events are now processed synchronously in the tick() method
+    // This handler is kept for future use when we might process tick events asynchronously
+    console.log('Tick event received (already processed synchronously)');
+  }
+
+  /**
+   * Handle user action events
+   */
+  private handleUserActionEvent(action: GameAction): void {
+    // Process the action through the existing processUserAction method
+    this.processUserAction(action).then(result => {
+      if (!result.success) {
+        console.error('User action failed:', result.error);
+      }
+    });
+  }
+
+  /**
+   * Handle pet-related events
+   */
+  private handlePetEvent(event: GameEvent): void {
+    // These events are informational - they've already affected state
+    // Could trigger UI updates or notifications here
+    console.log(`Pet event: ${event.type}`, event.payload);
+  }
+
+  /**
+   * Handle warning events
+   */
+  private handleWarningEvent(event: GameEvent): void {
+    // Could trigger UI notifications here
+    console.warn(`Warning: ${event.type}`, event.payload);
+  }
+
+  /**
+   * Get a write-only event interface for systems
+   */
+  getEventWriter(): EventWriter {
+    return this.eventManager.createEventWriter();
+  }
+
+  /**
    * Load game state from persistence
    */
   async loadGameState(): Promise<GameState> {
     // TODO: Implement persistence loading in phase 1.3
-    // For now, return current state
     return this.stateManager.getState();
   }
 
@@ -171,27 +334,98 @@ export class GameEngine implements GameSystem {
   }
 
   /**
-   * Pause the game
+   * Process a game tick (called every 60 seconds)
    */
-  pause(): void {
-    if (this.isRunning) {
-      this.stop();
-      console.log('Game paused');
+  tick(): void {
+    // For ticks, we process synchronously to maintain compatibility with tests
+    // and ensure immediate state updates
+    console.log('Processing game tick...');
+
+    // Dispatch tick action to state
+    this.stateManager.dispatch({
+      type: ActionType.PROCESS_TICK,
+      timestamp: Date.now(),
+    });
+
+    // Process care decay if pet exists
+    const petState = this.stateManager.getPetState();
+    if (petState && !petState.isSleeping) {
+      this.processCareDecay();
+    }
+
+    // Process other tick-based updates
+    this.processTickUpdates();
+
+    // Trigger autosave (immediate for ticks)
+    this.triggerAutosave(AutosaveReason.TICK);
+
+    console.log('Game tick processed');
+  }
+  
+  /**
+   * Force immediate processing of all queued events
+   * This is primarily for testing purposes
+   */
+  flushEventQueue(): void {
+    while (this.eventManager.hasEvents()) {
+      this.processEventQueue();
     }
   }
 
   /**
-   * Resume the game
+   * Central entry point for all user actions
    */
-  resume(): void {
-    if (this.isInitialized && !this.isRunning) {
-      this.start();
-      console.log('Game resumed');
+  async processUserAction(action: GameAction): Promise<{ success: boolean; error?: string }> {
+    // Write user action event to queue
+    this.eventWriter.writeEvent({
+      type: EventType.USER_ACTION,
+      payload: action,
+      timestamp: Date.now(),
+    });
+
+    // For now, process synchronously for compatibility
+    // In future, this could return immediately and process async
+    return this.executeAction(action);
+  }
+
+  /**
+   * Execute an action synchronously
+   */
+  private async executeAction(action: GameAction): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Validate the action
+      const validation = this.validateAction(action);
+      if (!validation.valid) {
+        return { success: false, error: validation.error || 'Validation failed' };
+      }
+
+      // Process through appropriate handlers
+      switch (action.type) {
+        case ActionType.CREATE_PET:
+          return await this.handleCreatePet(action);
+        case ActionType.FEED_PET:
+          return await this.handleFeedPet(action);
+        case ActionType.GIVE_DRINK:
+          return await this.handleGiveDrink(action);
+        case ActionType.PLAY_WITH_PET:
+          return await this.handlePlayWithPet(action);
+        case ActionType.CLEAN_POOP:
+          return await this.handleCleanPoop(action);
+        case ActionType.START_SLEEP:
+          return await this.handleStartSleep(action);
+        case ActionType.WAKE_PET:
+          return await this.handleWakePet(action);
+        default:
+          return { success: false, error: `Unknown action type: ${action.type}` };
+      }
+    } catch (error) {
+      console.error('Action execution error:', error);
+      return { success: false, error: String(error) };
     }
   }
 
   /**
-   * Create a starter pet (convenience method for initial setup)
+   * Create a starter pet (convenience method)
    */
   async createStarterPet(
     species: Species = Species.FLUFFY_PUP,
@@ -211,31 +445,19 @@ export class GameEngine implements GameSystem {
       stage: GrowthStage.HATCHLING,
       createdAt: now,
       lastInteractionTime: now,
-
-      // Care values (start at 80)
       satiety: 80,
       hydration: 80,
       happiness: 80,
-
-      // Hidden care ticks (80 * multiplier)
-      satietyTicks: 80 * 20, // 1600 ticks
-      hydrationTicks: 80 * 15, // 1200 ticks
-      happinessTicks: 80 * 30, // 2400 ticks
-
-      // Hidden life stat (start at 100)
+      satietyTicks: 80 * 20,
+      hydrationTicks: 80 * 15,
+      happinessTicks: 80 * 30,
       life: 100,
-
-      // Energy (start at max for hatchling)
       energy: 50,
       maxEnergy: 50,
-
-      // Status
       isSleeping: false,
       sleepStartTime: null,
       poopCount: 0,
       statuses: [],
-
-      // Battle stats (basic starter values)
       battleStats: {
         health: 50,
         maxHealth: 50,
@@ -246,67 +468,15 @@ export class GameEngine implements GameSystem {
         maxAction: 20,
       },
       knownMoves: [],
-
-      // Stage progression
       stageStartTime: now,
       canAdvanceStage: false,
     };
 
-    // Use the processUserAction method for proper orchestration
-    const result = await this.processUserAction({
+    return this.executeAction({
       type: ActionType.CREATE_PET,
       payload: starterPet,
       timestamp: now,
     });
-
-    if (result.success) {
-      console.log(`Created starter pet: ${name} (${species})`);
-    }
-
-    return result;
-  }
-
-  /**
-   * Central entry point for all user actions
-   * This is where the orchestration happens
-   */
-  async processUserAction(action: GameAction): Promise<{ success: boolean; error?: string }> {
-    // Prevent concurrent action processing (race condition protection)
-    if (this.isProcessingAction) {
-      return { success: false, error: 'Another action is being processed' };
-    }
-
-    this.isProcessingAction = true;
-
-    try {
-      // 1. Validate the action
-      const validation = this.validateAction(action);
-      if (!validation.valid) {
-        return { success: false, error: validation.error || 'Validation failed' };
-      }
-
-      // 2. Process through appropriate systems based on action type
-      switch (action.type) {
-        case ActionType.CREATE_PET:
-          return await this.handleCreatePet(action);
-        case ActionType.FEED_PET:
-          return await this.handleFeedPet(action);
-        case ActionType.GIVE_DRINK:
-          return await this.handleGiveDrink(action);
-        case ActionType.PLAY_WITH_PET:
-          return await this.handlePlayWithPet(action);
-        case ActionType.CLEAN_POOP:
-          return await this.handleCleanPoop(action);
-        case ActionType.START_SLEEP:
-          return await this.handleStartSleep(action);
-        case ActionType.WAKE_PET:
-          return await this.handleWakePet(action);
-        default:
-          return { success: false, error: `Unknown action type: ${action.type}` };
-      }
-    } finally {
-      this.isProcessingAction = false;
-    }
   }
 
   /**
@@ -317,7 +487,6 @@ export class GameEngine implements GameSystem {
       return { valid: false, error: 'Action type is required' };
     }
 
-    // Action-specific validation
     const petState = this.stateManager.getPetState();
 
     switch (action.type) {
@@ -349,8 +518,8 @@ export class GameEngine implements GameSystem {
     // Update state
     this.stateManager.dispatch(action);
 
-    // Emit event
-    this.eventManager.emit({
+    // Write event
+    this.eventWriter.writeEvent({
       type: EventType.PET_CREATED,
       payload: action.payload,
       timestamp: Date.now(),
@@ -371,14 +540,11 @@ export class GameEngine implements GameSystem {
       return { success: false, error: 'No active pet' };
     }
 
-    // Check if pet can eat (e.g., not in battle, not traveling in restricted mode)
-    // TODO: Add activity checks when those systems are implemented
-
     // Update state
     this.stateManager.dispatch(action);
 
-    // Emit event
-    this.eventManager.emit({
+    // Write event
+    this.eventWriter.writeEvent({
       type: EventType.PET_FED,
       payload: action.payload,
       timestamp: Date.now(),
@@ -402,8 +568,8 @@ export class GameEngine implements GameSystem {
     // Update state
     this.stateManager.dispatch(action);
 
-    // Emit event
-    this.eventManager.emit({
+    // Write event
+    this.eventWriter.writeEvent({
       type: EventType.PET_DRANK,
       payload: action.payload,
       timestamp: Date.now(),
@@ -418,9 +584,7 @@ export class GameEngine implements GameSystem {
   /**
    * Handle playing with pet
    */
-  private async handlePlayWithPet(
-    action: GameAction,
-  ): Promise<{ success: boolean; error?: string }> {
+  private async handlePlayWithPet(action: GameAction): Promise<{ success: boolean; error?: string }> {
     const petState = this.stateManager.getPetState();
     if (!petState) {
       return { success: false, error: 'No active pet' };
@@ -435,8 +599,8 @@ export class GameEngine implements GameSystem {
     // Update state
     this.stateManager.dispatch(action);
 
-    // Emit event
-    this.eventManager.emit({
+    // Write event
+    this.eventWriter.writeEvent({
       type: EventType.PET_PLAYED,
       payload: action.payload,
       timestamp: Date.now(),
@@ -473,9 +637,7 @@ export class GameEngine implements GameSystem {
   /**
    * Handle starting sleep
    */
-  private async handleStartSleep(
-    action: GameAction,
-  ): Promise<{ success: boolean; error?: string }> {
+  private async handleStartSleep(action: GameAction): Promise<{ success: boolean; error?: string }> {
     const petState = this.stateManager.getPetState();
     if (!petState) {
       return { success: false, error: 'No active pet' };
@@ -488,8 +650,8 @@ export class GameEngine implements GameSystem {
     // Update state
     this.stateManager.dispatch(action);
 
-    // Emit event
-    this.eventManager.emit({
+    // Write event
+    this.eventWriter.writeEvent({
       type: EventType.PET_SLEPT,
       payload: action.payload,
       timestamp: Date.now(),
@@ -514,19 +676,17 @@ export class GameEngine implements GameSystem {
       return { success: false, error: 'Pet is not sleeping' };
     }
 
-    // Calculate energy recovery if waking naturally or early
+    // Calculate energy recovery
     const now = Date.now();
     const sleepDuration = petState.sleepStartTime ? now - petState.sleepStartTime : 0;
-    const maxSleepTime = 8 * 60 * 60 * 1000; // 8 hours in ms
+    const maxSleepTime = 8 * 60 * 60 * 1000; // 8 hours
     const wasEarlyWake = sleepDuration < maxSleepTime;
 
     let energyRecovered = 0;
     if (wasEarlyWake) {
-      // Early wake - half energy recovery
       const percentSlept = sleepDuration / maxSleepTime;
       energyRecovered = Math.floor((petState.maxEnergy - petState.energy) * percentSlept * 0.5);
     } else {
-      // Full sleep - full energy recovery
       energyRecovered = petState.maxEnergy - petState.energy;
     }
 
@@ -540,8 +700,8 @@ export class GameEngine implements GameSystem {
     // Update state
     this.stateManager.dispatch(action);
 
-    // Emit event
-    this.eventManager.emit({
+    // Write event
+    this.eventWriter.writeEvent({
       type: EventType.PET_AWAKENED,
       payload: action.payload,
       timestamp: Date.now(),
@@ -554,162 +714,77 @@ export class GameEngine implements GameSystem {
   }
 
   /**
-   * Process a game tick (called every 60 seconds)
+   * Process care decay during ticks
    */
-  tick(): void {
-    console.log('Processing game tick...');
+  private processCareDecay(): void {
+    const petState = this.stateManager.getPetState();
+    if (!petState) {
+      return;
+    }
 
-    // Dispatch tick action to state
+    // Calculate decay amounts
+    const careDecay = {
+      satietyDecay: 1,
+      hydrationDecay: 1,
+      happinessDecay: 1,
+    };
+
+    // Apply decay
     this.stateManager.dispatch({
-      type: ActionType.PROCESS_TICK,
+      type: ActionType.DECAY_CARE,
+      payload: careDecay,
       timestamp: Date.now(),
     });
 
-    // Process care decay if pet exists
+    // Check for low care values and write warning events
+    if (petState.satiety <= 20) {
+      this.eventWriter.writeEvent({
+        type: EventType.SATIETY_LOW,
+        payload: { value: petState.satiety },
+        timestamp: Date.now(),
+      });
+    }
+
+    if (petState.hydration <= 20) {
+      this.eventWriter.writeEvent({
+        type: EventType.HYDRATION_LOW,
+        payload: { value: petState.hydration },
+        timestamp: Date.now(),
+      });
+    }
+
+    if (petState.happiness <= 20) {
+      this.eventWriter.writeEvent({
+        type: EventType.HAPPINESS_LOW,
+        payload: { value: petState.happiness },
+        timestamp: Date.now(),
+      });
+    }
+
+    if (petState.life <= 20) {
+      this.eventWriter.writeEvent({
+        type: EventType.LIFE_CRITICAL,
+        payload: { value: petState.life },
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  /**
+   * Process other tick-based updates
+   */
+  private processTickUpdates(): void {
     const petState = this.stateManager.getPetState();
     if (petState && !petState.isSleeping) {
-      this.processCareDecay();
-    }
-
-    // Process other tick-based updates
-    this.processTickUpdates();
-
-    // Trigger autosave (immediate for ticks)
-    this.triggerAutosave(AutosaveReason.TICK);
-
-    console.log('Game tick processed');
-  }
-
-  /**
-   * Register a system with the engine
-   */
-  registerSystem(systemType: SystemType, system: GameSystem): void {
-    this.systems.set(systemType, system);
-    console.log(`System registered: ${systemType}`);
-  }
-
-  /**
-   * Get a system by type
-   */
-  getSystem<T extends GameSystem>(systemType: SystemType): T {
-    const system = this.systems.get(systemType);
-    if (!system) {
-      throw new Error(`System not found: ${systemType}`);
-    }
-    return system as T;
-  }
-
-  /**
-   * Schedule an autosave with debouncing for user actions
-   * This prevents multiple rapid saves from quick successive actions
-   */
-  private scheduleAutosave(reason: AutosaveReason): void {
-    if (reason === AutosaveReason.TICK || reason === AutosaveReason.SHUTDOWN) {
-      // Immediate save for ticks and shutdown
-      this.triggerAutosave(reason);
-    } else {
-      // Debounced save for user actions
-      this.pendingAutosave = true;
-
-      if (this.autosaveDebounceTimer) {
-        clearTimeout(this.autosaveDebounceTimer);
+      // Random poop spawn check
+      if (Math.random() < 1 / 360) {
+        this.stateManager.dispatch({
+          type: ActionType.ADD_POOP,
+          payload: { amount: 1 },
+          timestamp: Date.now(),
+        });
       }
-
-      this.autosaveDebounceTimer = setTimeout(() => {
-        if (this.pendingAutosave) {
-          this.triggerAutosave(reason);
-          this.pendingAutosave = false;
-        }
-        this.autosaveDebounceTimer = null;
-      }, 1000) as any; // 1 second debounce
     }
-  }
-
-  /**
-   * Trigger an autosave
-   */
-  async triggerAutosave(reason: AutosaveReason): Promise<void> {
-    try {
-      // TODO: Implement actual persistence in phase 1.3
-      // For now, just emit the save completed event
-      this.eventManager.emit({
-        type: EventType.SAVE_COMPLETED,
-        payload: { reason },
-        timestamp: Date.now(),
-      });
-
-      console.log(`Autosave triggered: ${reason}`);
-    } catch (error) {
-      console.error('Autosave failed:', error);
-      this.eventManager.emit({
-        type: EventType.SYSTEM_ERROR,
-        payload: { system: 'GameEngine', error: 'Autosave failed' },
-        timestamp: Date.now(),
-      });
-    }
-  }
-
-  /**
-   * Check if the game engine is running
-   */
-  isGameRunning(): boolean {
-    return this.isRunning;
-  }
-
-  /**
-   * Check if the game engine is initialized
-   */
-  isGameInitialized(): boolean {
-    return this.isInitialized;
-  }
-
-  /**
-   * Get current game state
-   */
-  getGameState(): GameState {
-    return this.stateManager.getState();
-  }
-
-  /**
-   * Get the EventManager instance
-   */
-  getEventManager(): EventManager {
-    return this.eventManager;
-  }
-
-  /**
-   * Get the StateManager instance
-   */
-  getStateManager(): StateManager {
-    return this.stateManager;
-  }
-
-  /**
-   * Get the TimeManager instance
-   */
-  getTimeManager(): TimeManager {
-    return this.timeManager;
-  }
-
-  /**
-   * Set up event listeners for system coordination
-   */
-  private setupEventListeners(): void {
-    // GameEngine is the orchestrator, not a listener for user actions
-    // It only needs to listen for system-level events if needed
-    console.log('Event listeners set up');
-  }
-
-  /**
-   * Set up tick processing
-   */
-  private setupTickProcessing(): void {
-    // Register with time manager to process ticks
-    this.tickUnsubscribe = this.timeManager.registerTickHandler(() => {
-      this.tick();
-    });
-
-    console.log('Tick processing set up');
   }
 
   /**
@@ -719,7 +794,6 @@ export class GameEngine implements GameSystem {
     const offlineSeconds = this.timeManager.getOfflineTime();
 
     if (offlineSeconds > 60) {
-      // Only process if offline for more than 1 minute
       console.log(`Processing offline time: ${offlineSeconds} seconds`);
 
       const offlineUpdate = this.timeManager.processOfflineTime(offlineSeconds);
@@ -757,80 +831,126 @@ export class GameEngine implements GameSystem {
   }
 
   /**
-   * Process care decay during ticks
+   * Set up tick processing
    */
-  private processCareDecay(): void {
-    const petState = this.stateManager.getPetState();
-    if (!petState) {
-      return;
-    }
-
-    // Calculate decay amounts (1 tick per care type per game tick)
-    const careDecay = {
-      satietyDecay: 1, // 1 tick lost per game tick
-      hydrationDecay: 1, // 1 tick lost per game tick
-      happinessDecay: 1, // 1 tick lost per game tick
-    };
-
-    // Apply decay
-    this.stateManager.dispatch({
-      type: ActionType.DECAY_CARE,
-      payload: careDecay,
-      timestamp: Date.now(),
+  private setupTickProcessing(): void {
+    // Register with time manager to process ticks
+    this.tickUnsubscribe = this.timeManager.registerTickHandler(() => {
+      this.tick();
     });
 
-    // Check for low care values and emit warnings
-    if (petState.satiety <= 20) {
-      this.eventManager.emit({
-        type: EventType.SATIETY_LOW,
-        payload: { value: petState.satiety },
+    console.log('Tick processing set up');
+  }
+
+  /**
+   * Schedule an autosave with debouncing for user actions
+   */
+  private scheduleAutosave(reason: AutosaveReason): void {
+    if (reason === AutosaveReason.TICK || reason === AutosaveReason.SHUTDOWN) {
+      // Immediate save for ticks and shutdown
+      this.triggerAutosave(reason);
+    } else {
+      // Debounced save for user actions
+      this.pendingAutosave = true;
+
+      if (this.autosaveDebounceTimer) {
+        clearTimeout(this.autosaveDebounceTimer);
+      }
+
+      this.autosaveDebounceTimer = setTimeout(() => {
+        if (this.pendingAutosave) {
+          this.triggerAutosave(reason);
+          this.pendingAutosave = false;
+        }
+        this.autosaveDebounceTimer = null;
+      }, 1000) as any; // 1 second debounce
+    }
+  }
+
+  /**
+   * Trigger an autosave
+   */
+  async triggerAutosave(reason: AutosaveReason): Promise<void> {
+    try {
+      // TODO: Implement actual persistence in phase 1.3
+      // For now, just write the save completed event
+      this.eventWriter.writeEvent({
+        type: EventType.SAVE_COMPLETED,
+        payload: { reason },
         timestamp: Date.now(),
       });
-    }
 
-    if (petState.hydration <= 20) {
-      this.eventManager.emit({
-        type: EventType.HYDRATION_LOW,
-        payload: { value: petState.hydration },
-        timestamp: Date.now(),
-      });
-    }
-
-    if (petState.happiness <= 20) {
-      this.eventManager.emit({
-        type: EventType.HAPPINESS_LOW,
-        payload: { value: petState.happiness },
-        timestamp: Date.now(),
-      });
-    }
-
-    if (petState.life <= 20) {
-      this.eventManager.emit({
-        type: EventType.LIFE_CRITICAL,
-        payload: { value: petState.life },
+      console.log(`Autosave triggered: ${reason}`);
+    } catch (error) {
+      console.error('Autosave failed:', error);
+      this.eventWriter.writeEvent({
+        type: EventType.SYSTEM_ERROR,
+        payload: { system: 'GameEngine', error: 'Autosave failed' },
         timestamp: Date.now(),
       });
     }
   }
 
-  /**
-   * Process other tick-based updates
-   */
-  private processTickUpdates(): void {
-    // Random poop spawn check
-    const petState = this.stateManager.getPetState();
-    if (petState && !petState.isSleeping) {
-      // Simple random chance: 1 in 360 chance per tick (roughly once every 6 hours on average)
-      if (Math.random() < 1 / 360) {
-        this.stateManager.dispatch({
-          type: ActionType.ADD_POOP,
-          payload: { amount: 1 },
-          timestamp: Date.now(),
-        });
-      }
-    }
+  // Compatibility methods (will be removed in future)
 
-    // TODO: Add more tick-based processing as needed
+  /**
+   * @deprecated Use systems through invocation methods instead
+   */
+  registerSystem(systemType: SystemType, system: GameSystem): void {
+    console.warn('registerSystem is deprecated - systems should be invoked through GameEngine');
+    this.systems.set(systemType, system);
+  }
+
+  /**
+   * @deprecated Systems should not directly access each other
+   */
+  getSystem<T extends GameSystem>(systemType: SystemType): T {
+    console.warn('getSystem is deprecated - systems should not directly access each other');
+    const system = this.systems.get(systemType);
+    if (!system) {
+      throw new Error(`System not found: ${systemType}`);
+    }
+    return system as T;
+  }
+
+  // Public getters for current refactoring phase
+
+  isGameRunning(): boolean {
+    return this.isRunning;
+  }
+
+  isGameInitialized(): boolean {
+    return this.isInitialized;
+  }
+
+  getGameState(): GameState {
+    return this.stateManager.getState();
+  }
+
+  getEventManager(): EventManager {
+    return this.eventManager;
+  }
+
+  getStateManager(): StateManager {
+    return this.stateManager;
+  }
+
+  getTimeManager(): TimeManager {
+    return this.timeManager;
+  }
+
+  pause(): void {
+    if (this.isRunning) {
+      this.stop();
+      console.log('Game paused');
+    }
+  }
+
+  resume(): void {
+    if (this.isInitialized && !this.isRunning) {
+      this.start();
+      console.log('Game resumed');
+    }
   }
 
   /**
@@ -842,6 +962,9 @@ export class GameEngine implements GameSystem {
     try {
       // Stop the game engine
       this.stop();
+
+      // Stop event processing
+      this.stopEventProcessing();
 
       // Clean up subscriptions
       if (this.tickUnsubscribe) {
@@ -859,18 +982,9 @@ export class GameEngine implements GameSystem {
       await this.triggerAutosave(AutosaveReason.SHUTDOWN);
 
       // Shutdown all systems in reverse order
-      const systemsToShutdown = [
-        SystemType.TIME_MANAGER,
-        SystemType.STATE_MANAGER,
-        SystemType.EVENT_MANAGER,
-      ];
-
-      for (const systemType of systemsToShutdown) {
-        const system = this.systems.get(systemType);
-        if (system && system.shutdown) {
-          await system.shutdown();
-        }
-      }
+      await this.timeManager.shutdown();
+      await this.stateManager.shutdown();
+      await this.eventManager.shutdown();
 
       // Clear systems map
       this.systems.clear();

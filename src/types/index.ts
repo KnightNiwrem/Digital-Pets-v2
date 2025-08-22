@@ -49,6 +49,9 @@ export enum EventType {
   TICK = 'tick',
   OFFLINE_CATCHUP = 'offline_catchup',
 
+  // User action events
+  USER_ACTION = 'user_action',
+
   // Pet events
   PET_CREATED = 'pet_created',
   PET_DIED = 'pet_died',
