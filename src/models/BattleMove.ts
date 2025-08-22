@@ -27,42 +27,42 @@ export interface BattleMove {
   id: string;
   name: string;
   description: string;
-  
+
   // Move properties
-  actionCost: number;  // Action points required to use
-  power: number;  // Base damage (0 for status moves)
-  accuracy: number;  // Hit chance percentage (0-100)
-  priority: MovePriority;  // Determines turn order for same-speed pets
-  
+  actionCost: number; // Action points required to use
+  power: number; // Base damage (0 for status moves)
+  accuracy: number; // Hit chance percentage (0-100)
+  priority: MovePriority; // Determines turn order for same-speed pets
+
   // Move type and category
   moveType: MoveType;
   targetType: TargetType;
-  
+
   // Visual and audio
-  animation: string;  // Animation ID or sprite sheet reference
-  soundEffect: string;  // Sound file reference
-  
+  animation: string; // Animation ID or sprite sheet reference
+  soundEffect: string; // Sound file reference
+
   // Status effects
   statusEffect?: {
     type: BattleStatusEffect;
-    chance: number;  // Percentage chance to apply
-    duration: number;  // Number of turns
-    stackable: boolean;  // Can be applied multiple times
+    chance: number; // Percentage chance to apply
+    duration: number; // Number of turns
+    stackable: boolean; // Can be applied multiple times
   };
-  
+
   // Additional effects
   additionalEffects?: {
-    drain?: number;  // Percentage of damage healed
-    recoil?: number;  // Percentage of damage taken by user
+    drain?: number; // Percentage of damage healed
+    recoil?: number; // Percentage of damage taken by user
     multiHit?: {
       min: number;
       max: number;
     };
-    chargeTime?: number;  // Turns needed to charge before use
-    cooldown?: number;  // Turns before can use again
-    criticalBonus?: number;  // Additional critical hit chance
+    chargeTime?: number; // Turns needed to charge before use
+    cooldown?: number; // Turns before can use again
+    criticalBonus?: number; // Additional critical hit chance
   };
-  
+
   // Learning requirements
   learnRequirements?: {
     minStage?: GrowthStage;
@@ -72,12 +72,12 @@ export interface BattleMove {
       value: number;
     };
   };
-  
+
   // Move variations based on conditions
   conditionalPower?: {
     condition: ConditionType;
     threshold?: number;
-    powerModifier: number;  // Multiplier
+    powerModifier: number; // Multiplier
   };
 }
 
@@ -88,8 +88,8 @@ export interface SkipTurnMove {
   id: 'skip_turn';
   name: 'Rest';
   description: 'Skip turn to recover Action points';
-  actionRestore: number;  // Amount of Action to restore
-  healingPercent?: number;  // Optional health recovery
+  actionRestore: number; // Amount of Action to restore
+  healingPercent?: number; // Optional health recovery
 }
 
 /**
@@ -99,41 +99,41 @@ export interface BattleParticipant {
   id: string;
   name: string;
   sprite: string;
-  
+
   // Current battle stats
   currentHealth: number;
   maxHealth: number;
   currentAction: number;
   maxAction: number;
-  
+
   // Battle stats
   attack: number;
   defense: number;
   speed: number;
-  
+
   // Known moves
-  moves: string[];  // Move IDs
-  
+  moves: string[]; // Move IDs
+
   // Status effects
   statusEffects: {
     type: BattleStatusEffect;
     turnsRemaining: number;
-    intensity: number;  // Stacks or severity
+    intensity: number; // Stacks or severity
   }[];
-  
+
   // Battle modifiers
   statModifiers: {
-    attack: number;  // Multiplier
+    attack: number; // Multiplier
     defense: number;
     speed: number;
     accuracy: number;
     evasion: number;
   };
-  
+
   // Team information
   team: TeamType;
   isWild: boolean;
-  level?: number;  // For wild encounters
+  level?: number; // For wild encounters
 }
 
 /**
@@ -143,25 +143,25 @@ export interface BattleState {
   id: string;
   type: BattleType;
   startTime: number;
-  
+
   // Participants
   participants: BattleParticipant[];
-  currentTurn: number;  // Index of current participant
-  turnOrder: number[];  // Participant indices in turn order
-  
+  currentTurn: number; // Index of current participant
+  turnOrder: number[]; // Participant indices in turn order
+
   // Battle properties
   turnCount: number;
   allowFlee: boolean;
   allowItems: boolean;
-  allowSwitch: boolean;  // For future multi-pet battles
-  
+  allowSwitch: boolean; // For future multi-pet battles
+
   // Environmental factors
   weather?: WeatherType;
   terrain?: TerrainType;
-  
+
   // Battle log
   log: BattleLogEntry[];
-  
+
   // Rewards (determined at battle start)
   rewards?: {
     experience: number;
@@ -172,7 +172,7 @@ export interface BattleState {
       chance: number;
     }[];
   };
-  
+
   // Battle result (when completed)
   result?: {
     winner: TeamType | 'draw';
@@ -195,12 +195,12 @@ export interface BattleLogEntry {
   turn: number;
   timestamp: number;
   type: BattleLogType;
-  
+
   // Action details
-  actor?: string;  // Participant ID
-  target?: string;  // Participant ID
-  action?: string;  // Move or item ID
-  
+  actor?: string; // Participant ID
+  target?: string; // Participant ID
+  action?: string; // Move or item ID
+
   // Results
   damage?: number;
   healing?: number;
@@ -210,10 +210,10 @@ export interface BattleLogEntry {
     stat: string;
     change: number;
   };
-  
+
   // Message for display
   message: string;
-  important: boolean;  // Highlight important messages
+  important: boolean; // Highlight important messages
 }
 
 /**
@@ -221,37 +221,37 @@ export interface BattleLogEntry {
  */
 export interface BattleConfig {
   type: BattleType;
-  
+
   // Difficulty settings
   difficulty: DifficultyLevel;
-  levelScaling: boolean;  // Scale to player pet level
-  
+  levelScaling: boolean; // Scale to player pet level
+
   // AI behavior
   aiStrategy: AIStrategy;
-  aiPredictability: number;  // 0-1, how predictable the AI is
-  
+  aiPredictability: number; // 0-1, how predictable the AI is
+
   // Battle rules
   rules: {
-    maxTurns?: number;  // Battle timeout
-    suddenDeath?: boolean;  // Instant KO at low health
-    noHealing?: boolean;  // Disable healing moves/items
-    noStatus?: boolean;  // Disable status effects
-    speedMode?: boolean;  // Double speed for all
+    maxTurns?: number; // Battle timeout
+    suddenDeath?: boolean; // Instant KO at low health
+    noHealing?: boolean; // Disable healing moves/items
+    noStatus?: boolean; // Disable status effects
+    speedMode?: boolean; // Double speed for all
   };
-  
+
   // Reward modifiers
   rewardModifiers: {
     experienceMultiplier: number;
     currencyMultiplier: number;
     itemDropMultiplier: number;
   };
-  
+
   // Special conditions
   specialConditions?: {
-    weatherLocked?: string;  // Fixed weather
-    terrainLocked?: string;  // Fixed terrain
-    mustUseMove?: string;  // Required move to win
-    surviveXTurns?: number;  // Survival challenge
+    weatherLocked?: string; // Fixed weather
+    terrainLocked?: string; // Fixed terrain
+    mustUseMove?: string; // Required move to win
+    surviveXTurns?: number; // Survival challenge
   };
 }
 
@@ -261,7 +261,7 @@ export interface BattleConfig {
 export interface MoveEffectiveness {
   moveType: string;
   targetType: string;
-  multiplier: number;  // 0.5 for not very effective, 2 for super effective
+  multiplier: number; // 0.5 for not very effective, 2 for super effective
 }
 
 /**
@@ -273,30 +273,30 @@ export interface BattleFormulas {
     basePower: number;
     attackMultiplier: number;
     defenseMultiplier: number;
-    randomRange: { min: number; max: number };  // Random factor
+    randomRange: { min: number; max: number }; // Random factor
     criticalMultiplier: number;
   };
-  
+
   // Speed and turn order
   speedFormula: {
     baseSpeed: number;
-    statusPenalty: number;  // Speed reduction when affected by status
-    priorityBonus: number;  // Bonus per priority level
+    statusPenalty: number; // Speed reduction when affected by status
+    priorityBonus: number; // Bonus per priority level
   };
-  
+
   // Accuracy and evasion
   accuracyFormula: {
     baseAccuracy: number;
     evasionPenalty: number;
-    statusBonus: number;  // Accuracy bonus/penalty from status
+    statusBonus: number; // Accuracy bonus/penalty from status
   };
-  
+
   // Experience calculation
   experienceFormula: {
     baseExperience: number;
-    levelDifference: number;  // Multiplier based on level difference
-    participationBonus: number;  // Bonus for participating
-    victoryBonus: number;  // Bonus for winning
+    levelDifference: number; // Multiplier based on level difference
+    participationBonus: number; // Bonus for participating
+    victoryBonus: number; // Bonus for winning
   };
 }
 
@@ -309,7 +309,7 @@ export interface BattleStatistics {
   losses: number;
   draws: number;
   flees: number;
-  
+
   // Detailed stats
   totalDamageDealt: number;
   totalDamageTaken: number;
@@ -318,13 +318,13 @@ export interface BattleStatistics {
   movesUsed: {
     [moveId: string]: number;
   };
-  
+
   // Records
-  longestBattle: number;  // In turns
-  shortestVictory: number;  // In turns
-  highestDamage: number;  // Single hit
+  longestBattle: number; // In turns
+  shortestVictory: number; // In turns
+  highestDamage: number; // Single hit
   mostConsecutiveWins: number;
-  
+
   // By battle type
   byType: {
     [key: string]: {

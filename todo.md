@@ -3,6 +3,7 @@
 ## Phase 1: Foundation and Core Infrastructure
 
 ### 1.1 Project Setup
+
 - [x] Initialize TypeScript project with strict mode configuration
 - [x] Set up build tooling (bundler, development server)
 - [x] Configure ESLint and Prettier for code quality
@@ -16,6 +17,7 @@
   - [x] `/src/utils` - Helper functions and utilities
 
 ### 1.2 Core Data Models
+
 - [x] Define TypeScript interfaces for all data models
   - [x] Create `GameState` interface with all properties
   - [x] Define `Pet` model with species, stats, care values
@@ -30,20 +32,22 @@
   - [x] Define `ITEM_CATEGORIES` const object
 
 ### 1.3 Configuration System
-- [ ] Implement `ConfigSystem` class
-  - [ ] Create static configuration JSON files
-  - [ ] Load tuning values for care decay rates
-  - [ ] Define activity durations and energy costs
-  - [ ] Set up battle formulas and damage calculations
-  - [ ] Configure item effects and values
-- [ ] Create configuration validation
-  - [ ] Validate all required config keys exist
-  - [ ] Type-check configuration values
-  - [ ] Provide default fallbacks
+
+- [x] Implement `ConfigSystem` class
+  - [x] Create static configuration JSON files
+  - [x] Load tuning values for care decay rates
+  - [x] Define activity durations and energy costs
+  - [x] Set up battle formulas and damage calculations
+  - [x] Configure item effects and values
+- [x] Create configuration validation
+  - [x] Validate all required config keys exist
+  - [x] Type-check configuration values
+  - [x] Provide default fallbacks
 
 ## Phase 2: Game Engine and Queue System
 
 ### 2.1 GameUpdates Queue Implementation
+
 - [ ] Create `GameUpdatesQueue` class
   - [ ] Implement FIFO queue structure
   - [ ] Add enqueue method with validation
@@ -56,6 +60,7 @@
   - [ ] Generate unique IDs for updates
 
 ### 2.2 GameEngine Core
+
 - [ ] Implement `GameEngine` class
   - [ ] Create system registry map
   - [ ] Implement system initialization
@@ -71,6 +76,7 @@
   - [ ] Add state validation
 
 ### 2.3 Base System Interface
+
 - [ ] Create abstract `BaseSystem` class
   - [ ] Define common system properties
   - [ ] Create initialize method signature
@@ -84,6 +90,7 @@
 ## Phase 3: Time and Save Systems
 
 ### 3.1 TimeSystem Implementation
+
 - [ ] Create `TimeSystem` class
   - [ ] Implement 60-second tick timer
   - [ ] Create tick counter
@@ -100,6 +107,7 @@
   - [ ] Handle timer completion updates
 
 ### 3.2 SaveSystem Implementation
+
 - [ ] Create `SaveSystem` class
   - [ ] Implement localStorage wrapper
   - [ ] Add save state serialization
@@ -123,6 +131,7 @@
 ## Phase 4: Pet Management Systems
 
 ### 4.1 PetSystem Implementation
+
 - [ ] Create `PetSystem` class
   - [ ] Initialize pet state
   - [ ] Implement care value management
@@ -149,6 +158,7 @@
   - [ ] Implement revival with egg
 
 ### 4.2 EggSystem Implementation
+
 - [ ] Create `EggSystem` class
   - [ ] Track incubating eggs
   - [ ] Implement incubation timers
@@ -166,6 +176,7 @@
   - [ ] Initialize starter pet
 
 ### 4.3 Poop and Status Management
+
 - [ ] Implement poop spawning
   - [ ] Create spawn timer (6-24 hours)
   - [ ] Add randomization
@@ -185,6 +196,7 @@
 ## Phase 5: Inventory and Shop Systems
 
 ### 5.1 InventorySystem Implementation
+
 - [ ] Create `InventorySystem` class
   - [ ] Implement item storage
   - [ ] Add currency management
@@ -202,6 +214,7 @@
   - [ ] Implement filtering by category
 
 ### 5.2 ShopSystem Implementation
+
 - [ ] Create `ShopSystem` class
   - [ ] Generate daily inventory
   - [ ] Use date-based seed for consistency
@@ -221,6 +234,7 @@
 ## Phase 6: Location and Activity Systems
 
 ### 6.1 LocationSystem Implementation
+
 - [ ] Create `LocationSystem` class
   - [ ] Define all locations
   - [ ] Track current location
@@ -238,6 +252,7 @@
   - [ ] Queue completion updates
 
 ### 6.2 ActivitySystem Implementation
+
 - [ ] Create `ActivitySystem` class
   - [ ] Define activity types
   - [ ] Track active activities
@@ -262,6 +277,7 @@
 ## Phase 7: Battle System
 
 ### 7.1 BattleSystem Core
+
 - [ ] Create `BattleSystem` class
   - [ ] Initialize battle state
   - [ ] Track battle participants
@@ -279,6 +295,7 @@
   - [ ] Implement skip turn for action recovery
 
 ### 7.2 Battle Calculations
+
 - [ ] Create damage formulas
   - [ ] Calculate base damage
   - [ ] Apply stat modifiers
@@ -296,6 +313,7 @@
   - [ ] Handle special rewards
 
 ### 7.3 Training System
+
 - [ ] Implement training mechanics
   - [ ] Create training activities
   - [ ] Target specific stats
@@ -310,6 +328,7 @@
 ## Phase 8: Event System
 
 ### 8.1 EventSystem Implementation
+
 - [ ] Create `EventSystem` class
   - [ ] Define calendar events
   - [ ] Track active events
@@ -334,6 +353,7 @@
 ## Phase 9: User Interface
 
 ### 9.1 UI Foundation
+
 - [ ] Set up React/Vue/Vanilla framework
 - [ ] Create component structure
 - [ ] Implement state management
@@ -341,6 +361,7 @@
 - [ ] Add responsive design
 
 ### 9.2 Main HUD Implementation
+
 - [ ] Create pet portrait display
   - [ ] Show current pet sprite
   - [ ] Display growth stage
@@ -358,6 +379,7 @@
   - [ ] Activity timer
 
 ### 9.3 Action Panels
+
 - [ ] Create action menu
   - [ ] Context-sensitive actions
   - [ ] Feed/Drink buttons
@@ -375,6 +397,7 @@
   - [ ] Start/cancel buttons
 
 ### 9.4 Inventory UI
+
 - [ ] Create inventory grid
   - [ ] Item display
   - [ ] Stack counts
@@ -387,6 +410,7 @@
   - [ ] Quantity selection
 
 ### 9.5 Battle Interface
+
 - [ ] Create battle screen
   - [ ] Health/Action bars
   - [ ] Turn order display
@@ -399,6 +423,7 @@
   - [ ] Victory/defeat screens
 
 ### 9.6 Shop Interface
+
 - [ ] Create shop layout
   - [ ] Item grid display
   - [ ] Price labels
@@ -413,6 +438,7 @@
 ## Phase 10: UISystem Bridge
 
 ### 10.1 UISystem Implementation
+
 - [ ] Create `UISystem` class
   - [ ] Connect UI to GameEngine
   - [ ] Handle input events
@@ -432,6 +458,7 @@
 ## Phase 11: Offline and Background Features
 
 ### 11.1 Offline Catch-up
+
 - [ ] Implement offline calculation
   - [ ] Calculate elapsed time
   - [ ] Process care decay
@@ -451,6 +478,7 @@
 ## Phase 12: Accessibility and Polish
 
 ### 12.1 Accessibility Features
+
 - [ ] Implement keyboard navigation
   - [ ] Tab order management
   - [ ] Keyboard shortcuts
@@ -468,6 +496,7 @@
   - [ ] Performance optimization
 
 ### 12.2 Tutorial and Onboarding
+
 - [ ] Create tutorial flow
   - [ ] Starter selection guide
   - [ ] Basic care tutorial
@@ -485,6 +514,7 @@
   - [ ] Completion celebration
 
 ### 12.3 Notifications and Feedback
+
 - [ ] Implement toast system
   - [ ] Low care warnings
   - [ ] Activity completions
@@ -504,6 +534,7 @@
 ## Phase 13: Testing and Quality Assurance
 
 ### 13.1 Unit Testing
+
 - [ ] Test all systems individually
   - [ ] PetSystem tests
   - [ ] SaveSystem tests
@@ -521,6 +552,7 @@
   - [ ] Migration paths
 
 ### 13.2 Integration Testing
+
 - [ ] Test system interactions
   - [ ] GameEngine orchestration
   - [ ] Update queue flow
@@ -538,6 +570,7 @@
   - [ ] Offline scenarios
 
 ### 13.3 Performance Testing
+
 - [ ] Measure performance metrics
   - [ ] Frame rate consistency
   - [ ] Memory usage
@@ -555,6 +588,7 @@
   - [ ] Improve load times
 
 ### 13.4 Browser Compatibility
+
 - [ ] Test on target browsers
   - [ ] Chrome/Chromium
   - [ ] Safari/WebKit
@@ -574,6 +608,7 @@
 ## Phase 14: Deployment and Release
 
 ### 14.1 Build Pipeline
+
 - [ ] Configure production build
   - [ ] Minification
   - [ ] Tree shaking
@@ -586,6 +621,7 @@
   - [ ] Version tagging
 
 ### 14.2 Progressive Web App
+
 - [ ] Create PWA manifest
   - [ ] App metadata
   - [ ] Icon sets
@@ -598,6 +634,7 @@
   - [ ] Background sync
 
 ### 14.3 Analytics and Monitoring
+
 - [ ] Add analytics (privacy-friendly)
   - [ ] Play session tracking
   - [ ] Feature usage
@@ -610,6 +647,7 @@
   - [ ] Debug information
 
 ### 14.4 Documentation
+
 - [ ] Create user documentation
   - [ ] Game guide
   - [ ] Feature explanations
@@ -624,24 +662,28 @@
 ## Phase 15: Post-Launch Iteration
 
 ### 15.1 Bug Fixes
+
 - [ ] Monitor error reports
 - [ ] Prioritize critical issues
 - [ ] Deploy hotfixes
 - [ ] Verify resolutions
 
 ### 15.2 Balance Adjustments
+
 - [ ] Review gameplay metrics
 - [ ] Adjust tuning values
 - [ ] Balance difficulty
 - [ ] Optimize progression
 
 ### 15.3 Content Updates
+
 - [ ] Add new species
 - [ ] Create seasonal events
 - [ ] Introduce new items
 - [ ] Expand activities
 
 ### 15.4 Feature Enhancements
+
 - [ ] Implement user feedback
 - [ ] Add quality-of-life improvements
 - [ ] Enhance existing features
@@ -650,6 +692,7 @@
 ## Notes
 
 ### Development Priority
+
 1. **Critical Path**: Phases 1-4 establish the core game loop
 2. **Gameplay**: Phases 5-8 add depth and engagement
 3. **Polish**: Phases 9-12 create the user experience
@@ -657,19 +700,31 @@
 5. **Growth**: Phase 15 maintains and expands the game
 
 ### Dependencies
+
 - Each phase builds on previous phases
 - Systems can be developed in parallel within a phase
 - UI development can begin after Phase 2
 - Testing should be continuous throughout development
 
 ### Risk Mitigation
+
 - Implement save system early to prevent data loss
 - Test offline functionality thoroughly
 - Ensure mobile performance from the start
 - Plan for localStorage limitations
 
 ### Technical Decisions
+
 - Use TypeScript for type safety
 - Implement deterministic game logic for testing
 - Keep systems isolated for maintainability
 - Optimize for mobile-first experience
+
+### Code Quality Strategies
+
+- Run `bun run format` before committing code to ensure consistent formatting
+- Ensure `bun run lint` passes with no warnings (ESLint with max-warnings=0)
+- Ensure `bun run typecheck` passes to maintain type safety
+- Write comprehensive tests for all systems and run `bun test` regularly
+- Use meaningful commit messages and follow conventional commits
+- Document complex logic and maintain README files for each module

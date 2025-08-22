@@ -1,0 +1,294 @@
+{
+  "version": "1.0.0",
+  "gameTitle": "Digital Pet Game",
+  "tickInterval": 60,
+  "saveSettings": {
+    "maxSaves": 3,
+    "autoSaveInterval": 60,
+    "storageKey": "digital_pet_save",
+    "backupKeyPrefix": "digital_pet_backup_"
+  },
+  "tuning": {
+    "careDecay": {
+      "satietyPerHour": 3,
+      "hydrationPerHour": 4,
+      "happinessPerHour": 2
+    },
+    "careTickMultipliers": {
+      "satiety": 20,
+      "hydration": 15,
+      "happiness": 30
+    },
+    "careValueRange": {
+      "min": 0,
+      "max": 100
+    },
+    "energy": {
+      "maxByStage": {
+        "HATCHLING": 50,
+        "JUVENILE": 80,
+        "ADULT": 120
+      },
+      "sleepRegenRatePerHour": {
+        "HATCHLING": 12,
+        "JUVENILE": 16,
+        "ADULT": 20
+      },
+      "boosterRestoreAmount": 30,
+      "boosterCooldownMinutes": 5
+    },
+    "growth": {
+      "stageDurations": {
+        "HATCHLING": 24,
+        "JUVENILE": 72
+      },
+      "stageAdvancementBonuses": {
+        "health": 10,
+        "attack": 3,
+        "defense": 3,
+        "speed": 2,
+        "action": 5
+      }
+    },
+    "poop": {
+      "spawnRangeHours": {
+        "min": 6,
+        "max": 24
+      },
+      "sicknessThreshold": 5,
+      "happinessDecayPerPoop": 2
+    },
+    "sickness": {
+      "baseChancePerHour": 0.5,
+      "poopMultiplier": 2,
+      "activityRiskChance": 5,
+      "lifeDecayPerHour": 2,
+      "energyRegenPenalty": 0.5
+    },
+    "injury": {
+      "battleLossChance": 30,
+      "heavyHitChance": 10,
+      "activityMishapChance": 2,
+      "travelSpeedPenalty": 0.5,
+      "happinessDecayPerHour": 1
+    },
+    "sleep": {
+      "maxDurationHours": 8,
+      "forceWakePenalty": 0.5,
+      "happinessPenaltyForceWake": 10
+    },
+    "life": {
+      "startingValue": 100,
+      "criticalThreshold": 20,
+      "deathThreshold": 0,
+      "recoveryRatePerHour": 1,
+      "decayWhenNeglected": 3
+    },
+    "battle": {
+      "maxMoves": 4,
+      "baseAccuracy": 100,
+      "criticalHitChance": 10,
+      "criticalHitMultiplier": 1.5,
+      "fleeBaseChance": 50,
+      "actionRestoreOnSkip": 10,
+      "damageFormula": {
+        "base": 10,
+        "attackMultiplier": 1.5,
+        "defenseMultiplier": 0.8
+      }
+    },
+    "training": {
+      "durationMinutes": 8,
+      "energyCost": 20,
+      "statIncreasePerSession": 2,
+      "moveLearnChance": 20,
+      "actionStatIncrease": 1
+    },
+    "activities": {
+      "fishing": {
+        "short": {
+          "duration": 2,
+          "energyCost": 5,
+          "minRewards": 1,
+          "maxRewards": 2
+        },
+        "medium": {
+          "duration": 5,
+          "energyCost": 10,
+          "minRewards": 2,
+          "maxRewards": 4
+        },
+        "long": {
+          "duration": 10,
+          "energyCost": 20,
+          "minRewards": 3,
+          "maxRewards": 6
+        }
+      },
+      "foraging": {
+        "short": {
+          "duration": 2,
+          "energyCost": 5,
+          "minRewards": 1,
+          "maxRewards": 2
+        },
+        "medium": {
+          "duration": 5,
+          "energyCost": 10,
+          "minRewards": 2,
+          "maxRewards": 4
+        },
+        "long": {
+          "duration": 10,
+          "energyCost": 20,
+          "minRewards": 3,
+          "maxRewards": 6
+        }
+      },
+      "mining": {
+        "medium": {
+          "duration": 5,
+          "energyCost": 15,
+          "minRewards": 1,
+          "maxRewards": 3,
+          "requiredStage": "JUVENILE",
+          "requiredTool": "PICKAXE"
+        },
+        "long": {
+          "duration": 10,
+          "energyCost": 30,
+          "minRewards": 2,
+          "maxRewards": 5,
+          "requiredStage": "JUVENILE",
+          "requiredTool": "PICKAXE"
+        }
+      }
+    },
+    "travel": {
+      "instant": {
+        "duration": 0,
+        "energyCost": 0
+      },
+      "short": {
+        "duration": 3,
+        "energyCost": 10
+      },
+      "medium": {
+        "duration": 6,
+        "energyCost": 20
+      },
+      "long": {
+        "duration": 10,
+        "energyCost": 35
+      }
+    },
+    "shop": {
+      "dailyRotationSeed": true,
+      "itemCountByRarity": {
+        "COMMON": 5,
+        "UNCOMMON": 3,
+        "RARE": 2,
+        "EPIC": 1,
+        "LEGENDARY": 0
+      },
+      "priceMultiplierByRarity": {
+        "COMMON": 1,
+        "UNCOMMON": 2,
+        "RARE": 5,
+        "EPIC": 10,
+        "LEGENDARY": 25
+      },
+      "eventDiscountPercent": 20,
+      "sellValuePercent": 50
+    },
+    "eggs": {
+      "incubationHours": {
+        "COMMON": 12,
+        "UNCOMMON": 18,
+        "RARE": 24,
+        "EPIC": 36,
+        "LEGENDARY": 48
+      },
+      "rarityWeights": {
+        "COMMON": 60,
+        "UNCOMMON": 25,
+        "RARE": 10,
+        "EPIC": 4,
+        "LEGENDARY": 1
+      }
+    },
+    "items": {
+      "stackLimits": {
+        "default": 99,
+        "materials": 999,
+        "currency": 999999,
+        "nonStackable": 1
+      },
+      "foodEffects": {
+        "SMALL": 20,
+        "MEDIUM": 40,
+        "LARGE": 60
+      },
+      "drinkEffects": {
+        "SMALL": 20,
+        "MEDIUM": 40,
+        "LARGE": 60
+      },
+      "toyEffects": {
+        "SMALL": 15,
+        "MEDIUM": 30,
+        "LARGE": 50
+      },
+      "medicineEffectiveness": 80,
+      "bandageEffectiveness": 90
+    },
+    "events": {
+      "tokenToCoinsRate": 10,
+      "participationRewardChance": 100,
+      "completionBonusMultiplier": 2,
+      "gracefulClosurePartialRewardPercent": 50
+    }
+  },
+  "featureFlags": {
+    "enableBattles": true,
+    "enableEvents": true,
+    "enableTrading": false,
+    "enableMultiplePets": false,
+    "enableAchievements": false,
+    "enableDailyQuests": false,
+    "enablePvP": false,
+    "debugMode": false,
+    "showAdvancedStats": false,
+    "allowCheatCodes": false
+  },
+  "limits": {
+    "maxInventorySlots": 100,
+    "maxPetNameLength": 20,
+    "maxSaveFileSize": 5242880,
+    "maxOfflineHours": 720,
+    "maxBattleTurns": 100,
+    "maxEventTokens": 9999,
+    "maxQuestObjectives": 10
+  },
+  "defaultSettings": {
+    "masterVolume": 70,
+    "musicVolume": 60,
+    "sfxVolume": 80,
+    "textSize": "medium",
+    "colorBlindMode": "off",
+    "highContrast": false,
+    "reducedMotion": false,
+    "showParticles": true,
+    "autoSave": true,
+    "autoSaveInterval": 5,
+    "confirmActions": true,
+    "showTutorialHints": true,
+    "enableNotifications": true,
+    "lowCareWarning": true,
+    "activityComplete": true,
+    "eventReminders": true,
+    "touchControls": true,
+    "keyboardShortcuts": true,
+    "swipeGestures": true
+  }
+}

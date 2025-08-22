@@ -20,12 +20,12 @@ graph TB
         UI[UI Components]
         UISystem[UISystem]
     end
-    
+
     subgraph "Game Engine Core"
         GE[GameEngine]
         GU[GameUpdates Queue]
     end
-    
+
     subgraph "Domain Systems"
         PS[PetSystem]
         SS[SaveSystem]
@@ -39,12 +39,12 @@ graph TB
         SHS[ShopSystem]
         CS[ConfigSystem]
     end
-    
+
     subgraph "Data Layer"
         LS_Store[localStorage]
         State[Game State]
     end
-    
+
     UI --> UISystem
     UISystem -.->|Write Only| GU
     TS -.->|Write Only| GU
@@ -75,6 +75,7 @@ graph TB
 **Responsibility**: Central orchestrator that owns all systems and processes game updates sequentially.
 
 **Key Functions**:
+
 - Initialize all systems with appropriate write-only access to GameUpdates
 - Poll GameUpdates queue and process updates sequentially
 - Orchestrate system interactions based on update types
@@ -82,6 +83,7 @@ graph TB
 - Manage global game state transitions
 
 **Interfaces**:
+
 ```typescript
 interface GameEngine {
   initialize(): void;
@@ -97,24 +99,26 @@ interface GameEngine {
 **Responsibility**: Intermediate communication channel between systems and GameEngine. Uses a simple FIFO (First-In-First-Out) queue structure.
 
 **Key Functions**:
+
 - Queue game updates from authorized systems (UISystem, TimeSystem, ActivitySystem, BattleSystem, EventSystem, LocationSystem)
 - Provide read-only access to GameEngine
 - Maintain update order (FIFO)
 - Handle update validation
 
 **Update Types**:
+
 ```typescript
 const UPDATE_TYPES = {
-  USER_ACTION: 'USER_ACTION',           // UI-initiated actions
-  GAME_TICK: 'GAME_TICK',              // Time system tick
+  USER_ACTION: 'USER_ACTION', // UI-initiated actions
+  GAME_TICK: 'GAME_TICK', // Time system tick
   ACTIVITY_COMPLETE: 'ACTIVITY_COMPLETE', // Activity completion
-  BATTLE_ACTION: 'BATTLE_ACTION',       // Battle system updates
-  EVENT_TRIGGER: 'EVENT_TRIGGER',       // Calendar event triggers
-  SAVE_REQUEST: 'SAVE_REQUEST',         // Save state request
-  STATE_TRANSITION: 'STATE_TRANSITION'   // Major state changes
+  BATTLE_ACTION: 'BATTLE_ACTION', // Battle system updates
+  EVENT_TRIGGER: 'EVENT_TRIGGER', // Calendar event triggers
+  SAVE_REQUEST: 'SAVE_REQUEST', // Save state request
+  STATE_TRANSITION: 'STATE_TRANSITION', // Major state changes
 } as const;
 
-type UpdateType = typeof UPDATE_TYPES[keyof typeof UPDATE_TYPES];
+type UpdateType = (typeof UPDATE_TYPES)[keyof typeof UPDATE_TYPES];
 
 interface GameUpdate {
   id: string;
@@ -130,6 +134,7 @@ interface GameUpdate {
 **Responsibility**: Manage save states, handle localStorage operations, and rotate saves.
 
 **Key Functions**:
+
 - Write save states to localStorage
 - Retrieve and validate saves from localStorage
 - Implement save rotation (maintain last N saves)
@@ -138,6 +143,7 @@ interface GameUpdate {
 - Auto-save on game ticks
 
 **Data Management**:
+
 ```typescript
 interface SaveSystem {
   save(state: GameState): void;
@@ -161,6 +167,7 @@ interface SaveState {
 **Responsibility**: Manage pet state, care values, growth stages, and wellness.
 
 **Key Functions**:
+
 - Track and update care values (Satiety, Hydration, Happiness) - computed from tick counters
 - Manage hidden Life value and tick counters
 - Handle growth stage transitions
@@ -169,6 +176,7 @@ interface SaveState {
 - Manage pet death and revival (death from neglect only, not battle)
 
 **State Management**:
+
 ```typescript
 interface PetSystem {
   updateCareValues(ticks: number): void;
@@ -187,6 +195,7 @@ interface PetSystem {
 **Responsibility**: Manage game time, ticks, and offline catch-up calculations.
 
 **Key Functions**:
+
 - Generate game ticks (60-second intervals)
 - Calculate offline time and generate catch-up updates
 - Manage real-time clock synchronization
@@ -196,6 +205,7 @@ interface PetSystem {
 **Time Management**:
 
 **Time Management**:
+
 ```typescript
 interface TimeSystem {
   start(): void;
@@ -212,6 +222,7 @@ interface TimeSystem {
 **Responsibility**: Manage pet location, travel mechanics, and location-based features.
 
 **Key Functions**:
+
 - Track current location
 - Calculate travel times and energy costs
 - Handle intra-city and inter-city movement
@@ -224,6 +235,7 @@ interface TimeSystem {
 **Responsibility**: Manage all pet activities (fishing, foraging, mining, training).
 
 **Key Functions**:
+
 - Start and cancel activities
 - Calculate activity durations and energy costs
 - Determine activity outcomes and rewards
@@ -236,6 +248,7 @@ interface TimeSystem {
 **Responsibility**: Handle all combat mechanics and battle flow.
 
 **Key Functions**:
+
 - Initialize battles from various triggers
 - Manage turn order and action resolution
 - Calculate damage and apply effects
@@ -249,6 +262,7 @@ interface TimeSystem {
 **Responsibility**: Manage items, currency, and inventory operations.
 
 **Key Functions**:
+
 - Add/remove items from inventory
 - Handle item stacking and limits
 - Manage currency transactions
@@ -261,6 +275,7 @@ interface TimeSystem {
 **Responsibility**: Manage calendar events and time-based content.
 
 **Key Functions**:
+
 - Check event availability based on real-time
 - Handle event participation and closure
 - Manage event-specific activities and battles
@@ -273,6 +288,7 @@ interface TimeSystem {
 **Responsibility**: Bridge between UI components and game engine via GameUpdates.
 
 **Key Functions**:
+
 - Translate user interactions into GameUpdates
 - Render game state to UI components
 - Handle input validation
@@ -284,6 +300,7 @@ interface TimeSystem {
 **Responsibility**: Manage egg incubation, hatching mechanics, and species determination.
 
 **Key Functions**:
+
 - Track egg incubation timers
 - Process real-time incubation during offline periods
 - Handle hatching and species rolling based on egg type
@@ -292,6 +309,7 @@ interface TimeSystem {
 - Generate starter selection when no pets/eggs exist
 
 **Egg Management**:
+
 ```typescript
 interface EggSystem {
   startIncubation(eggItem: Item): void;
@@ -308,6 +326,7 @@ interface EggSystem {
 **Responsibility**: Manage shop inventory and purchase transactions as a stateless service.
 
 **Key Functions**:
+
 - Generate daily shop inventory
 - Calculate item prices based on rarity
 - Process purchase transactions
@@ -316,6 +335,7 @@ interface EggSystem {
 - Interface with InventorySystem for item transfers
 
 **Shop Operations**:
+
 ```typescript
 interface ShopSystem {
   getDailyInventory(seed: number): ShopItem[];
@@ -331,6 +351,7 @@ interface ShopSystem {
 **Responsibility**: Centralized configuration and tuning value management.
 
 **Key Functions**:
+
 - Load game configuration from static sources
 - Provide tuning values for all systems
 - Manage feature flags
@@ -338,6 +359,7 @@ interface ShopSystem {
 - Cache frequently accessed values
 
 **Configuration Management**:
+
 ```typescript
 interface ConfigSystem {
   load(): GameConfig;
@@ -381,7 +403,7 @@ sequenceDiagram
     participant GameUpdates
     participant GameEngine
     participant Systems
-    
+
     User->>UI: Click/Tap Action
     UI->>UISystem: Handle Input
     UISystem->>GameUpdates: Queue Update
@@ -400,7 +422,7 @@ sequenceDiagram
     participant GameEngine
     participant PetSystem
     participant SaveSystem
-    
+
     TimeSystem->>TimeSystem: 60s Timer
     TimeSystem->>GameUpdates: Queue Tick Update
     GameEngine->>GameUpdates: Poll Updates
@@ -418,7 +440,7 @@ sequenceDiagram
 interface GameState {
   version: string;
   timestamp: number;
-  
+
   pet: {
     species: string;
     rarity: Rarity;
@@ -436,18 +458,18 @@ interface GameState {
     moves: Move[];
     poopCount: number;
   };
-  
+
   inventory: {
-    items: Item[];  // Includes all items: consumables, tools with durability, etc.
+    items: Item[]; // Includes all items: consumables, tools with durability, etc.
     currency: number;
   };
-  
+
   world: {
     currentLocation: Location;
     activeTimers: Timer[];
     eventParticipation: EventRef[];
   };
-  
+
   meta: {
     settings: Settings;
     tutorialProgress: string[];
@@ -466,7 +488,7 @@ sequenceDiagram
     participant TimeSystem
     participant UISystem
     participant OtherSystems
-    
+
     Main->>GameEngine: new GameEngine()
     GameEngine->>SaveSystem: initialize()
     SaveSystem->>localStorage: Check for saves
@@ -485,6 +507,7 @@ sequenceDiagram
 ### System-Level Error Handling
 
 Each system implements its own error boundaries:
+
 - **SaveSystem**: Handles corrupted saves with rollback capability
 - **TimeSystem**: Handles clock drift and invalid timestamps
 - **BattleSystem**: Handles invalid move selections and state corruption
@@ -521,16 +544,19 @@ interface ErrorRecovery {
 ## Testing Strategy
 
 ### Unit Testing
+
 - Test each system in isolation with mock GameUpdates
 - Test update processing logic in GameEngine
 - Test save/load functionality with various state scenarios
 
 ### Integration Testing
+
 - Test system interactions through GameEngine
 - Test complete user flows from UI to persistence
 - Test offline catch-up with various time gaps
 
 ### Performance Testing
+
 - Test with maximum inventory and pet stats
 - Test with extended offline periods (30+ days)
 - Test save/load performance with large states
@@ -538,12 +564,14 @@ interface ErrorRecovery {
 ## Security Considerations
 
 ### Client-Side Security
+
 - Validate all save imports with checksums
 - Sanitize user inputs before processing
 - Implement rate limiting for actions
 - Store sensitive calculations server-side (future consideration)
 
 ### Data Integrity
+
 - Use checksums for save validation
 - Implement version checking for save compatibility
 - Log suspicious activity patterns
@@ -552,6 +580,7 @@ interface ErrorRecovery {
 ## Future Extensibility
 
 ### Planned Extensions
+
 1. **Achievement System**: Track player accomplishments
 2. **Collection System**: Manage multiple pets (storage only)
 3. **Customization System**: Pet accessories and decorations
@@ -559,6 +588,7 @@ interface ErrorRecovery {
 5. **Analytics System**: Track gameplay metrics locally
 
 ### System Addition Protocol
+
 1. Create new system implementing base System interface
 2. Register with GameEngine during initialization
 3. Define update types for GameUpdates
@@ -569,12 +599,14 @@ interface ErrorRecovery {
 ## Deployment Architecture
 
 ### Build Configuration
+
 - TypeScript compilation with strict mode
 - Bundle optimization with tree-shaking
 - Asset optimization (sprites, sounds)
 - Progressive Web App manifest
 
 ### Browser Compatibility
+
 - Target ES2020 for modern browsers
 - Polyfills for localStorage where needed
 - Graceful degradation for older browsers

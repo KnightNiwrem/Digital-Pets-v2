@@ -24,10 +24,10 @@ export interface Timer {
   type: TimerType;
   startTime: number;
   endTime: number;
-  duration: number;  // In milliseconds
+  duration: number; // In milliseconds
   paused: boolean;
   pausedAt?: number;
-  
+
   // Associated data
   data?: {
     routeId?: string;
@@ -57,22 +57,22 @@ export interface CalendarEvent {
   name: string;
   description: string;
   type: EventType;
-  
+
   // Schedule
   startTime: number;
   endTime: number;
   timezone: string;
   recurring?: {
     frequency: EventFrequency;
-    daysOfWeek?: number[];  // 0-6 for weekly
-    dayOfMonth?: number;  // For monthly
+    daysOfWeek?: number[]; // 0-6 for weekly
+    dayOfMonth?: number; // For monthly
   };
-  
+
   // Event content
-  activities?: string[];  // Special activity IDs
-  battles?: string[];  // Special battle configs
-  shop?: string[];  // Special shop items
-  
+  activities?: string[]; // Special activity IDs
+  battles?: string[]; // Special battle configs
+  shop?: string[]; // Special shop items
+
   // Rewards
   rewards: {
     participation: {
@@ -91,11 +91,11 @@ export interface CalendarEvent {
       }[];
     }[];
   };
-  
+
   // Token system
   tokenExchange?: {
     tokenItemId: string;
-    exchangeRate: number;  // Tokens to currency
+    exchangeRate: number; // Tokens to currency
     specialExchanges?: {
       itemId: string;
       tokenCost: number;
@@ -109,29 +109,29 @@ export interface CalendarEvent {
  */
 export interface Settings {
   // Audio
-  masterVolume: number;  // 0-100
-  musicVolume: number;  // 0-100
-  sfxVolume: number;  // 0-100
-  
+  masterVolume: number; // 0-100
+  musicVolume: number; // 0-100
+  sfxVolume: number; // 0-100
+
   // Visual
   textSize: TextSize;
   colorBlindMode: ColorBlindMode;
   highContrast: boolean;
   reducedMotion: boolean;
   showParticles: boolean;
-  
+
   // Gameplay
   autoSave: boolean;
-  autoSaveInterval: number;  // Minutes
+  autoSaveInterval: number; // Minutes
   confirmActions: boolean;
   showTutorialHints: boolean;
-  
+
   // Notifications
   enableNotifications: boolean;
   lowCareWarning: boolean;
   activityComplete: boolean;
   eventReminders: boolean;
-  
+
   // Controls
   touchControls: boolean;
   keyboardShortcuts: boolean;
@@ -142,10 +142,10 @@ export interface Settings {
  * Tutorial progress tracking
  */
 export interface TutorialProgress {
-  completed: string[];  // Tutorial step IDs
+  completed: string[]; // Tutorial step IDs
   currentStep?: string;
   skipped: boolean;
-  
+
   // Onboarding milestones
   milestones: {
     firstFeed: boolean;
@@ -168,13 +168,13 @@ export interface Quest {
   id: string;
   name: string;
   description: string;
-  
+
   // Progress
   started: boolean;
   startTime?: number;
   completed: boolean;
   completionTime?: number;
-  
+
   // Requirements
   objectives: {
     id: string;
@@ -183,7 +183,7 @@ export interface Quest {
     required: number;
     completed: boolean;
   }[];
-  
+
   // Rewards
   rewards: {
     itemId: string;
@@ -197,22 +197,22 @@ export interface Quest {
 export interface GameStatistics {
   // Time tracking
   firstPlayTime: number;
-  totalPlayTime: number;  // In seconds
+  totalPlayTime: number; // In seconds
   lastPlayTime: number;
   consecutiveDays: number;
-  
+
   // Pet statistics
   totalPetsOwned: number;
   totalPetsLost: number;
-  currentPetAge: number;  // In days
-  longestPetLife: number;  // In days
-  
+  currentPetAge: number; // In days
+  longestPetLife: number; // In days
+
   // Care statistics
   totalFeedings: number;
   totalDrinks: number;
   totalPlays: number;
   totalCleanings: number;
-  
+
   // Activity statistics
   activitiesCompleted: {
     [activityType: string]: number;
@@ -220,19 +220,19 @@ export interface GameStatistics {
   totalItemsCollected: number;
   totalCurrencyEarned: number;
   totalCurrencySpent: number;
-  
+
   // Battle statistics (reference to detailed stats)
   battleStats: BattleStatistics;
-  
+
   // Collection progress
   speciesDiscovered: number;
   totalSpecies: number;
   itemsDiscovered: number;
   totalItems: number;
-  
+
   // Travel statistics
   locationsVisited: number;
-  totalTravelDistance: number;  // In abstract units
+  totalTravelDistance: number; // In abstract units
   favoriteLocation?: string;
 }
 
@@ -243,11 +243,11 @@ export interface GameState {
   // Version and metadata
   version: string;
   timestamp: number;
-  playerId: string;  // Generated UUID for this save
-  
+  playerId: string; // Generated UUID for this save
+
   // Core game state
-  pet: Pet | null;  // Current active pet
-  
+  pet: Pet | null; // Current active pet
+
   // Inventory and resources
   inventory: {
     items: InventoryItem[];
@@ -258,36 +258,36 @@ export interface GameState {
     maxSlots: number;
     unlockedSlots: number;
   };
-  
+
   // World state
   world: {
     currentLocation: LocationState;
     activeTimers: Timer[];
     eventParticipation: EventRef[];
     currentEvents: CalendarEvent[];
-    worldTime: number;  // Current world time for events
-    lastTickTime: number;  // Last game tick timestamp
-    tickCount: number;  // Total ticks since game start
+    worldTime: number; // Current world time for events
+    lastTickTime: number; // Last game tick timestamp
+    tickCount: number; // Total ticks since game start
   };
-  
+
   // Collections
   collections: {
-    eggs: Egg[];  // Eggs in inventory
+    eggs: Egg[]; // Eggs in inventory
     species: { [speciesId: string]: SpeciesCollectionEntry };
-    memorials: PetMemorial[];  // Past pets
+    memorials: PetMemorial[]; // Past pets
   };
-  
+
   // Battle state (if in battle)
   activeBattle?: BattleState;
-  
+
   // Meta information
   meta: {
     settings: Settings;
     tutorialProgress: TutorialProgress;
-    quests?: Quest[];  // Future feature
+    quests?: Quest[]; // Future feature
     statistics: GameStatistics;
   };
-  
+
   // Save management
   saveData: {
     lastSaveTime: number;
@@ -309,7 +309,7 @@ export interface SaveSnapshot {
   version: string;
   checksum: string;
   compressed: boolean;
-  data: string;  // JSON string of GameState
+  data: string; // JSON string of GameState
 }
 
 /**
@@ -319,20 +319,20 @@ export interface GameUpdate {
   id: string;
   type: UpdateType;
   timestamp: number;
-  priority: number;  // 0 = normal, higher = more urgent
-  
+  priority: number; // 0 = normal, higher = more urgent
+
   // Update payload
   payload: {
     action?: string;
     data?: any;
-    source?: string;  // Which system generated this
-    targetSystem?: string;  // Which system should handle this
+    source?: string; // Which system generated this
+    targetSystem?: string; // Which system should handle this
   };
-  
+
   // Validation
   requiresValidation?: boolean;
   validationRules?: string[];
-  
+
   // Error handling
   retryable?: boolean;
   maxRetries?: number;
@@ -368,9 +368,9 @@ export interface GameInitOptions {
  * Offline calculation result
  */
 export interface OfflineCalculation {
-  offlineTime: number;  // Total seconds offline
+  offlineTime: number; // Total seconds offline
   ticksToProcess: number;
-  
+
   // Care changes
   careDecay: {
     satiety: number;
@@ -378,33 +378,33 @@ export interface OfflineCalculation {
     happiness: number;
     life: number;
   };
-  
+
   // Poop spawns
   poopSpawned: number;
-  
+
   // Sickness checks
   sicknessTriggered: boolean;
   sicknessReason?: string;
-  
+
   // Activity completions
   completedActivities: {
     activityId: string;
     rewards: any;
   }[];
-  
+
   // Travel completions
   travelCompleted: boolean;
   newLocation?: string;
-  
+
   // Incubation progress
   eggsHatched: string[];
-  
+
   // Event expirations
   expiredEvents: string[];
-  
+
   // Energy regeneration (if sleeping)
   energyRecovered: number;
-  
+
   // Death check
   petDied: boolean;
   deathReason?: string;

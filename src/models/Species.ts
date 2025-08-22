@@ -27,15 +27,15 @@ export interface SpeciesBaseStats {
  * Visual appearance data for a species
  */
 export interface SpeciesAppearance {
-  spriteSheet: string;  // Path to sprite sheet
+  spriteSheet: string; // Path to sprite sheet
   animations: {
-    idle: number[];     // Frame indices for idle animation
-    happy: number[];    // Frame indices for happy animation
-    sad: number[];      // Frame indices for sad animation
-    sick: number[];     // Frame indices for sick animation
+    idle: number[]; // Frame indices for idle animation
+    happy: number[]; // Frame indices for happy animation
+    sad: number[]; // Frame indices for sad animation
+    sick: number[]; // Frame indices for sick animation
     sleeping: number[]; // Frame indices for sleeping animation
-    eating: number[];   // Frame indices for eating animation
-    playing: number[];  // Frame indices for playing animation
+    eating: number[]; // Frame indices for eating animation
+    playing: number[]; // Frame indices for playing animation
   };
   defaultColor: string;
   availableColors?: string[];
@@ -50,10 +50,10 @@ export interface SpeciesAppearance {
  */
 export interface SpeciesTraits {
   temperament: PetTemperament;
-  favoriteFood?: string[];  // Item IDs of preferred foods
-  favoriteToys?: string[];  // Item IDs of preferred toys
+  favoriteFood?: string[]; // Item IDs of preferred foods
+  favoriteToys?: string[]; // Item IDs of preferred toys
   habitat: PetHabitat;
-  activityPreference: ActivityPreference;  // Active time preference
+  activityPreference: ActivityPreference; // Active time preference
 }
 
 /**
@@ -64,55 +64,55 @@ export interface Species {
   name: string;
   description: string;
   rarity: RarityTier;
-  
+
   // Base stats by growth stage
   baseStats: {
     [GROWTH_STAGES.HATCHLING]: SpeciesBaseStats;
     [GROWTH_STAGES.JUVENILE]: SpeciesBaseStats;
     [GROWTH_STAGES.ADULT]: SpeciesBaseStats;
   };
-  
+
   // Visual data
   appearance: SpeciesAppearance;
-  
+
   // Characteristics
   traits: SpeciesTraits;
-  
+
   // Learnable moves
   learnableMoves: {
     moveId: string;
     learnStage: GrowthStage;
-    learnChance: number;  // Percentage chance to learn during training
+    learnChance: number; // Percentage chance to learn during training
   }[];
-  
+
   // Starting moves for newly hatched pets
-  startingMoves: string[];  // Array of move IDs
-  
+  startingMoves: string[]; // Array of move IDs
+
   // Care requirements modifiers (multipliers)
   careModifiers?: {
-    hungerRate?: number;     // Default 1.0
-    thirstRate?: number;     // Default 1.0
+    hungerRate?: number; // Default 1.0
+    thirstRate?: number; // Default 1.0
     happinessDecay?: number; // Default 1.0
-    energyUsage?: number;    // Default 1.0
+    energyUsage?: number; // Default 1.0
   };
-  
+
   // Special abilities or passive effects
   abilities?: {
     id: string;
     name: string;
     description: string;
     effect: PetAbilityEffect;
-    value: number;  // Percentage or multiplier
+    value: number; // Percentage or multiplier
   }[];
-  
+
   // Egg data
-  eggSprite: string;  // Path to egg sprite
-  incubationTime: number;  // Hours required for hatching
-  
+  eggSprite: string; // Path to egg sprite
+  incubationTime: number; // Hours required for hatching
+
   // Metadata
-  isStarter: boolean;  // Can be selected as a starter
-  isEventExclusive: boolean;  // Only available during events
-  unlockConditions?: string;  // Description of how to unlock
+  isStarter: boolean; // Can be selected as a starter
+  isEventExclusive: boolean; // Only available during events
+  unlockConditions?: string; // Description of how to unlock
 }
 
 /**
@@ -123,7 +123,7 @@ export interface StarterSpecies {
   name: string;
   description: string;
   sprite: string;
-  traits: string[];  // Simple trait descriptions for UI
+  traits: string[]; // Simple trait descriptions for UI
 }
 
 /**
@@ -149,19 +149,19 @@ export interface EggType {
   name: string;
   description: string;
   sprite: string;
-  
+
   // Possible species that can hatch from this egg
   possibleSpecies: {
     speciesId: string;
-    weight: number;  // Relative weight for random selection
+    weight: number; // Relative weight for random selection
   }[];
-  
+
   // Rarity distribution override (optional)
   rarityWeights?: {
     [key in RarityTier]?: number;
   };
-  
-  baseIncubationTime: number;  // Base hours (can be modified by species)
+
+  baseIncubationTime: number; // Base hours (can be modified by species)
 }
 
 /**
@@ -169,10 +169,10 @@ export interface EggType {
  */
 export interface Egg {
   id: string;
-  eggType: string;  // References EggType
+  eggType: string; // References EggType
   obtainedTime: number;
   incubationStartTime?: number;
   incubationEndTime?: number;
   isIncubating: boolean;
-  determinedSpecies?: string;  // Predetermined at egg creation if needed
+  determinedSpecies?: string; // Predetermined at egg creation if needed
 }

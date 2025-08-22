@@ -4,16 +4,16 @@
 
 // Game Update Types for the GameUpdates queue
 export const UPDATE_TYPES = {
-  USER_ACTION: 'USER_ACTION',           // UI-initiated actions
-  GAME_TICK: 'GAME_TICK',              // Time system tick
+  USER_ACTION: 'USER_ACTION', // UI-initiated actions
+  GAME_TICK: 'GAME_TICK', // Time system tick
   ACTIVITY_COMPLETE: 'ACTIVITY_COMPLETE', // Activity completion
-  BATTLE_ACTION: 'BATTLE_ACTION',       // Battle system updates
-  EVENT_TRIGGER: 'EVENT_TRIGGER',       // Calendar event triggers
-  SAVE_REQUEST: 'SAVE_REQUEST',         // Save state request
+  BATTLE_ACTION: 'BATTLE_ACTION', // Battle system updates
+  EVENT_TRIGGER: 'EVENT_TRIGGER', // Calendar event triggers
+  SAVE_REQUEST: 'SAVE_REQUEST', // Save state request
   STATE_TRANSITION: 'STATE_TRANSITION', // Major state changes
 } as const;
 
-export type UpdateType = typeof UPDATE_TYPES[keyof typeof UPDATE_TYPES];
+export type UpdateType = (typeof UPDATE_TYPES)[keyof typeof UPDATE_TYPES];
 
 // Pet Rarity Tiers
 export const RARITY_TIERS = {
@@ -24,7 +24,7 @@ export const RARITY_TIERS = {
   LEGENDARY: 'LEGENDARY',
 } as const;
 
-export type RarityTier = typeof RARITY_TIERS[keyof typeof RARITY_TIERS];
+export type RarityTier = (typeof RARITY_TIERS)[keyof typeof RARITY_TIERS];
 
 // Rarity weights for egg hatching (percentages)
 export const RARITY_WEIGHTS = {
@@ -42,7 +42,7 @@ export const GROWTH_STAGES = {
   ADULT: 'ADULT',
 } as const;
 
-export type GrowthStage = typeof GROWTH_STAGES[keyof typeof GROWTH_STAGES];
+export type GrowthStage = (typeof GROWTH_STAGES)[keyof typeof GROWTH_STAGES];
 
 // Growth stage requirements (in hours)
 export const STAGE_DURATIONS = {
@@ -71,7 +71,7 @@ export const ITEM_CATEGORIES = {
   CURRENCY: 'CURRENCY',
 } as const;
 
-export type ItemCategory = typeof ITEM_CATEGORIES[keyof typeof ITEM_CATEGORIES];
+export type ItemCategory = (typeof ITEM_CATEGORIES)[keyof typeof ITEM_CATEGORIES];
 
 // Food/Drink/Toy effect sizes
 export const EFFECT_SIZES = {
@@ -80,7 +80,7 @@ export const EFFECT_SIZES = {
   LARGE: 'LARGE',
 } as const;
 
-export type EffectSize = typeof EFFECT_SIZES[keyof typeof EFFECT_SIZES];
+export type EffectSize = (typeof EFFECT_SIZES)[keyof typeof EFFECT_SIZES];
 
 // Tool Types
 export const TOOL_TYPES = {
@@ -89,7 +89,7 @@ export const TOOL_TYPES = {
   PICKAXE: 'PICKAXE',
 } as const;
 
-export type ToolType = typeof TOOL_TYPES[keyof typeof TOOL_TYPES];
+export type ToolType = (typeof TOOL_TYPES)[keyof typeof TOOL_TYPES];
 
 // Activity Types
 export const ACTIVITY_TYPES = {
@@ -101,7 +101,7 @@ export const ACTIVITY_TYPES = {
   SLEEPING: 'SLEEPING',
 } as const;
 
-export type ActivityType = typeof ACTIVITY_TYPES[keyof typeof ACTIVITY_TYPES];
+export type ActivityType = (typeof ACTIVITY_TYPES)[keyof typeof ACTIVITY_TYPES];
 
 // Activity Durations (in minutes)
 export const ACTIVITY_DURATIONS = {
@@ -117,7 +117,7 @@ export const LOCATION_TYPES = {
   WILD: 'WILD',
 } as const;
 
-export type LocationType = typeof LOCATION_TYPES[keyof typeof LOCATION_TYPES];
+export type LocationType = (typeof LOCATION_TYPES)[keyof typeof LOCATION_TYPES];
 
 // City Areas
 export const CITY_AREAS = {
@@ -127,7 +127,7 @@ export const CITY_AREAS = {
   ARENA: 'ARENA',
 } as const;
 
-export type CityArea = typeof CITY_AREAS[keyof typeof CITY_AREAS];
+export type CityArea = (typeof CITY_AREAS)[keyof typeof CITY_AREAS];
 
 // Wild Biomes
 export const WILD_BIOMES = {
@@ -138,14 +138,14 @@ export const WILD_BIOMES = {
   PLAINS: 'PLAINS',
 } as const;
 
-export type WildBiome = typeof WILD_BIOMES[keyof typeof WILD_BIOMES];
+export type WildBiome = (typeof WILD_BIOMES)[keyof typeof WILD_BIOMES];
 
 // Travel Distance Tiers (in minutes)
 export const TRAVEL_TIERS = {
-  INSTANT: 0,  // Intra-city
-  SHORT: 3,    // Near locations
-  MEDIUM: 6,   // Medium distance
-  LONG: 10,    // Far locations
+  INSTANT: 0, // Intra-city
+  SHORT: 3, // Near locations
+  MEDIUM: 6, // Medium distance
+  LONG: 10, // Far locations
 } as const;
 
 export type TravelDistance = 'instant' | 'short' | 'medium' | 'long';
@@ -162,7 +162,7 @@ export const STATUS_TYPES = {
   DEAD: 'DEAD',
 } as const;
 
-export type StatusType = typeof STATUS_TYPES[keyof typeof STATUS_TYPES];
+export type StatusType = (typeof STATUS_TYPES)[keyof typeof STATUS_TYPES];
 
 // Battle Move Priority Levels
 export const MOVE_PRIORITY = {
@@ -173,7 +173,7 @@ export const MOVE_PRIORITY = {
   HIGHEST: 2,
 } as const;
 
-export type MovePriority = typeof MOVE_PRIORITY[keyof typeof MOVE_PRIORITY];
+export type MovePriority = (typeof MOVE_PRIORITY)[keyof typeof MOVE_PRIORITY];
 
 // Battle Status Effects
 export const BATTLE_STATUS_EFFECTS = {
@@ -184,7 +184,7 @@ export const BATTLE_STATUS_EFFECTS = {
   BUFFED: 'BUFFED',
 } as const;
 
-export type BattleStatusEffect = typeof BATTLE_STATUS_EFFECTS[keyof typeof BATTLE_STATUS_EFFECTS];
+export type BattleStatusEffect = (typeof BATTLE_STATUS_EFFECTS)[keyof typeof BATTLE_STATUS_EFFECTS];
 
 // Care Value Ranges
 export const CARE_VALUE_RANGE = {
@@ -201,9 +201,9 @@ export const CARE_DECAY_RATES = {
 
 // Tick-based multipliers (ticks per unit of care value)
 export const CARE_TICK_MULTIPLIERS = {
-  SATIETY: 20,    // 20 ticks = 1 satiety unit (20 minutes)
-  HYDRATION: 15,  // 15 ticks = 1 hydration unit (15 minutes)
-  HAPPINESS: 30,  // 30 ticks = 1 happiness unit (30 minutes)
+  SATIETY: 20, // 20 ticks = 1 satiety unit (20 minutes)
+  HYDRATION: 15, // 15 ticks = 1 hydration unit (15 minutes)
+  HAPPINESS: 30, // 30 ticks = 1 happiness unit (30 minutes)
 } as const;
 
 // Game Tick Interval (in seconds)
@@ -237,7 +237,7 @@ export const EVENT_TYPES = {
   SPECIAL: 'SPECIAL',
 } as const;
 
-export type EventType = typeof EVENT_TYPES[keyof typeof EVENT_TYPES];
+export type EventType = (typeof EVENT_TYPES)[keyof typeof EVENT_TYPES];
 
 // Currency Types
 export const CURRENCY_TYPES = {
@@ -245,7 +245,7 @@ export const CURRENCY_TYPES = {
   EVENT_TOKENS: 'EVENT_TOKENS',
 } as const;
 
-export type CurrencyType = typeof CURRENCY_TYPES[keyof typeof CURRENCY_TYPES];
+export type CurrencyType = (typeof CURRENCY_TYPES)[keyof typeof CURRENCY_TYPES];
 
 // Stack Limits
 export const STACK_LIMITS = {
@@ -290,7 +290,16 @@ export type BattleType = 'wild' | 'trainer' | 'arena' | 'event';
 export type DifficultyLevel = 'easy' | 'normal' | 'medium' | 'hard' | 'extreme';
 
 // Weather Types
-export type WeatherType = 'sunny' | 'rainy' | 'sandstorm' | 'foggy' | 'clear' | 'rain' | 'snow' | 'fog' | 'wind';
+export type WeatherType =
+  | 'sunny'
+  | 'rainy'
+  | 'sandstorm'
+  | 'foggy'
+  | 'clear'
+  | 'rain'
+  | 'snow'
+  | 'fog'
+  | 'wind';
 
 // Terrain Types
 export type TerrainType = 'normal' | 'grassy' | 'rocky' | 'water';
@@ -302,7 +311,15 @@ export type TeamType = 'player' | 'enemy' | 'ally';
 export type BattleEndReason = 'defeat' | 'victory' | 'flee' | 'capture' | 'timeout';
 
 // Battle Log Types
-export type BattleLogType = 'move' | 'damage' | 'status' | 'item' | 'flee' | 'switch' | 'weather' | 'other';
+export type BattleLogType =
+  | 'move'
+  | 'damage'
+  | 'status'
+  | 'item'
+  | 'flee'
+  | 'switch'
+  | 'weather'
+  | 'other';
 
 // AI Strategy Types
 export type AIStrategy = 'random' | 'aggressive' | 'defensive' | 'balanced' | 'smart';
@@ -389,7 +406,11 @@ export type PetHabitat = 'forest' | 'mountains' | 'lake' | 'desert' | 'plains' |
 export type ActivityPreference = 'diurnal' | 'nocturnal' | 'crepuscular';
 
 // Pet Abilities
-export type PetAbilityEffect = 'resistance_to_sickness' | 'faster_travel' | 'better_rewards' | 'quick_learner';
+export type PetAbilityEffect =
+  | 'resistance_to_sickness'
+  | 'faster_travel'
+  | 'better_rewards'
+  | 'quick_learner';
 
 // Death Causes
 export type DeathCause = 'neglect' | 'old_age';

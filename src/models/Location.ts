@@ -30,8 +30,8 @@ export interface Location {
   name: string;
   description: string;
   type: LocationType;
-  sprite: string;  // Background sprite for location
-  
+  sprite: string; // Background sprite for location
+
   // Ambient properties
   ambientMusic?: string;
   ambientSounds?: string[];
@@ -44,7 +44,7 @@ export interface Location {
  */
 export interface CityLocation extends Location {
   type: 'CITY';
-  
+
   // Available areas within the city
   areas: {
     [key in CityArea]?: {
@@ -56,20 +56,20 @@ export interface CityLocation extends Location {
       specialFeatures?: string[];
     };
   };
-  
+
   // City-specific properties
   population: PopulationSize;
-  prosperityLevel: number;  // 1-10, affects shop prices and variety
-  
+  prosperityLevel: number; // 1-10, affects shop prices and variety
+
   // Services available
   hasShop: boolean;
   hasArena: boolean;
   hasGym: boolean;
   hasInn: boolean;
-  
+
   // Special city features
-  specialEvents?: string[];  // Event IDs that can occur here
-  uniqueNPCs?: string[];  // Special NPC IDs
+  specialEvents?: string[]; // Event IDs that can occur here
+  uniqueNPCs?: string[]; // Special NPC IDs
 }
 
 /**
@@ -78,40 +78,40 @@ export interface CityLocation extends Location {
 export interface WildLocation extends Location {
   type: 'WILD';
   biome: WildBiome;
-  
+
   // Exploration properties
-  dangerLevel: number;  // 1-10, affects encounter rates
+  dangerLevel: number; // 1-10, affects encounter rates
   explorationDifficulty: DifficultyLevel;
-  
+
   // Available activities
   availableActivities: ActivityType[];
-  
+
   // Resource availability
   resources: {
-    abundant: string[];  // Item IDs that are common here
-    rare: string[];  // Item IDs that are rare but possible
-    exclusive: string[];  // Item IDs only found here
+    abundant: string[]; // Item IDs that are common here
+    rare: string[]; // Item IDs that are rare but possible
+    exclusive: string[]; // Item IDs only found here
   };
-  
+
   // Wildlife
   wildPetSpecies: {
     speciesId: string;
-    encounterRate: number;  // Percentage
+    encounterRate: number; // Percentage
     level: { min: number; max: number };
   }[];
-  
+
   // Environmental hazards
   hazards?: {
     type: HazardType;
-    chance: number;  // Percentage per activity
-    effect: string;  // Description of effect
+    chance: number; // Percentage per activity
+    effect: string; // Description of effect
   }[];
-  
+
   // Weather patterns
   weatherPatterns?: {
     type: string;
-    frequency: number;  // How often it occurs
-    duration: number;  // Average duration in hours
+    frequency: number; // How often it occurs
+    duration: number; // Average duration in hours
     effects: {
       visibilityModifier?: number;
       encounterRateModifier?: number;
@@ -125,37 +125,37 @@ export interface WildLocation extends Location {
  */
 export interface TravelRoute {
   id: string;
-  from: string;  // Location ID
-  to: string;  // Location ID
-  
+  from: string; // Location ID
+  to: string; // Location ID
+
   // Travel properties
   distance: TravelDistance;
-  baseTravelTime: number;  // In minutes
+  baseTravelTime: number; // In minutes
   energyCost: number;
-  
+
   // Route characteristics
   routeType: RouteType;
   safety: SafetyLevel;
-  
+
   // Requirements
   requirements?: {
     minStage?: GrowthStage;
-    requiredItem?: string;  // Item ID needed for travel
-    requiredQuest?: string;  // Quest ID that must be completed
+    requiredItem?: string; // Item ID needed for travel
+    requiredQuest?: string; // Quest ID that must be completed
   };
-  
+
   // Random encounters during travel
   encounters?: {
     type: EncounterType;
-    chance: number;  // Percentage
-    pool: string[];  // IDs of possible encounters
+    chance: number; // Percentage
+    pool: string[]; // IDs of possible encounters
   }[];
-  
+
   // Scenic points (for future features)
   scenicPoints?: {
     name: string;
     description: string;
-    position: number;  // 0-1, position along route
+    position: number; // 0-1, position along route
   }[];
 }
 
@@ -165,28 +165,28 @@ export interface TravelRoute {
 export interface LocationActivity {
   id: string;
   type: ActivityType;
-  location: string;  // Location ID
-  
+  location: string; // Location ID
+
   // Activity properties
   name: string;
   description: string;
   duration: {
-    min: number;  // Minutes
+    min: number; // Minutes
     max: number;
   };
   energyCost: number;
-  
+
   // Requirements
   requirements: {
     minStage?: GrowthStage;
-    requiredTool?: string;  // Tool ID
+    requiredTool?: string; // Tool ID
     requiredToolTier?: ToolTier;
     requiredStats?: {
       stat: string;
       minValue: number;
     }[];
   };
-  
+
   // Rewards
   rewards: {
     guaranteed: {
@@ -205,11 +205,11 @@ export interface LocationActivity {
       max: number;
     };
   };
-  
+
   // Success factors
   successFactors?: {
     baseSuccessRate: number;
-    toolBonus: number;  // Per tool tier
+    toolBonus: number; // Per tool tier
     statBonus: {
       stat: string;
       bonusPerPoint: number;
@@ -227,18 +227,18 @@ export interface LocationActivity {
 export interface WorldMap {
   id: string;
   name: string;
-  
+
   // All locations
   locations: {
     [locationId: string]: Location | CityLocation | WildLocation;
   };
-  
+
   // Travel routes between locations
   routes: TravelRoute[];
-  
+
   // Starting location for new players
   startingLocation: string;
-  
+
   // Region groupings
   regions?: {
     id: string;
@@ -247,7 +247,7 @@ export interface WorldMap {
     locationIds: string[];
     unlockRequirement?: string;
   }[];
-  
+
   // World events that affect all locations
   globalEvents?: {
     id: string;
@@ -266,39 +266,39 @@ export interface WorldMap {
  */
 export interface LocationState {
   currentLocationId: string;
-  currentArea?: CityArea;  // If in a city
-  
+  currentArea?: CityArea; // If in a city
+
   // Travel state
   traveling: boolean;
   travelRoute?: {
     routeId: string;
     startTime: number;
     endTime: number;
-    progress: number;  // 0-1
+    progress: number; // 0-1
     paused: boolean;
     pausedAt?: number;
   };
-  
+
   // Activity state
   inActivity: boolean;
   currentActivity?: {
     activityId: string;
     startTime: number;
     endTime: number;
-    progress: number;  // 0-1
+    progress: number; // 0-1
     paused: boolean;
     toolUsed?: string;
   };
-  
+
   // Location history
   visitedLocations: string[];
   lastVisitTimes: {
     [locationId: string]: number;
   };
-  
+
   // Discovery tracking
   discoveredSecrets?: {
-    [locationId: string]: string[];  // Secret IDs discovered
+    [locationId: string]: string[]; // Secret IDs discovered
   };
 }
 
@@ -311,11 +311,11 @@ export interface LocationNPC {
   sprite: string;
   locationId: string;
   area?: CityArea;
-  
+
   // NPC properties
   role: NPCRole;
   personality: NPCPersonality;
-  
+
   // Dialogue
   dialogues: {
     greeting: string[];
@@ -325,7 +325,7 @@ export interface LocationNPC {
       [condition: string]: string[];
     };
   };
-  
+
   // Interactions
   interactions?: {
     trade?: {
@@ -333,7 +333,7 @@ export interface LocationNPC {
       refreshDaily: boolean;
     };
     battle?: {
-      team: string[];  // Pet IDs for NPC team
+      team: string[]; // Pet IDs for NPC team
       difficulty: DifficultyLevel;
       rewards: {
         itemId: string;
