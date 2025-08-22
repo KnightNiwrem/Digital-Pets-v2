@@ -17,7 +17,7 @@ import { PersistenceManager } from './PersistenceManager';
 /**
  * GameEngine is the ultimate central orchestrator that manages the game.
  * All control flow goes through GameEngine - systems cannot communicate directly.
- * 
+ *
  * Key architectural principles:
  * 1. Systems are pure, isolated entities with no cross-references
  * 2. GameEngine provides write-only event interfaces to systems
@@ -228,7 +228,7 @@ export class GameEngine implements GameSystem {
         case EventType.TICK:
           this.handleTickEvent();
           break;
-        
+
         case EventType.USER_ACTION:
           this.handleUserActionEvent(event.payload);
           break;
@@ -281,7 +281,7 @@ export class GameEngine implements GameSystem {
    */
   private handleUserActionEvent(action: GameAction): void {
     // Process the action through the existing processUserAction method
-    this.processUserAction(action).then(result => {
+    this.processUserAction(action).then((result) => {
       if (!result.success) {
         console.error('User action failed:', result.error);
       }
@@ -390,7 +390,7 @@ export class GameEngine implements GameSystem {
 
     console.log('Game tick processed');
   }
-  
+
   /**
    * Force immediate processing of all queued events
    * This is primarily for testing purposes
@@ -613,7 +613,9 @@ export class GameEngine implements GameSystem {
   /**
    * Handle playing with pet
    */
-  private async handlePlayWithPet(action: GameAction): Promise<{ success: boolean; error?: string }> {
+  private async handlePlayWithPet(
+    action: GameAction,
+  ): Promise<{ success: boolean; error?: string }> {
     const petState = this.stateManager.getPetState();
     if (!petState) {
       return { success: false, error: 'No active pet' };
@@ -666,7 +668,9 @@ export class GameEngine implements GameSystem {
   /**
    * Handle starting sleep
    */
-  private async handleStartSleep(action: GameAction): Promise<{ success: boolean; error?: string }> {
+  private async handleStartSleep(
+    action: GameAction,
+  ): Promise<{ success: boolean; error?: string }> {
     const petState = this.stateManager.getPetState();
     if (!petState) {
       return { success: false, error: 'No active pet' };

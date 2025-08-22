@@ -30,7 +30,7 @@ export class PersistenceManager implements GameSystem {
   private saveManager: SaveManager;
   private backupManager: BackupManager;
   private stateManager: StateManager | null = null;
-  
+
   private isInitialized = false;
   private isSaving = false;
   private lastSaveTime = 0;
@@ -127,7 +127,7 @@ export class PersistenceManager implements GameSystem {
       console.log(`Game saved successfully (save #${this.saveCount})`);
     } catch (error) {
       console.error('Save failed:', error);
-      
+
       // Try to handle quota exceeded
       if (error instanceof Error && error.message.includes('quota')) {
         await this.handleStorageQuotaExceeded();
@@ -161,7 +161,7 @@ export class PersistenceManager implements GameSystem {
     // Debounce autosaves (except for critical ones)
     const now = Date.now();
     const timeSinceLastSave = now - this.lastSaveTime;
-    
+
     if (reason === AutosaveReason.USER_ACTION && timeSinceLastSave < 1000) {
       // Defer user action autosaves if saved recently
       this.pendingAutosave = reason;
@@ -170,7 +170,7 @@ export class PersistenceManager implements GameSystem {
 
     try {
       const state = this.stateManager.getState();
-      
+
       // Create autosave
       const saveData: SaveFile = {
         version: PersistenceManager.SAVE_VERSION,
@@ -210,7 +210,7 @@ export class PersistenceManager implements GameSystem {
     }
 
     const state = this.stateManager.getState();
-    
+
     const saveData: SaveFile = {
       version: PersistenceManager.SAVE_VERSION,
       timestamp: Date.now(),
@@ -238,7 +238,7 @@ export class PersistenceManager implements GameSystem {
     try {
       // Try to load main save first
       let saveData = await this.loadSaveFile(PersistenceManager.MAIN_SAVE_KEY);
-      
+
       // Fall back to autosave if main save doesn't exist
       if (!saveData) {
         console.log('No main save found, trying autosave');
@@ -280,7 +280,9 @@ export class PersistenceManager implements GameSystem {
         saveData.state = await this.migrateOldSave(saveData);
       }
 
-      console.log(`Game loaded successfully (save from ${new Date(saveData.timestamp).toLocaleString()})`);
+      console.log(
+        `Game loaded successfully (save from ${new Date(saveData.timestamp).toLocaleString()})`,
+      );
       return saveData.state;
     } catch (error) {
       console.error('Load failed:', error);
@@ -308,7 +310,7 @@ export class PersistenceManager implements GameSystem {
     }
 
     const state = this.stateManager.getState();
-    
+
     const saveFile: SaveFile = {
       version: PersistenceManager.SAVE_VERSION,
       timestamp: Date.now(),
@@ -446,15 +448,18 @@ export class PersistenceManager implements GameSystem {
   async clearOldSaves(): Promise<void> {
     // Get all saves
     const saves = await this.saveManager.getAllSaves();
-    
+
     // Keep only the most recent saves
     const sortedSaves = saves.sort((a, b) => b.timestamp - a.timestamp);
     const toKeep = 5; // Keep 5 most recent saves
-    
+
     for (let i = toKeep; i < sortedSaves.length; i++) {
       const save = sortedSaves[i];
-      if (save && save.key !== PersistenceManager.MAIN_SAVE_KEY &&
-          save.key !== PersistenceManager.AUTOSAVE_KEY) {
+      if (
+        save &&
+        save.key !== PersistenceManager.MAIN_SAVE_KEY &&
+        save.key !== PersistenceManager.AUTOSAVE_KEY
+      ) {
         await this.saveManager.deleteSave(save.key);
       }
     }
@@ -482,11 +487,13 @@ export class PersistenceManager implements GameSystem {
    * Migrate old save format to current version
    */
   async migrateOldSave(oldSave: any): Promise<GameState> {
-    console.log(`Migrating save from version ${oldSave.version} to ${PersistenceManager.SAVE_VERSION}`);
-    
+    console.log(
+      `Migrating save from version ${oldSave.version} to ${PersistenceManager.SAVE_VERSION}`,
+    );
+
     // For now, just return the state as-is
     // Add migration logic here as the game evolves
-    
+
     return oldSave.state;
   }
 
@@ -564,14 +571,14 @@ export class PersistenceManager implements GameSystem {
    */
   private async handleStorageQuotaExceeded(): Promise<void> {
     console.warn('Storage quota exceeded - attempting cleanup');
-    
+
     // Clear old saves
     await this.clearOldSaves();
-    
+
     // Clear old backups
     await this.backupManager.rotateBackups('auto', 5);
     await this.backupManager.rotateBackups('rolling', 2);
-    
+
     // Try SaveManager's cleanup
     await this.saveManager.handleQuotaExceeded();
   }

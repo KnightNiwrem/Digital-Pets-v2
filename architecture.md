@@ -70,49 +70,49 @@ graph TB
     GE -.->|owns| EM
     GE -.->|owns| SM
     GE -.->|owns| TM
-    
+
     %% GameEngine invokes systems with state
     GE ==>|invokes with state| PS
     GE ==>|invokes with state| AS
     GE ==>|invokes with state| LS
     GE ==>|invokes with state| UI
     GE ==>|invokes with state| PM
-    
+
     %% Systems return results to GameEngine
     PS -.->|returns result| GE
     AS -.->|returns result| GE
     LS -.->|returns result| GE
     UI -.->|returns result| GE
     PM -.->|returns result| GE
-    
+
     %% Event flow through write-only interface
     PS -->|write event| EM
     AS -->|write event| EM
     UI -->|write event| EM
-    
+
     %% GameEngine processes events from queue
     EM -->|event queue| GE
-    
+
     %% Subsystem organization (no direct communication)
     PS -.-> CS
     PS -.-> GS
     PS -.-> SS
-    
+
     AS -.-> TS
     AS -.-> TRS
     AS -.-> BS
-    
+
     LS -.-> ES
     LS -.-> IS
     LS -.-> SH
-    
+
     UI -.-> HUD
     UI -.-> NS
     UI -.-> AC
-    
+
     PM -.-> SM2
     PM -.-> BM
-    
+
     style GE fill:#f9f,stroke:#333,stroke-width:4px
     style EM fill:#bbf,stroke:#333,stroke-width:2px
 ```
@@ -147,23 +147,23 @@ class GameEngine {
   startGameLoop(): void;
   stopGameLoop(): void;
   tick(): void; // Called every 60 seconds
-  
+
   // Event Processing (Sequential)
   processEventQueue(): void;
   processEvent(event: GameEvent): void;
-  
+
   // System Invocation
   invokePetSystem(action: string, state: PetState): SystemResult;
   invokeActivitySystem(action: string, state: GameState): SystemResult;
   invokeUISystem(action: string, state: Partial<GameState>): void;
-  
+
   // Event Write Interface Provider
   getEventWriter(): EventWriter; // Write-only interface for systems
-  
+
   // User Action Processing
   processUserAction(action: GameAction): Promise<ActionResult>;
   validateAction(action: GameAction): ValidationResult;
-  
+
   // State Management
   getState(): GameState;
   updateState(changes: StateChanges): void;
@@ -299,11 +299,11 @@ class EventManager {
 
   // Write-Only Interface (provided to systems)
   createEventWriter(): EventWriter;
-  
+
   // Event History (for debugging)
   getEventHistory(limit: number): GameEvent[];
   clearEventHistory(): void;
-  
+
   // Processing State
   isProcessing(): boolean;
   setProcessing(processing: boolean): void;
@@ -312,7 +312,7 @@ class EventManager {
 // The EventWriter interface that systems receive
 class EventWriter {
   constructor(private eventManager: EventManager);
-  
+
   // Only write method available to systems
   writeEvent(event: GameEvent): void {
     this.eventManager.enqueueEvent(event);
@@ -334,24 +334,24 @@ class EventWriter {
 class PetSystem {
   // Pure transformations - no side effects
   createPet(species: Species, fromEgg?: Egg): PetCreationResult;
-  
+
   // State transformations (receives state, returns changes)
   processFeed(petState: PetState, foodItem: Item): StateChanges;
   processDrink(petState: PetState, drinkItem: Item): StateChanges;
   processPlay(petState: PetState, toy: Item): StateChanges;
   processSleep(petState: PetState): StateChanges;
   processWake(petState: PetState, sleepDuration: number): StateChanges;
-  
+
   // Care calculations
   calculateCareDecay(petState: PetState, ticks: number): CareDecayResult;
   calculateLifeStatus(petState: PetState): LifeStatus;
-  
+
   // Validation
   validatePetAction(petState: PetState, action: PetAction): ValidationResult;
-  
+
   // Offline Processing
   processOfflineUpdates(petState: PetState, ticks: number): StateChanges;
-  
+
   // Event generation (returns events to write)
   generatePetEvents(petState: PetState, changes: StateChanges): GameEvent[];
 }
@@ -997,21 +997,21 @@ sequenceDiagram
     GE->>SM: createInitialState()
     GE->>EM: initialize()
     GE->>TM: initialize()
-    
+
     Note over GE: Load saved state
     GE->>SM: loadState()
     SM-->>GE: GameState
-    
+
     Note over GE: Process offline time
     GE->>TM: getOfflineTime()
     TM-->>GE: offlineSeconds
     GE->>PS: processOfflineUpdates(state, offlineSeconds)
     PS-->>GE: StateChanges
     GE->>SM: applyChanges(StateChanges)
-    
+
     Note over GE: Initialize UI with state
     GE->>UI: initialize(state)
-    
+
     Note over GE: Start game loop
     GE->>GE: startEventProcessing()
     GE->>TM: startTicking()
@@ -1029,26 +1029,26 @@ sequenceDiagram
     participant SM as StateManager
 
     TM->>EM: writeEvent(TICK_EVENT)
-    
+
     Note over GE: Process event queue
     GE->>EM: dequeueEvent()
     EM-->>GE: TICK_EVENT
-    
+
     Note over GE: Get current state
     GE->>SM: getState()
     SM-->>GE: GameState
-    
+
     Note over GE: Process care decay
     GE->>PS: calculateCareDecay(petState, 1)
     PS-->>GE: CareDecayResult
-    
+
     Note over GE: Process activities
     GE->>AS: processActivityTick(activityState)
     AS-->>GE: ActivityResult
-    
+
     Note over GE: Update state
     GE->>SM: applyChanges(changes)
-    
+
     Note over GE: Trigger autosave
     GE->>GE: autosave(TICK)
 ```
@@ -1067,11 +1067,11 @@ sequenceDiagram
 
     User->>UI: clickFeedButton(foodItem)
     UI->>EM: writeEvent(FEED_ACTION)
-    
+
     Note over GE: Process event queue
     GE->>EM: dequeueEvent()
     EM-->>GE: FEED_ACTION
-    
+
     Note over GE: Validate action
     GE->>SM: getState()
     SM-->>GE: GameState
@@ -1079,22 +1079,22 @@ sequenceDiagram
     PS-->>GE: Valid
     GE->>IS: validateItem(inventory, foodItem)
     IS-->>GE: Valid
-    
+
     Note over GE: Process feeding
     GE->>PS: processFeed(petState, foodItem)
     PS-->>GE: StateChanges + Events
     GE->>IS: consumeItem(inventory, foodItem)
     IS-->>GE: InventoryChanges
-    
+
     Note over GE: Update state
     GE->>SM: applyChanges(allChanges)
-    
+
     Note over GE: Write resulting events
     GE->>EM: enqueueEvent(PET_FED_EVENT)
-    
+
     Note over GE: Update UI
     GE->>UI: updatePetDisplay(newPetState)
-    
+
     Note over GE: Autosave
     GE->>GE: autosave(USER_ACTION)
 ```
@@ -1112,33 +1112,33 @@ sequenceDiagram
     Note over GE: Battle triggered
     GE->>SM: getState()
     SM-->>GE: GameState
-    
+
     GE->>BS: initializeBattle(petState, opponent)
     BS-->>GE: BattleState + BATTLE_START event
-    
+
     GE->>SM: setBattleState(battleState)
     GE->>UI: showBattleScreen(battleState)
-    
+
     loop Each Turn
         Note over GE: Wait for player action
         UI->>EM: writeEvent(USE_MOVE)
-        
+
         GE->>EM: dequeueEvent()
         EM-->>GE: USE_MOVE
-        
+
         GE->>BS: processTurn(battleState, move)
         BS-->>GE: TurnResult + Events
-        
+
         GE->>SM: updateBattleState(turnResult)
         GE->>UI: updateBattleDisplay(battleState)
-        
+
         GE->>BS: checkBattleEnd(battleState)
         BS-->>GE: BattleStatus
     end
-    
+
     GE->>BS: finalizeBattle(battleState)
     BS-->>GE: BattleRewards + Events
-    
+
     GE->>SM: applyRewards(rewards)
     GE->>UI: showBattleSummary(results)
 ```
@@ -1157,29 +1157,29 @@ sequenceDiagram
     Note over GE: Game resuming
     GE->>TM: calculateOfflineTime()
     TM-->>GE: offlineSeconds
-    
+
     GE->>TM: calculateOfflineTicks(offlineSeconds)
     TM-->>GE: offlineTicks
-    
+
     Note over GE: Get current state
     GE->>SM: getState()
     SM-->>GE: GameState
-    
+
     Note over GE: Process pet updates
     GE->>PS: processOfflineUpdates(petState, offlineTicks)
     PS-->>GE: PetChanges + Events
-    
+
     Note over GE: Process activities
     GE->>AS: processOfflineActivity(activityState, offlineTicks)
     AS-->>GE: ActivityChanges + Events
-    
+
     Note over GE: Check events
     GE->>ES: checkEventClosures(eventState, currentTime)
     ES-->>GE: EventChanges + Events
-    
+
     Note over GE: Apply all changes
     GE->>SM: batchApplyChanges(allChanges)
-    
+
     Note over GE: Queue events for processing
     GE->>EM: enqueueEvents(offlineEvents)
 ```

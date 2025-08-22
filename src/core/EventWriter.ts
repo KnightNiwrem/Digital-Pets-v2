@@ -16,7 +16,7 @@ export class EventWriter {
     if (!event.timestamp) {
       event.timestamp = Date.now();
     }
-    
+
     // Enqueue the event for sequential processing
     this.enqueueFunc(event);
   }

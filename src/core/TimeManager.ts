@@ -3,7 +3,7 @@ import type { GameSystem, Unsubscribe, TimeState } from '../types';
 /**
  * TimeManager manages all time-related operations as a pure calculation service.
  * It tracks real-time, calculates offline time, and manages tick scheduling.
- * 
+ *
  * This is now a pure system with no dependencies on other systems.
  * It returns time calculations to GameEngine instead of emitting events.
  */
@@ -93,7 +93,9 @@ export class TimeManager implements GameSystem {
     // Sleep calculations (these would be based on pet state in real implementation)
     const maxSleepDuration = 8 * 60 * 60; // 8 hours in seconds
     const sleepCompleted = offlineSeconds >= maxSleepDuration;
-    const energyRecovered = sleepCompleted ? 100 : Math.floor((offlineSeconds / maxSleepDuration) * 100);
+    const energyRecovered = sleepCompleted
+      ? 100
+      : Math.floor((offlineSeconds / maxSleepDuration) * 100);
 
     return {
       ticksProcessed: ticks,
@@ -139,7 +141,7 @@ export class TimeManager implements GameSystem {
    */
   private processTick(): void {
     // Notify all tick handlers
-    this.tickHandlers.forEach(handler => {
+    this.tickHandlers.forEach((handler) => {
       try {
         handler();
       } catch (error) {

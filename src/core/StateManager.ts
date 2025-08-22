@@ -17,7 +17,7 @@ import { ActionType } from '../types';
 /**
  * StateManager maintains the single source of truth for all game state.
  * Only GameEngine can directly modify state through this manager.
- * 
+ *
  * This is now a pure state store with no event emission capabilities.
  * All state change notifications are handled by GameEngine.
  */
@@ -323,7 +323,7 @@ export class StateManager implements GameSystem {
     // Don't notify listeners during transactions
     if (!this.isInTransaction) {
       this.notifyListeners();
-      
+
       // No event emission - GameEngine handles all events
       // Previous event emission code has been removed
     }

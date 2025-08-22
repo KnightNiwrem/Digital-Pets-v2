@@ -52,7 +52,7 @@ export class SaveManager implements GameSystem {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        
+
         // Create saves store if it doesn't exist
         if (!db.objectStoreNames.contains(SaveManager.STORE_NAME)) {
           const saveStore = db.createObjectStore(SaveManager.STORE_NAME, { keyPath: 'key' });
@@ -78,7 +78,7 @@ export class SaveManager implements GameSystem {
    */
   private createTransaction(
     storeNames: string | string[],
-    mode: IDBTransactionMode = 'readonly'
+    mode: IDBTransactionMode = 'readonly',
   ): IDBTransaction {
     if (!this.db) {
       throw new Error('Database not initialized or IndexedDB not available');
@@ -218,7 +218,7 @@ export class SaveManager implements GameSystem {
       const request = store.getAll();
 
       request.onsuccess = () => {
-        const saves = request.result.map(save => ({
+        const saves = request.result.map((save) => ({
           key: save.key,
           data: save.data,
           timestamp: save.timestamp,
@@ -253,7 +253,7 @@ export class SaveManager implements GameSystem {
       let completed = 0;
       const total = saves.length;
 
-      saves.forEach(save => {
+      saves.forEach((save) => {
         const saveData = {
           key: save.key,
           data: save.data,
@@ -306,7 +306,7 @@ export class SaveManager implements GameSystem {
    */
   async handleQuotaExceeded(): Promise<void> {
     console.warn('Storage quota exceeded - attempting cleanup');
-    
+
     // Get all saves and delete oldest ones
     const saves = await this.getAllSaves();
     saves.sort((a, b) => a.timestamp - b.timestamp);
@@ -359,7 +359,7 @@ export class SaveManager implements GameSystem {
 
     for (let i = 0; i < jsonString.length; i++) {
       const char = jsonString.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
 
@@ -378,14 +378,14 @@ export class SaveManager implements GameSystem {
    */
   private async upgradeDatabase(oldVersion: number, newVersion: number): Promise<void> {
     console.log(`Upgrading database from version ${oldVersion} to ${newVersion}`);
-    
+
     // Handle migrations based on version differences
     // This will be expanded as the game evolves
-    
+
     if (oldVersion < 1) {
       // Initial schema is created in onupgradeneeded
     }
-    
+
     // Future migrations will be added here
   }
 

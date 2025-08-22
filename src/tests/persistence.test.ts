@@ -18,7 +18,7 @@ const mockIndexedDB = {
       },
       transaction: (stores: string[], mode: string) => ({
         objectStore: (name: string) => ({
-          put: (data: any) => ({ 
+          put: (data: any) => ({
             onsuccess: null as any,
             onerror: null as any,
             result: data.key,
@@ -165,7 +165,7 @@ describe('SaveManager', () => {
     // Mock IndexedDB
     (global as any).indexedDB = mockIndexedDB;
     mockIndexedDB.databases.clear();
-    
+
     saveManager = new SaveManager();
     // Don't actually initialize IndexedDB in tests
     // await saveManager.initialize();
@@ -179,24 +179,24 @@ describe('SaveManager', () => {
     const data = { test: 'data', value: 123 };
     const checksum1 = saveManager.generateChecksum(data);
     const checksum2 = saveManager.generateChecksum(data);
-    
+
     expect(checksum1).toBe(checksum2);
   });
 
   it('should generate different checksums for different data', () => {
     const data1 = { test: 'data', value: 123 };
     const data2 = { test: 'data', value: 456 };
-    
+
     const checksum1 = saveManager.generateChecksum(data1);
     const checksum2 = saveManager.generateChecksum(data2);
-    
+
     expect(checksum1).not.toBe(checksum2);
   });
 
   it('should verify checksums correctly', () => {
     const data = { test: 'data', value: 123 };
     const checksum = saveManager.generateChecksum(data);
-    
+
     expect(saveManager.verifyChecksum(data, checksum)).toBe(true);
     expect(saveManager.verifyChecksum(data, 'invalid_checksum')).toBe(false);
   });
@@ -210,7 +210,7 @@ describe('BackupManager', () => {
     // Mock IndexedDB
     (global as any).indexedDB = mockIndexedDB;
     mockIndexedDB.databases.clear();
-    
+
     saveManager = new SaveManager();
     backupManager = new BackupManager(saveManager);
     // Don't actually initialize in tests
@@ -247,7 +247,7 @@ describe('BackupManager', () => {
   it('should generate unique backup IDs', () => {
     const id1 = backupManager['generateBackupId']('manual');
     const id2 = backupManager['generateBackupId']('manual');
-    
+
     expect(id1).not.toBe(id2);
     expect(id1).toContain('backup_manual_');
     expect(id2).toContain('backup_manual_');
@@ -261,7 +261,7 @@ describe('BackupManager', () => {
     };
 
     const repaired = backupManager['repairState'](corruptedState);
-    
+
     expect(repaired).toBeDefined();
     expect(repaired.meta).toBeDefined();
     expect(repaired.meta.version).toBe('1.0.0');
@@ -280,11 +280,11 @@ describe('PersistenceManager', () => {
     // Mock IndexedDB
     (global as any).indexedDB = mockIndexedDB;
     mockIndexedDB.databases.clear();
-    
+
     persistenceManager = new PersistenceManager();
     stateManager = new StateManager();
     persistenceManager.setStateManager(stateManager);
-    
+
     // Don't actually initialize IndexedDB in tests
     // await persistenceManager.initialize();
   });
@@ -324,10 +324,10 @@ describe('PersistenceManager', () => {
 
   it('should compress and decompress save data', () => {
     const state = createTestGameState();
-    
+
     const compressed = persistenceManager.compressSave(state);
     expect(typeof compressed).toBe('string');
-    
+
     const decompressed = persistenceManager.decompressSave(compressed);
     expect(decompressed).toEqual(state);
   });
@@ -340,7 +340,7 @@ describe('PersistenceManager', () => {
   it('should enable and disable autosave', () => {
     persistenceManager.setAutosaveEnabled(false);
     expect(persistenceManager['autosaveEnabled']).toBe(false);
-    
+
     persistenceManager.setAutosaveEnabled(true);
     expect(persistenceManager['autosaveEnabled']).toBe(true);
   });
@@ -355,15 +355,15 @@ describe('Persistence Integration', () => {
     // Mock IndexedDB
     (global as any).indexedDB = mockIndexedDB;
     mockIndexedDB.databases.clear();
-    
+
     persistenceManager = new PersistenceManager();
     stateManager = new StateManager();
     persistenceManager.setStateManager(stateManager);
     testState = createTestGameState();
-    
+
     // Mark as initialized for testing (since we're mocking IndexedDB)
     persistenceManager['isInitialized'] = true;
-    
+
     // Set the test state
     stateManager.dispatch({
       type: 'set_state' as any,
@@ -377,7 +377,7 @@ describe('Persistence Integration', () => {
 
   it('should export save file with correct structure', async () => {
     const saveFile = await persistenceManager.exportSave();
-    
+
     expect(saveFile).toBeDefined();
     expect(saveFile.version).toBe('1.0.0');
     expect(saveFile.timestamp).toBeGreaterThan(0);
@@ -389,7 +389,7 @@ describe('Persistence Integration', () => {
   it('should validate state through state manager', () => {
     const state = createTestGameState();
     const validation = stateManager.validateState(state);
-    
+
     expect(validation.isValid).toBe(true);
     expect(validation.errors.length).toBe(0);
   });
@@ -398,9 +398,9 @@ describe('Persistence Integration', () => {
     const state = createTestGameState();
     state.pet!.satiety = 150; // Invalid: > 100
     state.pet!.hydration = -10; // Invalid: < 0
-    
+
     const validation = stateManager.validateState(state);
-    
+
     expect(validation.isValid).toBe(false);
     expect(validation.errors).toContain('Pet satiety must be between 0 and 100');
     expect(validation.errors).toContain('Pet hydration must be between 0 and 100');
@@ -411,9 +411,9 @@ describe('Persistence Integration', () => {
     state.pet!.satiety = 15;
     state.pet!.hydration = 10;
     state.pet!.life = 5;
-    
+
     const validation = stateManager.validateState(state);
-    
+
     expect(validation.isValid).toBe(true); // Still valid, just with warnings
     expect(validation.warnings).toContain('Pet satiety is critically low');
     expect(validation.warnings).toContain('Pet hydration is critically low');
@@ -426,9 +426,9 @@ describe('Persistence Integration', () => {
     state.pet!.hydration = -10;
     state.pet!.energy = 100; // Above max
     state.pet!.poopCount = -5;
-    
+
     const sanitized = stateManager.sanitizeState(state);
-    
+
     expect(sanitized.pet!.satiety).toBe(100);
     expect(sanitized.pet!.hydration).toBe(0);
     expect(sanitized.pet!.energy).toBe(50); // Clamped to maxEnergy

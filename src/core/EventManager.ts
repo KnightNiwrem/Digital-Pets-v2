@@ -4,7 +4,7 @@ import { EventWriter } from './EventWriter';
 /**
  * EventManager maintains the event queue for sequential processing by GameEngine.
  * Systems write events through EventWriter interfaces, GameEngine processes them.
- * 
+ *
  * This is a pure queue manager with no event processing or subscription capabilities.
  * All event processing is handled sequentially by GameEngine to prevent race conditions.
  */

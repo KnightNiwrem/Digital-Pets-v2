@@ -50,7 +50,7 @@ export class BackupManager implements GameSystem {
   async createBackup(
     state: GameState,
     type: 'auto' | 'manual' | 'rolling' = 'manual',
-    description?: string
+    description?: string,
   ): Promise<string> {
     if (!this.isInitialized) {
       throw new Error('BackupManager not initialized');
@@ -198,7 +198,7 @@ export class BackupManager implements GameSystem {
    */
   async rotateBackups(type: 'auto' | 'manual' | 'rolling', maxBackups: number): Promise<void> {
     const backups = await this.listBackups();
-    const typeBackups = backups.filter(b => b.type === type);
+    const typeBackups = backups.filter((b) => b.type === type);
 
     if (typeBackups.length > maxBackups) {
       // Sort by timestamp, oldest first
@@ -420,9 +420,9 @@ export class BackupManager implements GameSystem {
       await this.rotateBackups('auto', BackupManager.MAX_AUTO_BACKUPS);
 
       // Remove backups older than 30 days for manual backups
-      const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
       const backups = await this.listBackups();
-      
+
       for (const backup of backups) {
         if (backup.type === 'manual' && backup.timestamp < thirtyDaysAgo) {
           await this.deleteBackup(backup.id);
@@ -476,9 +476,9 @@ export class BackupManager implements GameSystem {
 
     const info = {
       totalBackups: backups.length,
-      autoBackups: backups.filter(b => b.type === 'auto').length,
-      manualBackups: backups.filter(b => b.type === 'manual').length,
-      rollingBackups: backups.filter(b => b.type === 'rolling').length,
+      autoBackups: backups.filter((b) => b.type === 'auto').length,
+      manualBackups: backups.filter((b) => b.type === 'manual').length,
+      rollingBackups: backups.filter((b) => b.type === 'rolling').length,
       oldestBackup: oldest ? new Date(oldest.timestamp) : null,
       newestBackup: newest ? new Date(newest.timestamp) : null,
       totalSize: 0, // Will be calculated from storage estimate
