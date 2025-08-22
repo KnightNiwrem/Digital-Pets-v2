@@ -1,4 +1,4 @@
-import type { GameState, GameSystem, StateSnapshot, ValidationResult } from '../types';
+import type { GameState, GameSystem, ValidationResult } from '../types';
 import { AutosaveReason } from '../types';
 import { SaveManager } from './SaveManager';
 import { BackupManager } from './BackupManager';

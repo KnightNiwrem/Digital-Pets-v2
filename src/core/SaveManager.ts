@@ -1,4 +1,4 @@
-import type { GameState, GameSystem } from '../types';
+import type { GameSystem } from '../types';
 
 /**
  * SaveManager handles low-level save operations using IndexedDB.

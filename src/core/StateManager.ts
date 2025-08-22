@@ -313,7 +313,7 @@ export class StateManager implements GameSystem {
   /**
    * Internal method to set state and notify listeners
    */
-  private setState(newState: GameState, action?: GameAction): void {
+  private setState(newState: GameState, _action?: GameAction): void {
     this.previousState = JSON.parse(JSON.stringify(this.state));
     this.state = newState;
 

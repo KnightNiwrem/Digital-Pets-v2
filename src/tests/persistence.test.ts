@@ -4,7 +4,7 @@ import { BackupManager } from '../core/BackupManager';
 import { PersistenceManager } from '../core/PersistenceManager';
 import { StateManager } from '../core/StateManager';
 import type { GameState } from '../types';
-import { Species, Rarity, GrowthStage, AutosaveReason } from '../types';
+import { Species, Rarity, GrowthStage } from '../types';
 
 // Mock IndexedDB for testing
 const mockIndexedDB = {
@@ -14,10 +14,10 @@ const mockIndexedDB = {
       name,
       version,
       objectStoreNames: {
-        contains: (name: string) => false,
+        contains: (_name: string) => false,
       },
-      transaction: (stores: string[], mode: string) => ({
-        objectStore: (name: string) => ({
+      transaction: (_stores: string[], _mode: string) => ({
+        objectStore: (_name: string) => ({
           put: (data: any) => ({
             onsuccess: null as any,
             onerror: null as any,
@@ -28,7 +28,7 @@ const mockIndexedDB = {
             onerror: null as any,
             result: mockIndexedDB.databases.get(name)?.get(key),
           }),
-          delete: (key: string) => ({
+          delete: (_key: string) => ({
             onsuccess: null as any,
             onerror: null as any,
           }),
