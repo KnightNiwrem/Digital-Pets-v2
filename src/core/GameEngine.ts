@@ -12,6 +12,7 @@ import {
 import { EventManager } from './EventManager';
 import { StateManager } from './StateManager';
 import { TimeManager } from './TimeManager';
+import { PersistenceManager } from './PersistenceManager';
 
 /**
  * GameEngine is the ultimate central orchestrator that manages the game.
@@ -31,6 +32,7 @@ export class GameEngine implements GameSystem {
   private eventManager: EventManager;
   private stateManager: StateManager;
   private timeManager: TimeManager;
+  private persistenceManager: PersistenceManager;
 
   // Event writer for internal use
   private eventWriter: EventWriter;
@@ -54,6 +56,10 @@ export class GameEngine implements GameSystem {
     this.eventManager = new EventManager();
     this.stateManager = new StateManager(initialState);
     this.timeManager = new TimeManager();
+    this.persistenceManager = new PersistenceManager();
+
+    // Set state manager reference for persistence
+    this.persistenceManager.setStateManager(this.stateManager);
 
     // Create event writer for internal use
     this.eventWriter = this.eventManager.createEventWriter();
@@ -62,6 +68,7 @@ export class GameEngine implements GameSystem {
     this.systems.set(SystemType.EVENT_MANAGER, this.eventManager);
     this.systems.set(SystemType.STATE_MANAGER, this.stateManager);
     this.systems.set(SystemType.TIME_MANAGER, this.timeManager);
+    this.systems.set(SystemType.PERSISTENCE_MANAGER, this.persistenceManager);
 
     // NO CROSS-SYSTEM REFERENCES! Systems are isolated
     // Previous problematic lines 49-52 have been removed
@@ -105,6 +112,23 @@ export class GameEngine implements GameSystem {
       await this.eventManager.initialize();
       await this.stateManager.initialize();
       await this.timeManager.initialize();
+      await this.persistenceManager.initialize();
+
+      // Try to load existing save data
+      try {
+        const savedState = await this.loadGameState();
+        // If we have a saved state, restore it
+        if (savedState) {
+          this.stateManager.restoreSnapshot({
+            state: savedState,
+            timestamp: Date.now(),
+            checksum: this.persistenceManager['saveManager'].generateChecksum(savedState),
+          });
+          console.log('Game state restored from save');
+        }
+      } catch (error) {
+        console.log('No existing save data found or load failed:', error);
+      }
 
       // Process offline time if any
       await this.handleOfflineTime();
@@ -292,8 +316,13 @@ export class GameEngine implements GameSystem {
    * Load game state from persistence
    */
   async loadGameState(): Promise<GameState> {
-    // TODO: Implement persistence loading in phase 1.3
-    return this.stateManager.getState();
+    try {
+      return await this.persistenceManager.load();
+    } catch (error) {
+      console.error('Failed to load game state:', error);
+      // Return current state as fallback
+      return this.stateManager.getState();
+    }
   }
 
   /**
@@ -872,8 +901,10 @@ export class GameEngine implements GameSystem {
    */
   async triggerAutosave(reason: AutosaveReason): Promise<void> {
     try {
-      // TODO: Implement actual persistence in phase 1.3
-      // For now, just write the save completed event
+      // Perform autosave through persistence manager
+      await this.persistenceManager.autosave(reason);
+
+      // Write the save completed event
       this.eventWriter.writeEvent({
         type: EventType.SAVE_COMPLETED,
         payload: { reason },
@@ -982,6 +1013,7 @@ export class GameEngine implements GameSystem {
       await this.triggerAutosave(AutosaveReason.SHUTDOWN);
 
       // Shutdown all systems in reverse order
+      await this.persistenceManager.shutdown();
       await this.timeManager.shutdown();
       await this.stateManager.shutdown();
       await this.eventManager.shutdown();

@@ -1,4 +1,4 @@
-# Digital Pet Game PRD (Client‑Only HTML5) — Revised Per Feedback
+# Digital Pet Game PRD (Client‑Only HTML5)
 
 Scope: Single‑player, client‑only browser game with no server interaction; fully playable offline after initial load
 
@@ -355,7 +355,6 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 - IndexedDB for state; tick‑driven autosave with explicit user action tracking.
 - Deterministic RNG seeds for debugging encounters.
 - Efficient tick-based architecture without unnecessary animation frames.
-- Event-driven UI updates only when state changes.
 - Sequential event processing architecture with GameEngine as the central orchestrator:
   - Systems are pure, isolated entities with no direct cross-system communication
   - GameEngine provides write-only event interfaces to systems that need to push events
