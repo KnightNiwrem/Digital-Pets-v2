@@ -14,7 +14,7 @@ describe('TimeSystem', () => {
   beforeEach(() => {
     // Reset state
     enqueuedUpdates = [];
-    
+
     // Create mock writer that captures enqueued updates
     gameUpdateWriter = {
       enqueue: jest.fn((update: any) => {
@@ -213,7 +213,7 @@ describe('TimeSystem', () => {
       const callback = () => {
         // Timer callback
       };
-      
+
       timeSystem.start();
       timeSystem.registerTimer('cancel-timer', 1000, callback);
 
