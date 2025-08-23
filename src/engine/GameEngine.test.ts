@@ -4,6 +4,36 @@ import { BaseSystem, type SystemInitOptions, type SystemError } from '../systems
 import { UPDATE_TYPES } from '../models/constants';
 import type { GameState, GameUpdate } from '../models';
 
+// Mock localStorage for GameEngine tests (needed for SaveSystem)
+class LocalStorageMock {
+  private store: Record<string, string> = {};
+
+  getItem(key: string): string | null {
+    return this.store[key] || null;
+  }
+
+  setItem(key: string, value: string): void {
+    this.store[key] = value;
+  }
+
+  removeItem(key: string): void {
+    delete this.store[key];
+  }
+
+  clear(): void {
+    this.store = {};
+  }
+
+  key(index: number): string | null {
+    const keys = Object.keys(this.store);
+    return keys[index] || null;
+  }
+
+  get length(): number {
+    return Object.keys(this.store).length;
+  }
+}
+
 // Mock System for testing
 class MockSystem extends BaseSystem {
   public initializeCalled = false;
@@ -73,8 +103,13 @@ class MockUpdateHandlerSystem extends MockSystem {
 
 describe('GameEngine', () => {
   let engine: GameEngine;
+  let mockLocalStorage: LocalStorageMock;
 
   beforeEach(() => {
+    // Setup mock localStorage for SaveSystem
+    mockLocalStorage = new LocalStorageMock();
+    global.localStorage = mockLocalStorage as any;
+
     engine = createGameEngine({
       tickInterval: 100, // 100ms for faster testing
       autoStart: false,
@@ -84,6 +119,8 @@ describe('GameEngine', () => {
 
   afterEach(async () => {
     await engine.stop();
+    // Clean up mock localStorage
+    mockLocalStorage.clear();
   });
 
   describe('Initialization', () => {
