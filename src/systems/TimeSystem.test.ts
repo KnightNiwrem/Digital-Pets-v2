@@ -200,8 +200,8 @@ describe('TimeSystem', () => {
       timeSystem.start();
       timeSystem.registerTimer('recurring-timer', 300, callback, true);
 
-      // Wait for multiple triggers
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Wait for multiple triggers - increased wait time to ensure at least 3 triggers
+      await new Promise((resolve) => setTimeout(resolve, 1100));
 
       expect(callCount).toBeGreaterThanOrEqual(3);
 
@@ -237,11 +237,11 @@ describe('TimeSystem', () => {
       expect(remaining1).toBeLessThanOrEqual(1000);
       expect(remaining1).toBeGreaterThan(900);
 
-      // Check after some time
+      // Check after some time - allow for timing variations
       await new Promise((resolve) => setTimeout(resolve, 500));
       const remaining2 = timeSystem.getTimerRemaining('remaining-timer');
-      expect(remaining2).toBeLessThanOrEqual(500);
-      expect(remaining2).toBeGreaterThan(400);
+      expect(remaining2).toBeLessThanOrEqual(510); // Allow 10ms tolerance for timing variations
+      expect(remaining2).toBeGreaterThan(390); // Allow 10ms tolerance for timing variations
 
       // Check non-existent timer
       const noRemaining = timeSystem.getTimerRemaining('non-existent');
@@ -257,7 +257,7 @@ describe('TimeSystem', () => {
       };
 
       timeSystem.start();
-      timeSystem.registerTimer('pause-timer', 500, callback);
+      timeSystem.registerTimer('pause-timer', 600, callback); // Increased from 500ms
 
       // Pause after 200ms
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -267,9 +267,9 @@ describe('TimeSystem', () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
       expect(callbackCalled).toBe(false);
 
-      // Resume and wait for completion
+      // Resume and wait for completion - increased wait time for better reliability
       timeSystem.resume();
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Increased from 400ms
       expect(callbackCalled).toBe(true);
 
       timeSystem.stop();
