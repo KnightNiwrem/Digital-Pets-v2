@@ -159,21 +159,21 @@
 
 ### 4.2 EggSystem Implementation
 
-- [ ] Create `EggSystem` class
-  - [ ] Track incubating eggs
-  - [ ] Implement incubation timers
-  - [ ] Process offline incubation
-  - [ ] Handle multiple eggs
-- [ ] Add hatching mechanics
-  - [ ] Check incubation completion
-  - [ ] Roll species based on egg type
-  - [ ] Apply rarity weights
-  - [ ] Create new pet from egg
-- [ ] Implement starter selection
-  - [ ] Detect no pet/no egg state
-  - [ ] Present three common species
-  - [ ] Handle starter selection
-  - [ ] Initialize starter pet
+- [x] Create `EggSystem` class
+  - [x] Track incubating eggs
+  - [x] Implement incubation timers
+  - [x] Process offline incubation
+  - [x] Handle multiple eggs
+- [x] Add hatching mechanics
+  - [x] Check incubation completion
+  - [x] Roll species based on egg type
+  - [x] Apply rarity weights
+  - [x] Create new pet from egg
+- [x] Implement starter selection
+  - [x] Detect no pet/no egg state
+  - [x] Present three common species
+  - [x] Handle starter selection
+  - [x] Initialize starter pet
 
 ### 4.3 Poop and Status Management
 

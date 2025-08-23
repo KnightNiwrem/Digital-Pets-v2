@@ -38,6 +38,8 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
     'BattleSystem',
     'EventSystem',
     'LocationSystem',
+    'PetSystem',
+    'EggSystem',
   ]);
 
   /**

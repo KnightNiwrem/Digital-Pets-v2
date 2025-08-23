@@ -9,6 +9,12 @@ import { ConfigSystem } from '../systems/ConfigSystem';
 import type { GameState, GameUpdate } from '../models';
 import { UPDATE_TYPES, GAME_TICK_INTERVAL } from '../models/constants';
 
+// Import systems
+import { PetSystem } from '../systems/PetSystem';
+import { SaveSystem } from '../systems/SaveSystem';
+import { TimeSystem } from '../systems/TimeSystem';
+import { EggSystem } from '../systems/EggSystem';
+
 /**
  * Engine configuration options
  */
@@ -461,13 +467,13 @@ export class GameEngine {
    */
   private createUpdateHandlerMap(): UpdateHandlerMap {
     return {
-      [UPDATE_TYPES.USER_ACTION]: ['PetSystem', 'InventorySystem', 'LocationSystem'],
-      [UPDATE_TYPES.GAME_TICK]: ['TimeSystem', 'PetSystem'],
+      [UPDATE_TYPES.USER_ACTION]: ['PetSystem', 'InventorySystem', 'LocationSystem', 'EggSystem'],
+      [UPDATE_TYPES.GAME_TICK]: ['TimeSystem', 'PetSystem', 'EggSystem'],
       [UPDATE_TYPES.ACTIVITY_COMPLETE]: ['ActivitySystem', 'InventorySystem'],
       [UPDATE_TYPES.BATTLE_ACTION]: ['BattleSystem'],
       [UPDATE_TYPES.EVENT_TRIGGER]: ['EventSystem'],
       [UPDATE_TYPES.SAVE_REQUEST]: ['SaveSystem'],
-      [UPDATE_TYPES.STATE_TRANSITION]: ['GameEngine'],
+      [UPDATE_TYPES.STATE_TRANSITION]: ['GameEngine', 'PetSystem', 'EggSystem'],
     };
   }
 
@@ -484,6 +490,8 @@ export class GameEngine {
       'BattleSystem',
       'EventSystem',
       'LocationSystem',
+      'PetSystem',
+      'EggSystem',
     ];
 
     if (authorizedSystems.includes(name)) {
@@ -492,7 +500,10 @@ export class GameEngine {
 
     const initOptions: SystemInitOptions = {
       gameUpdateWriter: writer,
-      config: await this.configSystem.get(name.toLowerCase()),
+      config: {
+        configSystem: this.configSystem,
+        [name.toLowerCase()]: await this.configSystem.get(name.toLowerCase()),
+      },
     };
 
     await system.initialize(initOptions);
@@ -506,8 +517,37 @@ export class GameEngine {
    * Initialize all systems
    */
   private async initializeAllSystems(): Promise<void> {
-    // This will be expanded as systems are implemented
-    // For now, just log
+    // Initialize systems in dependency order
+
+    // 1. SaveSystem (no dependencies)
+    const saveSystem = new SaveSystem();
+    this.registerSystem('SaveSystem', saveSystem);
+    await this.initializeSystem('SaveSystem', saveSystem);
+
+    // 2. TimeSystem (depends on ConfigSystem)
+    const timeSystem = new TimeSystem();
+    this.registerSystem('TimeSystem', timeSystem);
+    await this.initializeSystem('TimeSystem', timeSystem);
+
+    // 3. PetSystem (depends on ConfigSystem)
+    const petSystem = new PetSystem();
+    this.registerSystem('PetSystem', petSystem);
+    await this.initializeSystem('PetSystem', petSystem);
+
+    // 4. EggSystem (depends on ConfigSystem and PetSystem)
+    const eggSystem = new EggSystem();
+    this.registerSystem('EggSystem', eggSystem);
+    await this.initializeSystem('EggSystem', eggSystem);
+
+    // TODO: Add remaining systems as they are implemented:
+    // - InventorySystem
+    // - LocationSystem
+    // - ActivitySystem
+    // - BattleSystem
+    // - EventSystem
+    // - UISystem
+    // - ShopSystem
+
     if (this.config.debugMode) {
       console.log('[GameEngine] All systems initialized');
     }
