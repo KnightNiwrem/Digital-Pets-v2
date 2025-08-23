@@ -5,11 +5,7 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { ActivitySystem } from './ActivitySystem';
 import type { GameState } from '../models';
-import {
-  ACTIVITY_TYPES,
-  STATUS_TYPES,
-  GROWTH_STAGES,
-} from '../models/constants';
+import { ACTIVITY_TYPES, STATUS_TYPES, GROWTH_STAGES } from '../models/constants';
 import { createMockGameState, createMockPet } from '../testing/mocks';
 
 describe('ActivitySystem', () => {
