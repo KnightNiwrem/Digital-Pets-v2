@@ -8,6 +8,7 @@ import { ConfigSystem } from './ConfigSystem';
 import type { GameState } from '../models/GameState';
 import type { EggItem } from '../models/Item';
 import { RARITY_TIERS } from '../models/constants';
+import { createMockGameState, createMockPet, createMockEgg, createMockEggItem, createMockGameUpdateWriter } from '../testing';
 
 describe('EggSystem', () => {
   let eggSystem: EggSystem;
@@ -36,7 +37,7 @@ describe('EggSystem', () => {
     });
 
     // Create a basic game state
-    gameState = createMockGameState();
+    gameState = createMockGameState({ playerId: 'test_player' });
   });
 
   afterEach(async () => {
@@ -354,128 +355,3 @@ describe('EggSystem', () => {
     });
   });
 });
-
-// Helper functions for creating mock data
-function createMockGameState(): GameState {
-  return {
-    version: '1.0.0',
-    timestamp: Date.now(),
-    playerId: 'test_player',
-    pet: null,
-    inventory: {
-      items: [],
-      currency: { coins: 100 },
-      maxSlots: 100,
-      unlockedSlots: 50,
-    },
-    world: {
-      currentLocation: {
-        currentLocationId: 'city_square',
-        currentArea: undefined,
-        traveling: false,
-        travelRoute: undefined,
-        inActivity: false,
-        currentActivity: undefined,
-        visitedLocations: ['city_square'],
-        lastVisitTimes: {
-          city_square: Date.now(),
-        },
-        discoveredSecrets: undefined,
-      },
-      activeTimers: [],
-      eventParticipation: [],
-      currentEvents: [],
-      worldTime: Date.now(),
-      lastTickTime: Date.now(),
-      tickCount: 0,
-    },
-    collections: {
-      eggs: [],
-      species: {},
-      memorials: [],
-    },
-    meta: {
-      settings: {} as any,
-      tutorialProgress: {} as any,
-      statistics: {} as any,
-    },
-    saveData: {
-      lastSaveTime: Date.now(),
-      autoSaveEnabled: true,
-      saveCount: 0,
-      backupSlots: {},
-    },
-  };
-}
-
-function createMockPet(): any {
-  return {
-    id: 'pet_1',
-    name: 'Test Pet',
-    species: 'starter_fire',
-    rarity: RARITY_TIERS.COMMON,
-    stage: 'HATCHLING',
-    birthTime: Date.now(),
-    stageStartTime: Date.now(),
-    lastInteractionTime: Date.now(),
-    stats: {
-      health: 20,
-      maxHealth: 20,
-      attack: 5,
-      defense: 5,
-      speed: 5,
-      action: 10,
-      maxAction: 10,
-    },
-    energy: 50,
-    maxEnergy: 50,
-    careValues: { satiety: 100, hydration: 100, happiness: 100 },
-    hiddenCounters: {
-      satietyTicks: 2000,
-      hydrationTicks: 1500,
-      happinessTicks: 3000,
-      lifeTicks: 100,
-    },
-    status: { primary: 'HEALTHY' },
-    poopCount: 0,
-    moves: ['tackle'],
-    experiencePoints: 0,
-    trainingCounts: {
-      health: 0,
-      attack: 0,
-      defense: 0,
-      speed: 0,
-      action: 0,
-    },
-  };
-}
-
-function createMockEgg(): any {
-  return {
-    id: 'egg_1',
-    eggType: 'generic_egg',
-    obtainedTime: Date.now(),
-    incubationStartTime: Date.now(),
-    incubationEndTime: Date.now() + 3600000,
-    isIncubating: false,
-  };
-}
-
-function createMockEggItem(): EggItem {
-  return {
-    id: 'egg_item_1',
-    name: 'Mystery Egg',
-    description: 'A mysterious egg',
-    category: 'EGG',
-    sprite: 'egg.png',
-    stackable: false,
-    maxStack: 1,
-    sellPrice: 100,
-    buyPrice: 500,
-    rarity: RARITY_TIERS.COMMON,
-    consumable: true,
-    eggType: 'generic_egg',
-    obtainedFrom: 'shop',
-    incubationDuration: 12,
-  };
-}
