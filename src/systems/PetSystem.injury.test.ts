@@ -9,6 +9,7 @@ import type { GameState } from '../models/GameState';
 import type { Pet } from '../models/Pet';
 import { STATUS_TYPES, GROWTH_STAGES } from '../models/constants';
 import type { SystemInitOptions } from './BaseSystem';
+import { createMockGameState, createMockPet } from '../testing';
 
 describe('PetSystem - Injury Mechanics', () => {
   let petSystem: PetSystem;
@@ -28,128 +29,23 @@ describe('PetSystem - Injury Mechanics', () => {
       config: {},
     } as SystemInitOptions);
 
-    // Create mock pet
-    mockPet = {
+    // Create mock pet and game state
+    mockPet = createMockPet({
       id: 'test-pet',
       name: 'TestPet',
       species: 'TestSpecies',
       rarity: 'COMMON',
       stage: GROWTH_STAGES.JUVENILE,
-      birthTime: Date.now(),
-      stageStartTime: Date.now(),
-      lastInteractionTime: Date.now(),
-      stats: {
-        health: 50,
-        maxHealth: 50,
-        attack: 10,
-        defense: 10,
-        speed: 10,
-        action: 20,
-        maxAction: 20,
-      },
-      energy: 80,
-      maxEnergy: 80,
-      careValues: {
-        satiety: 100,
-        hydration: 100,
-        happiness: 100,
-      },
-      hiddenCounters: {
-        satietyTicks: 2000,
-        hydrationTicks: 1500,
-        happinessTicks: 3000,
-        lifeTicks: 100,
-      },
-      status: {
-        primary: STATUS_TYPES.HEALTHY,
-      },
-      poopCount: 0,
-      moves: ['tackle'],
-      experiencePoints: 0,
-      trainingCounts: {
-        health: 0,
-        attack: 0,
-        defense: 0,
-        speed: 0,
-        action: 0,
-      },
-    };
+      health: 50,
+      energy: 80
+    });
 
-    // Create game state
-    gameState = {
+    gameState = createMockGameState({
       playerId: 'test-player',
-      saveData: {
-        lastSaveTime: Date.now(),
-        autoSaveEnabled: true,
-        saveCount: 1,
-        backupSlots: {},
-      },
-      version: '1.0.0',
-      timestamp: Date.now(),
       pet: mockPet,
-      inventory: {
-        items: [],
-        currency: {
-          coins: 0,
-        },
-        maxSlots: 100,
-        unlockedSlots: 20,
-      },
-      world: {
-        currentLocation: {} as any, // Mock location state
-        activeTimers: [],
-        eventParticipation: [],
-        currentEvents: [],
-        worldTime: Date.now(),
-        lastTickTime: Date.now(),
-        tickCount: 0,
-      },
-      collections: {
-        eggs: [],
-        species: {},
-        memorials: [],
-      },
-      meta: {
-        settings: {
-          masterVolume: 70,
-          musicVolume: 60,
-          sfxVolume: 80,
-          textSize: 'medium',
-          colorBlindMode: 'off',
-          highContrast: false,
-          reducedMotion: false,
-          showParticles: true,
-          autoSave: true,
-          autoSaveInterval: 5,
-          confirmActions: true,
-          showTutorialHints: true,
-          enableNotifications: true,
-          lowCareWarning: true,
-          activityComplete: true,
-          eventReminders: true,
-          touchControls: true,
-          keyboardShortcuts: true,
-          swipeGestures: true,
-        },
-        tutorialProgress: {
-          completed: [],
-          skipped: false,
-          milestones: {
-            firstFeed: false,
-            firstDrink: false,
-            firstPlay: false,
-            firstClean: false,
-            firstSleep: false,
-            firstActivity: false,
-            firstBattle: false,
-            firstShop: false,
-            firstTravel: false,
-            firstTraining: false,
-          },
-        },
-        statistics: {} as any, // Mock statistics
-      },
-    };
+      coins: 0,
+      unlockedSlots: 20
+    });
   });
 
   describe('applyInjury', () => {

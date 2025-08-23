@@ -8,7 +8,7 @@ import { ConfigSystem } from './ConfigSystem';
 import type { GameState } from '../models/GameState';
 import type { EggItem } from '../models/Item';
 import { RARITY_TIERS } from '../models/constants';
-import { createMockGameState, createMockPet, createMockEgg, createMockEggItem, createMockGameUpdateWriter } from '../testing';
+import { createMockGameState, createMockPet, createMockEgg, createMockEggItem } from '../testing';
 
 describe('EggSystem', () => {
   let eggSystem: EggSystem;

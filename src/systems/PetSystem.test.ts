@@ -6,21 +6,15 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { PetSystem } from './PetSystem';
 import { ConfigSystem } from './ConfigSystem';
 import type { GameState } from '../models/GameState';
-import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import { GROWTH_STAGES, STATUS_TYPES, RARITY_TIERS } from '../models/constants';
+import { createMockGameState, createMockGameUpdateWriter } from '../testing';
 
 describe('PetSystem', () => {
   let petSystem: PetSystem;
   let configSystem: ConfigSystem;
-  let mockGameUpdateWriter: GameUpdateWriter;
   let gameState: GameState;
 
   beforeEach(async () => {
-    // Create mock GameUpdateWriter
-    mockGameUpdateWriter = {
-      enqueue: () => {},
-    };
-
     // Initialize ConfigSystem to get tuning values
     configSystem = new ConfigSystem();
     const tuning = configSystem.getTuningValues();
@@ -28,57 +22,19 @@ describe('PetSystem', () => {
     // Initialize PetSystem with tuning values
     petSystem = new PetSystem();
     await petSystem.initialize({
-      gameUpdateWriter: mockGameUpdateWriter,
+      gameUpdateWriter: createMockGameUpdateWriter(),
       tuning: tuning,
       config: {},
     });
 
     // Create empty game state
-    gameState = {
-      version: '1.0.0',
-      timestamp: Date.now(),
+    gameState = createMockGameState({
       playerId: 'test-player',
+      currentLocationId: 'city_central',
       pet: null,
-      inventory: {
-        items: [],
-        currency: { coins: 0 },
-        maxSlots: 100,
-        unlockedSlots: 20,
-      },
-      world: {
-        currentLocation: {
-          currentLocationId: 'city_central',
-          traveling: false,
-          inActivity: false,
-          visitedLocations: ['city_central'],
-          lastVisitTimes: {
-            city_central: Date.now(),
-          },
-        },
-        activeTimers: [],
-        eventParticipation: [],
-        currentEvents: [],
-        worldTime: Date.now(),
-        lastTickTime: Date.now(),
-        tickCount: 0,
-      },
-      collections: {
-        eggs: [],
-        species: {},
-        memorials: [],
-      },
-      meta: {
-        settings: {} as any,
-        tutorialProgress: {} as any,
-        statistics: {} as any,
-      },
-      saveData: {
-        lastSaveTime: Date.now(),
-        autoSaveEnabled: true,
-        saveCount: 0,
-        backupSlots: {},
-      },
-    };
+      coins: 0,
+      unlockedSlots: 20
+    });
   });
 
   describe('Pet Creation', () => {

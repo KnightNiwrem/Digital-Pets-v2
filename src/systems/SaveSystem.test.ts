@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { SaveSystem } from './SaveSystem';
-import type { GameState, SaveState } from '../models';
+import type { SaveState } from '../models';
 import { createMockGameState, createMockPet } from '../testing';
 
 // Mock localStorage
