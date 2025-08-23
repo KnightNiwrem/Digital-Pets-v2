@@ -1,0 +1,1047 @@
+/**
+ * PetSystem - Manages pet state, care values, growth stages, and wellness
+ */
+
+import { BaseSystem } from './BaseSystem';
+import type { SystemInitOptions, SystemError } from './BaseSystem';
+import { ConfigSystem } from './ConfigSystem';
+import type { GameState, GameUpdate, OfflineCalculation } from '../models/GameState';
+import type {
+  Pet,
+  PetCreationOptions,
+  PetMemorial,
+  HiddenCounters,
+  CareValues,
+  BattleStats,
+} from '../models/Pet';
+import type { Item, FoodItem, DrinkItem, ToyItem } from '../models/Item';
+import { UPDATE_TYPES, GROWTH_STAGES, STATUS_TYPES } from '../models/constants';
+import type { GrowthStage, RarityTier, DeathCause } from '../models/constants';
+
+/**
+ * Care action types
+ */
+export enum CareActionType {
+  FEED = 'FEED',
+  DRINK = 'DRINK',
+  PLAY = 'PLAY',
+  CLEAN_POOP = 'CLEAN_POOP',
+  USE_MEDICINE = 'USE_MEDICINE',
+  USE_BANDAGE = 'USE_BANDAGE',
+}
+
+/**
+ * Care action result
+ */
+export interface CareActionResult {
+  success: boolean;
+  message: string;
+  valueChange?: number;
+  newValue?: number;
+  energyCost?: number;
+  itemConsumed?: boolean;
+}
+
+/**
+ * Growth stage check result
+ */
+export interface GrowthCheckResult {
+  canAdvance: boolean;
+  currentStage: GrowthStage;
+  nextStage?: GrowthStage;
+  timeInStage: number;
+  requiredTime: number;
+  meetsCareCriteria: boolean;
+}
+
+/**
+ * PetSystem class implementation
+ */
+export class PetSystem extends BaseSystem {
+  private configSystem: ConfigSystem | null = null;
+  private petCache: Pet | null = null;
+  private lastDecayTick = 0;
+  private poopSpawnTimer = 0;
+
+  constructor() {
+    super('PetSystem');
+  }
+
+  /**
+   * System-specific initialization
+   */
+  protected async onInitialize(options: SystemInitOptions): Promise<void> {
+    // ConfigSystem will be injected by GameEngine
+    this.configSystem = options.config?.configSystem;
+    if (!this.configSystem) {
+      throw new Error('PetSystem requires ConfigSystem');
+    }
+  }
+
+  /**
+   * System-specific shutdown
+   */
+  protected async onShutdown(): Promise<void> {
+    this.petCache = null;
+    this.lastDecayTick = 0;
+    this.poopSpawnTimer = 0;
+  }
+
+  /**
+   * System-specific reset
+   */
+  protected async onReset(): Promise<void> {
+    this.petCache = null;
+    this.lastDecayTick = 0;
+    this.poopSpawnTimer = 0;
+  }
+
+  /**
+   * Process game tick
+   */
+  protected async onTick(deltaTime: number, gameState: GameState): Promise<void> {
+    if (!gameState.pet) {
+      return;
+    }
+
+    // Update care values decay
+    await this.processCareDecay(1, gameState);
+
+    // Check for poop spawning
+    await this.checkPoopSpawn(gameState);
+
+    // Check for sickness
+    await this.checkSickness(gameState);
+
+    // Check for critical conditions
+    await this.checkCriticalConditions(gameState);
+  }
+
+  /**
+   * Update system based on state changes
+   */
+  protected async onUpdate(gameState: GameState, prevState?: GameState): Promise<void> {
+    // Cache the current pet
+    this.petCache = gameState.pet;
+
+    // Check for pet death
+    if (prevState?.pet && !gameState.pet) {
+      // Pet died, handle memorial
+      console.log('Pet has died');
+    }
+  }
+
+  /**
+   * Handle system errors
+   */
+  protected onError(error: SystemError): void {
+    console.error(`[PetSystem] Error occurred:`, error);
+  }
+
+  /**
+   * Create a new pet
+   */
+  public createPet(options: PetCreationOptions, speciesData?: any): Pet {
+    const now = Date.now();
+    const tuning = this.configSystem?.getTuningValues();
+
+    // Get initial stats based on species or defaults
+    const initialStats = this.getInitialStats(options.species, speciesData);
+
+    const pet: Pet = {
+      id: this.generateId(),
+      name: options.name,
+      species: options.species,
+      rarity: speciesData?.rarity || ('COMMON' as RarityTier),
+      stage: GROWTH_STAGES.HATCHLING,
+
+      // Time tracking
+      birthTime: now,
+      stageStartTime: now,
+      lastInteractionTime: now,
+
+      // Stats
+      stats: initialStats,
+      energy: tuning?.energy.maxByStage.HATCHLING || 50,
+      maxEnergy: tuning?.energy.maxByStage.HATCHLING || 50,
+
+      // Care values (computed from hidden counters)
+      careValues: {
+        satiety: 100,
+        hydration: 100,
+        happiness: 100,
+      },
+
+      // Hidden counters (initialized to max)
+      hiddenCounters: {
+        satietyTicks: (tuning?.careTickMultipliers.satiety || 20) * 100,
+        hydrationTicks: (tuning?.careTickMultipliers.hydration || 15) * 100,
+        happinessTicks: (tuning?.careTickMultipliers.happiness || 30) * 100,
+        lifeTicks: tuning?.life.startingValue || 100,
+      },
+
+      // Status
+      status: {
+        primary: STATUS_TYPES.HEALTHY,
+      },
+      poopCount: 0,
+
+      // Battle moves
+      moves: this.getStarterMoves(options.species),
+
+      // Experience
+      experiencePoints: 0,
+      trainingCounts: {
+        health: 0,
+        attack: 0,
+        defense: 0,
+        speed: 0,
+        action: 0,
+      },
+    };
+
+    return pet;
+  }
+
+  /**
+   * Get initial battle stats for a species
+   */
+  private getInitialStats(species: string, speciesData?: any): BattleStats {
+    // Base stats, can be overridden by species data
+    const baseStats = {
+      health: 20,
+      maxHealth: 20,
+      attack: 5,
+      defense: 5,
+      speed: 5,
+      action: 10,
+      maxAction: 10,
+    };
+
+    if (speciesData?.baseStats) {
+      return { ...baseStats, ...speciesData.baseStats };
+    }
+
+    return baseStats;
+  }
+
+  /**
+   * Get starter moves for a species
+   */
+  private getStarterMoves(_species: string): string[] {
+    // Default starter move
+    // TODO: In the future, this would look up species-specific starter moves
+    return ['tackle']; // This would reference actual move IDs
+  }
+
+  /**
+   * Calculate care values from hidden tick counters
+   */
+  public calculateCareValues(hiddenCounters: HiddenCounters): CareValues {
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) {
+      return { satiety: 0, hydration: 0, happiness: 0 };
+    }
+
+    const satiety = Math.ceil(hiddenCounters.satietyTicks / tuning.careTickMultipliers.satiety);
+    const hydration = Math.ceil(
+      hiddenCounters.hydrationTicks / tuning.careTickMultipliers.hydration,
+    );
+    const happiness = Math.ceil(
+      hiddenCounters.happinessTicks / tuning.careTickMultipliers.happiness,
+    );
+
+    return {
+      satiety: Math.max(0, Math.min(100, satiety)),
+      hydration: Math.max(0, Math.min(100, hydration)),
+      happiness: Math.max(0, Math.min(100, happiness)),
+    };
+  }
+
+  /**
+   * Process care value decay over time
+   */
+  public async processCareDecay(ticks: number, gameState: GameState): Promise<void> {
+    if (!gameState.pet) return;
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) return;
+
+    const pet = gameState.pet;
+
+    // Decay hidden tick counters
+    pet.hiddenCounters.satietyTicks = Math.max(0, pet.hiddenCounters.satietyTicks - ticks);
+    pet.hiddenCounters.hydrationTicks = Math.max(0, pet.hiddenCounters.hydrationTicks - ticks);
+    pet.hiddenCounters.happinessTicks = Math.max(0, pet.hiddenCounters.happinessTicks - ticks);
+
+    // Additional happiness decay from poop
+    if (pet.poopCount > 0) {
+      const poopPenalty = pet.poopCount * tuning.poop.happinessDecayPerPoop;
+      pet.hiddenCounters.happinessTicks = Math.max(
+        0,
+        pet.hiddenCounters.happinessTicks - poopPenalty,
+      );
+    }
+
+    // Update Life based on care values
+    const careValues = this.calculateCareValues(pet.hiddenCounters);
+    pet.careValues = careValues;
+
+    // Update life based on overall care
+    const avgCare = (careValues.satiety + careValues.hydration + careValues.happiness) / 3;
+    if (avgCare < 30) {
+      // Pet is neglected, decrease life
+      pet.hiddenCounters.lifeTicks = Math.max(
+        0,
+        pet.hiddenCounters.lifeTicks - (tuning.life.decayWhenNeglected * ticks) / 60,
+      );
+    } else if (avgCare > 70 && pet.hiddenCounters.lifeTicks < tuning.life.startingValue) {
+      // Pet is well cared for, recover life
+      pet.hiddenCounters.lifeTicks = Math.min(
+        tuning.life.startingValue,
+        pet.hiddenCounters.lifeTicks + (tuning.life.recoveryRatePerHour * ticks) / 60,
+      );
+    }
+
+    // Check if pet is sick and apply life decay
+    if (pet.status.primary === STATUS_TYPES.SICK) {
+      pet.hiddenCounters.lifeTicks = Math.max(
+        0,
+        pet.hiddenCounters.lifeTicks - (tuning.sickness.lifeDecayPerHour * ticks) / 60,
+      );
+    }
+  }
+
+  /**
+   * Feed the pet
+   */
+  public async feed(gameState: GameState, foodItem: Item): Promise<CareActionResult> {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) {
+      return { success: false, message: 'Configuration not loaded' };
+    }
+
+    const pet = gameState.pet;
+
+    // Cast to FoodItem and determine effect based on size
+    const food = foodItem as FoodItem;
+    let ticksToAdd = 0;
+    const effectSize = food.effectSize || 'SMALL';
+
+    if (effectSize === 'SMALL') {
+      ticksToAdd =
+        ((tuning.items.foodEffects?.SMALL || 20) * tuning.careTickMultipliers.satiety) / 100;
+    } else if (effectSize === 'MEDIUM') {
+      ticksToAdd =
+        ((tuning.items.foodEffects?.MEDIUM || 40) * tuning.careTickMultipliers.satiety) / 100;
+    } else if (effectSize === 'LARGE') {
+      ticksToAdd =
+        ((tuning.items.foodEffects?.LARGE || 60) * tuning.careTickMultipliers.satiety) / 100;
+    }
+
+    // Add ticks to satiety
+    const oldValue = this.calculateCareValues(pet.hiddenCounters).satiety;
+    pet.hiddenCounters.satietyTicks = Math.min(
+      tuning.careTickMultipliers.satiety * 100,
+      pet.hiddenCounters.satietyTicks + ticksToAdd,
+    );
+
+    const newValue = this.calculateCareValues(pet.hiddenCounters).satiety;
+    pet.careValues = this.calculateCareValues(pet.hiddenCounters);
+    pet.lastInteractionTime = Date.now();
+
+    // Queue update for inventory system to consume item
+    if (this.gameUpdateWriter) {
+      const update: GameUpdate = {
+        id: this.generateId(),
+        type: UPDATE_TYPES.USER_ACTION,
+        timestamp: Date.now(),
+        priority: 0,
+        payload: {
+          action: 'CONSUME_ITEM',
+          data: { itemId: foodItem.id },
+          source: 'PetSystem',
+          targetSystem: 'InventorySystem',
+        },
+      };
+      this.gameUpdateWriter.enqueue(update);
+    }
+
+    return {
+      success: true,
+      message: `${pet.name} ate the ${foodItem.name}!`,
+      valueChange: newValue - oldValue,
+      newValue,
+      itemConsumed: true,
+    };
+  }
+
+  /**
+   * Give the pet a drink
+   */
+  public async drink(gameState: GameState, drinkItem: Item): Promise<CareActionResult> {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) {
+      return { success: false, message: 'Configuration not loaded' };
+    }
+
+    const pet = gameState.pet;
+
+    // Cast to DrinkItem and determine effect based on size
+    const drink = drinkItem as DrinkItem;
+    let ticksToAdd = 0;
+    const effectSize = drink.effectSize || 'SMALL';
+
+    if (effectSize === 'SMALL') {
+      ticksToAdd =
+        ((tuning.items.drinkEffects?.SMALL || 20) * tuning.careTickMultipliers.hydration) / 100;
+    } else if (effectSize === 'MEDIUM') {
+      ticksToAdd =
+        ((tuning.items.drinkEffects?.MEDIUM || 40) * tuning.careTickMultipliers.hydration) / 100;
+    } else if (effectSize === 'LARGE') {
+      ticksToAdd =
+        ((tuning.items.drinkEffects?.LARGE || 60) * tuning.careTickMultipliers.hydration) / 100;
+    }
+
+    // Add ticks to hydration
+    const oldValue = this.calculateCareValues(pet.hiddenCounters).hydration;
+    pet.hiddenCounters.hydrationTicks = Math.min(
+      tuning.careTickMultipliers.hydration * 100,
+      pet.hiddenCounters.hydrationTicks + ticksToAdd,
+    );
+
+    const newValue = this.calculateCareValues(pet.hiddenCounters).hydration;
+    pet.careValues = this.calculateCareValues(pet.hiddenCounters);
+    pet.lastInteractionTime = Date.now();
+
+    // Queue update for inventory system to consume item
+    if (this.gameUpdateWriter) {
+      const update: GameUpdate = {
+        id: this.generateId(),
+        type: UPDATE_TYPES.USER_ACTION,
+        timestamp: Date.now(),
+        priority: 0,
+        payload: {
+          action: 'CONSUME_ITEM',
+          data: { itemId: drinkItem.id },
+          source: 'PetSystem',
+          targetSystem: 'InventorySystem',
+        },
+      };
+      this.gameUpdateWriter.enqueue(update);
+    }
+
+    return {
+      success: true,
+      message: `${pet.name} drank the ${drinkItem.name}!`,
+      valueChange: newValue - oldValue,
+      newValue,
+      itemConsumed: true,
+    };
+  }
+
+  /**
+   * Play with the pet
+   */
+  public async play(gameState: GameState, toyItem?: Item): Promise<CareActionResult> {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) {
+      return { success: false, message: 'Configuration not loaded' };
+    }
+
+    const pet = gameState.pet;
+
+    // Check energy requirement for playing with toys
+    let energyCost = 0;
+    let ticksToAdd = 0;
+
+    if (toyItem) {
+      // Cast to ToyItem and use its properties
+      const toy = toyItem as ToyItem;
+      energyCost = toy.energyCost || 5;
+      const effectSize = toy.effectSize || 'SMALL';
+
+      if (effectSize === 'SMALL') {
+        ticksToAdd =
+          ((tuning.items.toyEffects?.SMALL || 15) * tuning.careTickMultipliers.happiness) / 100;
+      } else if (effectSize === 'MEDIUM') {
+        ticksToAdd =
+          ((tuning.items.toyEffects?.MEDIUM || 30) * tuning.careTickMultipliers.happiness) / 100;
+      } else if (effectSize === 'LARGE') {
+        ticksToAdd =
+          ((tuning.items.toyEffects?.LARGE || 50) * tuning.careTickMultipliers.happiness) / 100;
+      }
+
+      if (pet.energy < energyCost) {
+        return { success: false, message: 'Pet is too tired to play with toys' };
+      }
+    } else {
+      // Simple play without toy - no energy cost, smaller happiness gain
+      ticksToAdd = (10 * tuning.careTickMultipliers.happiness) / 100;
+    }
+
+    // Add ticks to happiness
+    const oldValue = this.calculateCareValues(pet.hiddenCounters).happiness;
+    pet.hiddenCounters.happinessTicks = Math.min(
+      tuning.careTickMultipliers.happiness * 100,
+      pet.hiddenCounters.happinessTicks + ticksToAdd,
+    );
+
+    const newValue = this.calculateCareValues(pet.hiddenCounters).happiness;
+    pet.careValues = this.calculateCareValues(pet.hiddenCounters);
+    pet.lastInteractionTime = Date.now();
+
+    // Deduct energy if using toy
+    if (toyItem && energyCost > 0) {
+      pet.energy -= energyCost;
+
+      // Handle toy durability if applicable
+      const toy = toyItem as ToyItem;
+      if (toy.durability !== undefined && this.gameUpdateWriter) {
+        const update: GameUpdate = {
+          id: this.generateId(),
+          type: UPDATE_TYPES.USER_ACTION,
+          timestamp: Date.now(),
+          priority: 0,
+          payload: {
+            action: 'USE_ITEM_DURABILITY',
+            data: { itemId: toyItem.id },
+            source: 'PetSystem',
+            targetSystem: 'InventorySystem',
+          },
+        };
+        this.gameUpdateWriter.enqueue(update);
+      }
+    }
+
+    return {
+      success: true,
+      message: toyItem
+        ? `${pet.name} played with the ${toyItem.name}!`
+        : `You played with ${pet.name}!`,
+      valueChange: newValue - oldValue,
+      newValue,
+      energyCost,
+    };
+  }
+
+  /**
+   * Clean poop
+   */
+  public async cleanPoop(gameState: GameState, amount?: number): Promise<CareActionResult> {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    const pet = gameState.pet;
+
+    if (pet.poopCount === 0) {
+      return { success: false, message: 'No poop to clean' };
+    }
+
+    const oldCount = pet.poopCount;
+
+    if (amount !== undefined) {
+      // Clean specific amount (e.g., from hygiene items)
+      pet.poopCount = Math.max(0, pet.poopCount - amount);
+    } else {
+      // Clean all poop instantly
+      pet.poopCount = 0;
+    }
+
+    const cleaned = oldCount - pet.poopCount;
+    pet.lastInteractionTime = Date.now();
+
+    return {
+      success: true,
+      message: cleaned === oldCount ? 'All poop has been cleaned!' : `Cleaned ${cleaned} poop!`,
+      valueChange: -cleaned,
+      newValue: pet.poopCount,
+    };
+  }
+
+  /**
+   * Check and spawn poop
+   */
+  private async checkPoopSpawn(gameState: GameState): Promise<void> {
+    if (!gameState.pet) return;
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) return;
+
+    const pet = gameState.pet;
+
+    // Only spawn poop when awake
+    // TODO: Check if pet is sleeping when sleep system is implemented
+
+    // Increment spawn timer
+    this.poopSpawnTimer++;
+
+    // Calculate spawn interval (in ticks/minutes)
+    const minTicks = tuning.poop.spawnRangeHours.min * 60;
+    const maxTicks = tuning.poop.spawnRangeHours.max * 60;
+    const spawnInterval = minTicks + Math.random() * (maxTicks - minTicks);
+
+    if (this.poopSpawnTimer >= spawnInterval) {
+      pet.poopCount++;
+      this.poopSpawnTimer = 0;
+
+      console.log(`Poop spawned! Count: ${pet.poopCount}`);
+    }
+  }
+
+  /**
+   * Check for sickness
+   */
+  private async checkSickness(gameState: GameState): Promise<void> {
+    if (!gameState.pet) return;
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) return;
+
+    const pet = gameState.pet;
+
+    // Skip if already sick
+    if (pet.status.primary === STATUS_TYPES.SICK) return;
+
+    // Calculate sickness chance
+    let sicknessChance = tuning.sickness.baseChancePerHour / 60; // Per tick chance
+
+    // Increase chance based on poop
+    if (pet.poopCount >= tuning.poop.sicknessThreshold) {
+      sicknessChance *= tuning.sickness.poopMultiplier;
+    }
+
+    // Roll for sickness
+    if (Math.random() * 100 < sicknessChance) {
+      pet.status.primary = STATUS_TYPES.SICK;
+      pet.status.sicknessSeverity = 20 + Math.random() * 30; // 20-50 severity
+
+      console.log(`${pet.name} got sick! Severity: ${pet.status.sicknessSeverity}`);
+    }
+  }
+
+  /**
+   * Treat sickness with medicine
+   */
+  public async treatSickness(gameState: GameState, medicineItem: Item): Promise<CareActionResult> {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    const pet = gameState.pet;
+
+    if (pet.status.primary !== STATUS_TYPES.SICK) {
+      return { success: false, message: `${pet.name} is not sick` };
+    }
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) {
+      return { success: false, message: 'Configuration not loaded' };
+    }
+
+    // Reduce sickness severity
+    const effectiveness = tuning.items.medicineEffectiveness;
+    pet.status.sicknessSeverity = Math.max(0, (pet.status.sicknessSeverity || 0) - effectiveness);
+
+    // Cure if severity is 0
+    if (pet.status.sicknessSeverity <= 0) {
+      pet.status.primary = STATUS_TYPES.HEALTHY;
+      pet.status.sicknessSeverity = undefined;
+    }
+
+    // Queue update to consume medicine
+    if (this.gameUpdateWriter) {
+      const update: GameUpdate = {
+        id: this.generateId(),
+        type: UPDATE_TYPES.USER_ACTION,
+        timestamp: Date.now(),
+        priority: 0,
+        payload: {
+          action: 'CONSUME_ITEM',
+          data: { itemId: medicineItem.id },
+          source: 'PetSystem',
+          targetSystem: 'InventorySystem',
+        },
+      };
+      this.gameUpdateWriter.enqueue(update);
+    }
+
+    return {
+      success: true,
+      message:
+        pet.status.primary === STATUS_TYPES.HEALTHY
+          ? `${pet.name} has been cured!`
+          : `${pet.name}'s condition improved!`,
+      itemConsumed: true,
+    };
+  }
+
+  /**
+   * Treat injury with bandage
+   */
+  public async treatInjury(gameState: GameState, bandageItem: Item): Promise<CareActionResult> {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    const pet = gameState.pet;
+
+    if (pet.status.primary !== STATUS_TYPES.INJURED) {
+      return { success: false, message: `${pet.name} is not injured` };
+    }
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) {
+      return { success: false, message: 'Configuration not loaded' };
+    }
+
+    // Reduce injury severity
+    const effectiveness = tuning.items.bandageEffectiveness;
+    pet.status.injurySeverity = Math.max(0, (pet.status.injurySeverity || 0) - effectiveness);
+
+    // Heal if severity is 0
+    if (pet.status.injurySeverity <= 0) {
+      pet.status.primary = STATUS_TYPES.HEALTHY;
+      pet.status.injurySeverity = undefined;
+    }
+
+    // Queue update to consume bandage
+    if (this.gameUpdateWriter) {
+      const update: GameUpdate = {
+        id: this.generateId(),
+        type: UPDATE_TYPES.USER_ACTION,
+        timestamp: Date.now(),
+        priority: 0,
+        payload: {
+          action: 'CONSUME_ITEM',
+          data: { itemId: bandageItem.id },
+          source: 'PetSystem',
+          targetSystem: 'InventorySystem',
+        },
+      };
+      this.gameUpdateWriter.enqueue(update);
+    }
+
+    return {
+      success: true,
+      message:
+        pet.status.primary === STATUS_TYPES.HEALTHY
+          ? `${pet.name}'s injury has been healed!`
+          : `${pet.name}'s injury is healing!`,
+      itemConsumed: true,
+    };
+  }
+
+  /**
+   * Check growth stage advancement eligibility
+   */
+  public checkGrowthStage(gameState: GameState): GrowthCheckResult {
+    const result: GrowthCheckResult = {
+      canAdvance: false,
+      currentStage: GROWTH_STAGES.HATCHLING,
+      timeInStage: 0,
+      requiredTime: 0,
+      meetsCareCriteria: false,
+    };
+
+    if (!gameState.pet) {
+      return result;
+    }
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) {
+      return result;
+    }
+
+    const pet = gameState.pet;
+    const now = Date.now();
+
+    result.currentStage = pet.stage;
+    result.timeInStage = (now - pet.stageStartTime) / (1000 * 60 * 60); // Hours
+
+    // Check if can advance
+    if (pet.stage === GROWTH_STAGES.HATCHLING) {
+      result.requiredTime = tuning.growth.stageDurations?.HATCHLING || 24;
+      result.nextStage = GROWTH_STAGES.JUVENILE;
+    } else if (pet.stage === GROWTH_STAGES.JUVENILE) {
+      result.requiredTime = tuning.growth.stageDurations?.JUVENILE || 72;
+      result.nextStage = GROWTH_STAGES.ADULT;
+    } else {
+      // Already adult
+      return result;
+    }
+
+    // Check time requirement
+    const meetsTimeReq = result.timeInStage >= result.requiredTime;
+
+    // Check care criteria (basic care maintained)
+    const careValues = this.calculateCareValues(pet.hiddenCounters);
+    const avgCare = (careValues.satiety + careValues.hydration + careValues.happiness) / 3;
+    result.meetsCareCriteria = avgCare >= 50; // At least 50% average care
+
+    result.canAdvance = meetsTimeReq && result.meetsCareCriteria;
+
+    return result;
+  }
+
+  /**
+   * Advance pet to next growth stage
+   */
+  public async advanceStage(gameState: GameState): Promise<CareActionResult> {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    const checkResult = this.checkGrowthStage(gameState);
+
+    if (!checkResult.canAdvance || !checkResult.nextStage) {
+      return {
+        success: false,
+        message: checkResult.meetsCareCriteria
+          ? `Not enough time in current stage (${checkResult.timeInStage.toFixed(1)}/${checkResult.requiredTime} hours)`
+          : 'Pet needs better care before advancing',
+      };
+    }
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) {
+      return { success: false, message: 'Configuration not loaded' };
+    }
+
+    const pet = gameState.pet;
+    const oldStage = pet.stage;
+
+    // Advance stage
+    pet.stage = checkResult.nextStage;
+    pet.stageStartTime = Date.now();
+
+    // Apply stat bonuses
+    const bonuses = tuning.growth.stageAdvancementBonuses;
+    pet.stats.maxHealth += bonuses.health;
+    pet.stats.health = pet.stats.maxHealth; // Full heal on advancement
+    pet.stats.attack += bonuses.attack;
+    pet.stats.defense += bonuses.defense;
+    pet.stats.speed += bonuses.speed;
+    pet.stats.maxAction += bonuses.action;
+    pet.stats.action = pet.stats.maxAction; // Full action on advancement
+
+    // Update max energy
+    pet.maxEnergy = tuning.energy.maxByStage[pet.stage] || 120;
+    pet.energy = pet.maxEnergy; // Full energy on advancement
+
+    return {
+      success: true,
+      message: `${pet.name} has grown from ${oldStage} to ${pet.stage}! Stats increased!`,
+    };
+  }
+
+  /**
+   * Check critical conditions (life threshold check)
+   */
+  private async checkCriticalConditions(gameState: GameState): Promise<void> {
+    if (!gameState.pet) return;
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) return;
+
+    const pet = gameState.pet;
+
+    // Check if pet should die from neglect
+    if (pet.hiddenCounters.lifeTicks <= 0) {
+      await this.handlePetDeath(gameState, 'neglect');
+    } else if (pet.hiddenCounters.lifeTicks < tuning.life.criticalThreshold) {
+      // Pet is in critical condition, send warning
+      console.warn(`${pet.name} is in critical condition! Life: ${pet.hiddenCounters.lifeTicks}`);
+    }
+  }
+
+  /**
+   * Handle pet death
+   */
+  private async handlePetDeath(gameState: GameState, cause: DeathCause): Promise<void> {
+    if (!gameState.pet) return;
+
+    const pet = gameState.pet;
+    const now = Date.now();
+
+    // Create memorial
+    const memorial: PetMemorial = {
+      id: pet.id,
+      name: pet.name,
+      species: pet.species,
+      rarity: pet.rarity,
+      birthTime: pet.birthTime,
+      deathTime: now,
+      causeOfDeath: cause,
+      finalStage: pet.stage,
+      daysLived: Math.floor((now - pet.birthTime) / (1000 * 60 * 60 * 24)),
+    };
+
+    // Add to memorials
+    if (!gameState.collections.memorials) {
+      gameState.collections.memorials = [];
+    }
+    gameState.collections.memorials.push(memorial);
+
+    // Set pet status to dead
+    pet.status.primary = STATUS_TYPES.DEAD;
+
+    // Queue death notification
+    if (this.gameUpdateWriter) {
+      const update: GameUpdate = {
+        id: this.generateId(),
+        type: UPDATE_TYPES.STATE_TRANSITION,
+        timestamp: Date.now(),
+        priority: 1,
+        payload: {
+          action: 'PET_DEATH',
+          data: {
+            petId: pet.id,
+            cause,
+            memorial,
+          },
+          source: 'PetSystem',
+        },
+      };
+      this.gameUpdateWriter.enqueue(update);
+    }
+
+    console.log(`${pet.name} has died from ${cause}`);
+  }
+
+  /**
+   * Revive pet with an egg
+   */
+  public async revivePet(gameState: GameState, eggId: string): Promise<CareActionResult> {
+    if (gameState.pet && gameState.pet.status.primary !== STATUS_TYPES.DEAD) {
+      return { success: false, message: 'Pet is not dead' };
+    }
+
+    // Check if egg exists
+    const egg = gameState.collections.eggs?.find((e) => e.id === eggId);
+    if (!egg) {
+      return { success: false, message: 'Egg not found' };
+    }
+
+    // Queue egg hatching through EggSystem
+    if (this.gameUpdateWriter) {
+      const update: GameUpdate = {
+        id: this.generateId(),
+        type: UPDATE_TYPES.USER_ACTION,
+        timestamp: Date.now(),
+        priority: 1,
+        payload: {
+          action: 'HATCH_EGG_FOR_REVIVAL',
+          data: { eggId },
+          source: 'PetSystem',
+          targetSystem: 'EggSystem',
+        },
+      };
+      this.gameUpdateWriter.enqueue(update);
+    }
+
+    return {
+      success: true,
+      message: 'Starting egg hatching for revival...',
+    };
+  }
+
+  /**
+   * Process offline care decay
+   */
+  public async processOfflineCareDecay(
+    offlineCalculation: OfflineCalculation,
+    gameState: GameState,
+  ): Promise<void> {
+    if (!gameState.pet) return;
+
+    const pet = gameState.pet;
+
+    // Apply care decay from offline calculation
+    pet.hiddenCounters.satietyTicks = Math.max(
+      0,
+      pet.hiddenCounters.satietyTicks - offlineCalculation.ticksToProcess,
+    );
+    pet.hiddenCounters.hydrationTicks = Math.max(
+      0,
+      pet.hiddenCounters.hydrationTicks - offlineCalculation.ticksToProcess,
+    );
+    pet.hiddenCounters.happinessTicks = Math.max(
+      0,
+      pet.hiddenCounters.happinessTicks - offlineCalculation.ticksToProcess,
+    );
+
+    // Apply life changes
+    if (offlineCalculation.careDecay.life) {
+      pet.hiddenCounters.lifeTicks = Math.max(
+        0,
+        pet.hiddenCounters.lifeTicks - offlineCalculation.careDecay.life,
+      );
+    }
+
+    // Update poop count
+    if (offlineCalculation.poopSpawned) {
+      pet.poopCount += offlineCalculation.poopSpawned;
+    }
+
+    // Update sickness if triggered
+    if (offlineCalculation.sicknessTriggered && pet.status.primary === STATUS_TYPES.HEALTHY) {
+      pet.status.primary = STATUS_TYPES.SICK;
+      pet.status.sicknessSeverity = 30; // Medium severity for offline sickness
+    }
+
+    // Update care values from counters
+    pet.careValues = this.calculateCareValues(pet.hiddenCounters);
+
+    // Check if pet died during offline
+    if (offlineCalculation.petDied) {
+      await this.handlePetDeath(gameState, 'neglect');
+    }
+  }
+
+  /**
+   * Get pet status summary
+   */
+  public getPetSummary(pet: Pet): string {
+    const careValues = this.calculateCareValues(pet.hiddenCounters);
+    const avgCare = (careValues.satiety + careValues.hydration + careValues.happiness) / 3;
+
+    let status = `${pet.name} (${pet.species}, ${pet.stage})\n`;
+    status += `Energy: ${pet.energy}/${pet.maxEnergy}\n`;
+    status += `Satiety: ${careValues.satiety}%\n`;
+    status += `Hydration: ${careValues.hydration}%\n`;
+    status += `Happiness: ${careValues.happiness}%\n`;
+    status += `Status: ${pet.status.primary}\n`;
+    status += `Poop: ${pet.poopCount}\n`;
+
+    if (avgCare < 30) {
+      status += '⚠️ Pet needs immediate care!';
+    } else if (avgCare < 50) {
+      status += '⚠️ Pet needs attention';
+    } else if (avgCare > 80) {
+      status += '✨ Pet is very happy!';
+    }
+
+    return status;
+  }
+
+  /**
+   * Generate a unique ID
+   */
+  private generateId(): string {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+}

@@ -132,30 +132,30 @@
 
 ### 4.1 PetSystem Implementation
 
-- [ ] Create `PetSystem` class
-  - [ ] Initialize pet state
-  - [ ] Implement care value management
-  - [ ] Add hidden tick counters
-  - [ ] Calculate displayed values from ticks
-- [ ] Implement care decay
-  - [ ] Process tick-based decay
-  - [ ] Apply decay multipliers
-  - [ ] Update hidden Life value
-  - [ ] Check for critical thresholds
-- [ ] Add care actions
-  - [ ] Implement feed action
-  - [ ] Implement drink action
-  - [ ] Implement play action
-  - [ ] Add clean poop action
-- [ ] Handle growth stages
-  - [ ] Track stage duration
-  - [ ] Check advancement eligibility
-  - [ ] Apply stat bonuses on advancement
-  - [ ] Update max energy by stage
-- [ ] Implement pet death/revival
-  - [ ] Monitor Life value
-  - [ ] Handle death state
-  - [ ] Implement revival with egg
+- [x] Create `PetSystem` class
+  - [x] Initialize pet state
+  - [x] Implement care value management
+  - [x] Add hidden tick counters
+  - [x] Calculate displayed values from ticks
+- [x] Implement care decay
+  - [x] Process tick-based decay
+  - [x] Apply decay multipliers
+  - [x] Update hidden Life value
+  - [x] Check for critical thresholds
+- [x] Add care actions
+  - [x] Implement feed action
+  - [x] Implement drink action
+  - [x] Implement play action
+  - [x] Add clean poop action
+- [x] Handle growth stages
+  - [x] Track stage duration
+  - [x] Check advancement eligibility
+  - [x] Apply stat bonuses on advancement
+  - [x] Update max energy by stage
+- [x] Implement pet death/revival
+  - [x] Monitor Life value
+  - [x] Handle death state
+  - [x] Implement revival with egg
 
 ### 4.2 EggSystem Implementation
 
@@ -177,21 +177,21 @@
 
 ### 4.3 Poop and Status Management
 
-- [ ] Implement poop spawning
-  - [ ] Create spawn timer (6-24 hours)
-  - [ ] Add randomization
-  - [ ] Track poop count
-  - [ ] Process offline poop spawns
-- [ ] Add sickness mechanics
-  - [ ] Calculate sickness chance
-  - [ ] Apply sickness effects
-  - [ ] Implement medicine treatment
-  - [ ] Track sickness severity
-- [ ] Add injury mechanics
-  - [ ] Track injury status
+- [x] Implement poop spawning
+  - [x] Create spawn timer (6-24 hours)
+  - [x] Add randomization
+  - [x] Track poop count
+  - [x] Process offline poop spawns
+- [x] Add sickness mechanics
+  - [x] Calculate sickness chance
+  - [x] Apply sickness effects
+  - [x] Implement medicine treatment
+  - [x] Track sickness severity
+- [x] Add injury mechanics
+  - [x] Track injury status
   - [ ] Apply movement penalties
   - [ ] Block certain activities
-  - [ ] Implement bandage treatment
+  - [x] Implement bandage treatment
 
 ## Phase 5: Inventory and Shop Systems
 
