@@ -113,6 +113,9 @@ export class PetSystem extends BaseSystem {
     // Check for sickness
     await this.checkSickness(gameState);
 
+    // Process passive injury recovery
+    await this.processInjuryRecovery(1, gameState);
+
     // Check for critical conditions
     await this.checkCriticalConditions(gameState);
   }
@@ -1013,6 +1016,153 @@ export class PetSystem extends BaseSystem {
   }
 
   /**
+   * Apply injury to pet (from battle or activity mishap)
+   */
+  public async applyInjury(
+    gameState: GameState,
+    severity: number,
+    source: string,
+  ): Promise<CareActionResult> {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    const pet = gameState.pet;
+
+    // Set injured status
+    pet.status.primary = STATUS_TYPES.INJURED;
+    pet.status.injurySeverity = Math.min(100, severity);
+
+    // Reduce happiness from injury
+    const tuning = this.configSystem?.getTuningValues();
+    if (tuning) {
+      const happinessPenalty = (severity / 2) * tuning.careTickMultipliers.happiness;
+      pet.hiddenCounters.happinessTicks = Math.max(
+        0,
+        pet.hiddenCounters.happinessTicks - happinessPenalty,
+      );
+      pet.careValues = this.calculateCareValues(pet.hiddenCounters);
+    }
+
+    console.log(`${pet.name} was injured! Severity: ${severity} from ${source}`);
+
+    return {
+      success: true,
+      message: `${pet.name} has been injured!`,
+      valueChange: severity,
+    };
+  }
+
+  /**
+   * Get movement speed modifier based on injury status
+   * Returns a multiplier (1.0 = normal speed, 0.5 = half speed)
+   */
+  public getMovementSpeedModifier(pet: Pet): number {
+    if (pet.status.primary !== STATUS_TYPES.INJURED) {
+      return 1.0;
+    }
+
+    const severity = pet.status.injurySeverity || 0;
+
+    // Injury slows movement based on severity
+    // Severity 0-25: 90% speed
+    // Severity 26-50: 75% speed
+    // Severity 51-75: 50% speed
+    // Severity 76-100: 25% speed
+    if (severity <= 25) {
+      return 0.9;
+    } else if (severity <= 50) {
+      return 0.75;
+    } else if (severity <= 75) {
+      return 0.5;
+    } else {
+      return 0.25;
+    }
+  }
+
+  /**
+   * Check if an activity is blocked due to injury
+   * Returns true if the activity is blocked
+   */
+  public isActivityBlocked(pet: Pet, activityType: string): boolean {
+    if (pet.status.primary !== STATUS_TYPES.INJURED) {
+      return false;
+    }
+
+    const severity = pet.status.injurySeverity || 0;
+
+    // Training is blocked for any injury
+    if (activityType === 'TRAINING') {
+      return true;
+    }
+
+    // Mining is blocked for moderate or severe injuries
+    if (activityType === 'MINING' && severity > 25) {
+      return true;
+    }
+
+    // Arena/Battle activities are blocked for severe injuries
+    if ((activityType === 'ARENA' || activityType === 'BATTLE') && severity > 50) {
+      return true;
+    }
+
+    // Long duration activities blocked for severe injuries
+    if (activityType === 'LONG_ACTIVITY' && severity > 75) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Get injury status message
+   */
+  public getInjuryStatusMessage(pet: Pet): string | null {
+    if (pet.status.primary !== STATUS_TYPES.INJURED) {
+      return null;
+    }
+
+    const severity = pet.status.injurySeverity || 0;
+
+    if (severity <= 25) {
+      return `${pet.name} has minor injuries (movement slightly reduced)`;
+    } else if (severity <= 50) {
+      return `${pet.name} is moderately injured (movement reduced, cannot train or mine)`;
+    } else if (severity <= 75) {
+      return `${pet.name} is severely injured (movement greatly reduced, many activities blocked)`;
+    } else {
+      return `${pet.name} is critically injured (movement minimal, most activities blocked)`;
+    }
+  }
+
+  /**
+   * Process injury recovery over time (passive healing)
+   */
+  public async processInjuryRecovery(ticks: number, gameState: GameState): Promise<void> {
+    if (!gameState.pet) return;
+
+    const pet = gameState.pet;
+
+    if (pet.status.primary !== STATUS_TYPES.INJURED) return;
+
+    const tuning = this.configSystem?.getTuningValues();
+    if (!tuning) return;
+
+    // Passive recovery rate (default 5 severity points per hour)
+    const recoveryRate = 5;
+    const recoveryAmount = (recoveryRate * ticks) / 60;
+
+    pet.status.injurySeverity = Math.max(0, (pet.status.injurySeverity || 0) - recoveryAmount);
+
+    // Fully recovered
+    if (pet.status.injurySeverity <= 0) {
+      pet.status.primary = STATUS_TYPES.HEALTHY;
+      pet.status.injurySeverity = undefined;
+      console.log(`${pet.name} has fully recovered from injuries!`);
+    }
+  }
+
+  /**
    * Get pet status summary
    */
   public getPetSummary(pet: Pet): string {
@@ -1025,6 +1175,15 @@ export class PetSystem extends BaseSystem {
     status += `Hydration: ${careValues.hydration}%\n`;
     status += `Happiness: ${careValues.happiness}%\n`;
     status += `Status: ${pet.status.primary}\n`;
+
+    // Add injury details if injured
+    if (pet.status.primary === STATUS_TYPES.INJURED) {
+      const injuryMsg = this.getInjuryStatusMessage(pet);
+      if (injuryMsg) {
+        status += `${injuryMsg}\n`;
+      }
+    }
+
     status += `Poop: ${pet.poopCount}\n`;
 
     if (avgCare < 30) {

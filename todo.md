@@ -189,8 +189,8 @@
   - [x] Track sickness severity
 - [x] Add injury mechanics
   - [x] Track injury status
-  - [ ] Apply movement penalties
-  - [ ] Block certain activities
+  - [x] Apply movement penalties
+  - [x] Block certain activities
   - [x] Implement bandage treatment
 
 ## Phase 5: Inventory and Shop Systems
@@ -536,20 +536,25 @@
 ### 13.1 Unit Testing
 
 - [ ] Test all systems individually
-  - [ ] PetSystem tests
-  - [ ] SaveSystem tests
+  - [x] PetSystem tests
+  - [x] SaveSystem tests
   - [ ] BattleSystem tests
   - [ ] InventorySystem tests
+  - [x] ConfigSystem tests
+  - [x] TimeSystem tests
+  - [x] EggSystem tests
+  - [x] GameEngine tests
+  - [x] GameUpdatesQueue tests
 - [ ] Test game logic
-  - [ ] Care decay calculations
+  - [x] Care decay calculations
   - [ ] Battle damage formulas
   - [ ] Reward distributions
-  - [ ] Timer accuracy
+  - [x] Timer accuracy
 - [ ] Test data integrity
-  - [ ] Save/load cycles
+  - [x] Save/load cycles
   - [ ] State mutations
-  - [ ] Checksum validation
-  - [ ] Migration paths
+  - [x] Checksum validation
+  - [x] Migration paths
 
 ### 13.2 Integration Testing
 
