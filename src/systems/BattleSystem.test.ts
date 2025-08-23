@@ -139,24 +139,31 @@ describe('BattleSystem', () => {
     });
 
     test('should execute move successfully', async () => {
-      const battleState = battleSystem.getCurrentBattle()!;
-      const currentParticipant = battleSystem.getCurrentTurnParticipant()!;
+      const originalRandom = Math.random;
+      Math.random = () => 0.1; // Low number to guarantee accuracy hit
       
-      await battleSystem.processBattleAction({
-        type: 'move',
-        participantId: currentParticipant.id,
-        moveId: 'tackle',
-        targetId: undefined // Will auto-target opponent
-      });
+      try {
+        const battleState = battleSystem.getCurrentBattle()!;
+        const currentParticipant = battleSystem.getCurrentTurnParticipant()!;
+        
+        await battleSystem.processBattleAction({
+          type: 'move',
+          participantId: currentParticipant.id,
+          moveId: 'tackle',
+          targetId: undefined // Will auto-target opponent
+        });
 
-      // Check that action was consumed
-      expect(currentParticipant.currentAction).toBeLessThan(100);
-      
-      // Check battle log
-      expect(battleState.log.length).toBeGreaterThan(1);
-      const lastLog = battleState.log[battleState.log.length - 1]!;
-      expect(lastLog.type).toBe('move');
-      expect(lastLog.actor).toBe(currentParticipant.id);
+        // Check that action was consumed
+        expect(currentParticipant.currentAction).toBeLessThan(100);
+        
+        // Check battle log
+        expect(battleState.log.length).toBeGreaterThan(1);
+        const lastLog = battleState.log[battleState.log.length - 1]!;
+        expect(lastLog.type).toBe('move');
+        expect(lastLog.actor).toBe(currentParticipant.id);
+      } finally {
+        Math.random = originalRandom;
+      }
     });
 
     test('should reject move if participant does not know it', async () => {
