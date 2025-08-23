@@ -197,21 +197,21 @@
 
 ### 5.1 InventorySystem Implementation
 
-- [ ] Create `InventorySystem` class
-  - [ ] Implement item storage
-  - [ ] Add currency management
-  - [ ] Handle item stacking
-  - [ ] Track non-stackable items
-- [ ] Add item operations
-  - [ ] Implement addItem method
-  - [ ] Create removeItem method
-  - [ ] Add item usage logic
-  - [ ] Handle durability reduction
-- [ ] Implement inventory limits
-  - [ ] Set stack size limits
-  - [ ] Handle inventory overflow
-  - [ ] Add sorting functionality
-  - [ ] Implement filtering by category
+- [x] Create `InventorySystem` class
+  - [x] Implement item storage
+  - [x] Add currency management
+  - [x] Handle item stacking
+  - [x] Track non-stackable items
+- [x] Add item operations
+  - [x] Implement addItem method
+  - [x] Create removeItem method
+  - [x] Add item usage logic
+  - [x] Handle durability reduction
+- [x] Implement inventory limits
+  - [x] Set stack size limits
+  - [x] Handle inventory overflow
+  - [x] Add sorting functionality
+  - [x] Implement filtering by category
 
 ### 5.2 ShopSystem Implementation
 
@@ -539,7 +539,7 @@
   - [x] PetSystem tests
   - [x] SaveSystem tests
   - [ ] BattleSystem tests
-  - [ ] InventorySystem tests
+  - [x] InventorySystem tests
   - [x] ConfigSystem tests
   - [x] TimeSystem tests
   - [x] EggSystem tests
