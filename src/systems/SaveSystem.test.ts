@@ -97,7 +97,24 @@ describe('SaveSystem', () => {
     });
 
     it('should save game state successfully', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       await saveSystem.save(gameState);
 
@@ -111,7 +128,24 @@ describe('SaveSystem', () => {
     });
 
     it('should update save count and timestamp', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
       const originalSaveCount = gameState.saveData.saveCount;
 
       await saveSystem.save(gameState);
@@ -121,8 +155,42 @@ describe('SaveSystem', () => {
     });
 
     it('should queue saves when already saving', async () => {
-      const gameState1 = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
-      const gameState2 = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState1 = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
+      const gameState2 = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
       gameState2.pet!.name = 'Spot';
 
       // Start first save
@@ -150,7 +218,24 @@ describe('SaveSystem', () => {
     });
 
     it('should load saved game state', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
       await saveSystem.save(gameState);
 
       const loadedState = await saveSystem.load();
@@ -166,7 +251,24 @@ describe('SaveSystem', () => {
     });
 
     it('should validate checksum on load', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
       await saveSystem.save(gameState);
 
       // Corrupt the save by modifying it directly
@@ -183,7 +285,24 @@ describe('SaveSystem', () => {
     });
 
     it('should load from backup slot', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       // Save to trigger backup rotation
       await saveSystem.save(gameState);
@@ -209,7 +328,24 @@ describe('SaveSystem', () => {
     });
 
     it('should rotate saves correctly', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       // Save multiple times to trigger rotation
       for (let i = 0; i < 5; i++) {
@@ -224,7 +360,24 @@ describe('SaveSystem', () => {
     });
 
     it('should maintain chronological order in backups', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       // Save multiple times
       for (let i = 0; i < 4; i++) {
@@ -253,7 +406,24 @@ describe('SaveSystem', () => {
     });
 
     it('should export save as JSON', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
       await saveSystem.save(gameState);
 
       const exportedData = await saveSystem.exportSave();
@@ -267,7 +437,24 @@ describe('SaveSystem', () => {
     });
 
     it('should import valid save data', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       // Create export data manually
       const exportData = {
@@ -294,7 +481,24 @@ describe('SaveSystem', () => {
     });
 
     it('should reject import with invalid checksum', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       const exportData = {
         version: '1.0.0',
@@ -323,7 +527,24 @@ describe('SaveSystem', () => {
     });
 
     it('should provide import preview', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       const exportData = {
         version: '1.0.0',
@@ -350,7 +571,24 @@ describe('SaveSystem', () => {
     });
 
     it('should validate save structure', async () => {
-      const validState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const validState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
       await saveSystem.save(validState);
 
       const loadedState = await saveSystem.load();
@@ -358,7 +596,24 @@ describe('SaveSystem', () => {
     });
 
     it('should detect missing required fields', async () => {
-      const invalidState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const invalidState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       // Remove required field
       delete (invalidState as any).inventory;
@@ -378,7 +633,24 @@ describe('SaveSystem', () => {
     });
 
     it('should handle version migration', async () => {
-      const oldVersionState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const oldVersionState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
       oldVersionState.version = '0.9.0';
 
       // Remove collections to simulate old version
@@ -410,7 +682,24 @@ describe('SaveSystem', () => {
     });
 
     it('should delete current save', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
       await saveSystem.save(gameState);
 
       await saveSystem.deleteSave();
@@ -420,7 +709,24 @@ describe('SaveSystem', () => {
     });
 
     it('should delete specific backup slot', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       // Create multiple saves
       for (let i = 0; i < 3; i++) {
@@ -437,7 +743,24 @@ describe('SaveSystem', () => {
     });
 
     it('should clear all saves', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       // Create multiple saves
       for (let i = 0; i < 3; i++) {
@@ -461,7 +784,24 @@ describe('SaveSystem', () => {
     });
 
     it('should handle storage quota exceeded', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       // Create some backups first
       for (let i = 0; i < 3; i++) {
@@ -498,7 +838,24 @@ describe('SaveSystem', () => {
       await system1.initialize({ gameUpdateWriter: null as any });
       await system2.initialize({ gameUpdateWriter: null as any });
 
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       const checksum1 = (system1 as any).generateChecksum(gameState);
       const checksum2 = (system2 as any).generateChecksum(gameState);
@@ -513,7 +870,24 @@ describe('SaveSystem', () => {
       await system1.initialize({ gameUpdateWriter: null as any });
       await system2.initialize({ gameUpdateWriter: null as any });
 
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       const checksum1 = (system1 as any).generateChecksum(gameState);
       const checksum2 = (system2 as any).generateChecksum(gameState);
@@ -525,8 +899,42 @@ describe('SaveSystem', () => {
       const system = new SaveSystem();
       await system.initialize({ gameUpdateWriter: null as any });
 
-      const gameState1 = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
-      const gameState2 = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState1 = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
+      const gameState2 = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
       gameState2.pet!.name = 'Different';
 
       const checksum1 = (system as any).generateChecksum(gameState1);
@@ -544,7 +952,24 @@ describe('SaveSystem', () => {
     });
 
     it('should recover from corrupted current save', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       // Save a valid backup first
       gameState.pet!.name = 'Backup';
@@ -579,7 +1004,24 @@ describe('SaveSystem', () => {
     });
 
     it('should prepare save for file download', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
       await saveSystem.save(gameState);
 
       // Mock document methods for download
@@ -616,7 +1058,24 @@ describe('SaveSystem', () => {
     });
 
     it('should load save from file', async () => {
-      const gameState = createMockGameState({ playerId: "test-player-123", maxSlots: 50, unlockedSlots: 50, includeTestItems: true, pet: createMockPet({ id: "pet-1", name: "Fluffy", species: "cat", rarity: "COMMON", stage: "ADULT", health: 100, energy: 80, satiety: 75, hydration: 60, happiness: 80 }) });
+      const gameState = createMockGameState({
+        playerId: 'test-player-123',
+        maxSlots: 50,
+        unlockedSlots: 50,
+        includeTestItems: true,
+        pet: createMockPet({
+          id: 'pet-1',
+          name: 'Fluffy',
+          species: 'cat',
+          rarity: 'COMMON',
+          stage: 'ADULT',
+          health: 100,
+          energy: 80,
+          satiety: 75,
+          hydration: 60,
+          happiness: 80,
+        }),
+      });
 
       const exportData = {
         version: '1.0.0',

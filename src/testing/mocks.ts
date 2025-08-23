@@ -46,15 +46,17 @@ export function createMockGameState(options: MockGameStateOptions = {}): GameSta
     unlockedSlots = 50,
     currentLocationId = 'city_square',
     version = '1.0.0',
-    includeTestItems = false
+    includeTestItems = false,
   } = options;
 
   const now = Date.now();
 
-  const testItems = includeTestItems ? [
-    createMockInventoryItem('food-basic', 5, now - 7200000),
-    createMockInventoryItem('water-basic', 3, now - 3600000),
-  ] : [];
+  const testItems = includeTestItems
+    ? [
+        createMockInventoryItem('food-basic', 5, now - 7200000),
+        createMockInventoryItem('water-basic', 3, now - 3600000),
+      ]
+    : [];
 
   return {
     version,
@@ -221,10 +223,10 @@ export function createMockPet(options: MockPetOptions = {}): Pet {
     },
     energy,
     maxEnergy: energy,
-    careValues: { 
-      satiety, 
-      hydration, 
-      happiness 
+    careValues: {
+      satiety,
+      hydration,
+      happiness,
     },
     hiddenCounters: {
       satietyTicks: satiety * 20, // Conversion factor from existing code
@@ -260,7 +262,7 @@ export function createMockGameUpdateWriter(): GameUpdateWriter {
  */
 export function createMockEgg(options: Partial<Egg> = {}): Egg {
   const now = Date.now();
-  
+
   return {
     id: 'egg_1',
     eggType: 'generic_egg',
@@ -356,7 +358,11 @@ export const mockItems: Record<string, Item> = {
 /**
  * Create a mock inventory item
  */
-export function createMockInventoryItem(itemId: string, quantity: number = 1, obtainedTime?: number): InventoryItem {
+export function createMockInventoryItem(
+  itemId: string,
+  quantity: number = 1,
+  obtainedTime?: number,
+): InventoryItem {
   return {
     itemId,
     quantity,

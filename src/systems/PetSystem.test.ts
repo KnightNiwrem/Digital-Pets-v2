@@ -33,7 +33,7 @@ describe('PetSystem', () => {
       currentLocationId: 'city_central',
       pet: null,
       coins: 0,
-      unlockedSlots: 20
+      unlockedSlots: 20,
     });
   });
 

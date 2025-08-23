@@ -37,14 +37,14 @@ describe('PetSystem - Injury Mechanics', () => {
       rarity: 'COMMON',
       stage: GROWTH_STAGES.JUVENILE,
       health: 50,
-      energy: 80
+      energy: 80,
     });
 
     gameState = createMockGameState({
       playerId: 'test-player',
       pet: mockPet,
       coins: 0,
-      unlockedSlots: 20
+      unlockedSlots: 20,
     });
   });
 

@@ -6,7 +6,12 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { InventorySystem } from './InventorySystem';
 import type { InventoryItem, GameState } from '../models';
 import { ITEM_CATEGORIES } from '../models/constants';
-import { createMockGameState, createMockPet, createMockGameUpdateWriter, mockItems } from '../testing';
+import {
+  createMockGameState,
+  createMockPet,
+  createMockGameUpdateWriter,
+  mockItems,
+} from '../testing';
 
 describe('InventorySystem', () => {
   let system: InventorySystem;
@@ -17,7 +22,7 @@ describe('InventorySystem', () => {
     gameState = createMockGameState({
       pet: createMockPet({ name: 'Fluffy', species: 'cat' }),
       maxSlots: 20,
-      unlockedSlots: 20
+      unlockedSlots: 20,
     });
 
     // Initialize system
