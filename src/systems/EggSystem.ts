@@ -4,7 +4,6 @@
 
 import { BaseSystem } from './BaseSystem';
 import type { SystemInitOptions, SystemError } from './BaseSystem';
-import { ConfigSystem } from './ConfigSystem';
 import type { GameState, GameUpdate, OfflineCalculation } from '../models/GameState';
 import type { Egg, EggType, Species, StarterSpecies } from '../models/Species';
 import type { Pet, PetCreationOptions } from '../models/Pet';
@@ -47,7 +46,6 @@ export interface StarterOptions {
  * EggSystem class implementation
  */
 export class EggSystem extends BaseSystem {
-  private configSystem: ConfigSystem | null = null;
   private incubatingEggs: Map<string, Egg> = new Map();
   private speciesDatabase: Map<string, Species> = new Map();
   private eggTypeDatabase: Map<string, EggType> = new Map();
@@ -62,11 +60,10 @@ export class EggSystem extends BaseSystem {
   /**
    * System-specific initialization
    */
-  protected async onInitialize(options: SystemInitOptions): Promise<void> {
-    // ConfigSystem will be injected by GameEngine
-    this.configSystem = options.config?.configSystem;
-    if (!this.configSystem) {
-      throw new Error('EggSystem requires ConfigSystem');
+  protected async onInitialize(_options: SystemInitOptions): Promise<void> {
+    // Tuning values are now provided via the base class
+    if (!this.tuning) {
+      console.warn('[EggSystem] Tuning values not provided, some features may not work correctly');
     }
 
     // Load species and egg type data (would normally come from data files)
@@ -303,10 +300,16 @@ export class EggSystem extends BaseSystem {
     }
 
     const now = Date.now();
-    const incubationHours =
-      eggType.baseIncubationTime ||
-      this.configSystem?.getIncubationTime(eggItem.guaranteedRarity || 'COMMON') ||
-      12;
+    // Get incubation time from tuning values based on rarity
+    const rarity = eggItem.guaranteedRarity || 'COMMON';
+    const incubationHoursMap = this.tuning?.eggs?.incubationHours || {
+      COMMON: 12,
+      UNCOMMON: 18,
+      RARE: 24,
+      EPIC: 36,
+      LEGENDARY: 48,
+    };
+    const incubationHours = eggType.baseIncubationTime || incubationHoursMap[rarity] || 12;
 
     const egg: Egg = {
       id: this.generateId(),
@@ -513,7 +516,7 @@ export class EggSystem extends BaseSystem {
    * Roll for rarity based on weights
    */
   private rollRarity(weights: Partial<Record<RarityTier, number>>): RarityTier {
-    const defaultWeights = this.configSystem?.getTuningValues().eggs.rarityWeights || {
+    const defaultWeights = this.tuning?.eggs?.rarityWeights || {
       COMMON: 60,
       UNCOMMON: 25,
       RARE: 10,

@@ -498,10 +498,14 @@ export class GameEngine {
       writer = this.updatesQueue.createWriter(name);
     }
 
+    // Get tuning values from ConfigSystem
+    const tuningValues = this.configSystem.getTuningValues();
+
     const initOptions: SystemInitOptions = {
       gameUpdateWriter: writer,
+      tuning: tuningValues,
       config: {
-        configSystem: this.configSystem,
+        // Pass any system-specific config
         [name.toLowerCase()]: await this.configSystem.get(name.toLowerCase()),
       },
     };
@@ -770,6 +774,54 @@ export class GameEngine {
 
     // Could implement recovery strategies here
     // For now, just log
+  }
+
+  /**
+   * Update tuning values for all systems
+   * Called when configuration changes
+   */
+  public updateSystemTuning(): void {
+    const newTuning = this.configSystem.getTuningValues();
+
+    // Update all systems with new tuning values
+    for (const [name, system] of this.systems) {
+      system.updateTuning(newTuning);
+
+      if (this.config.debugMode) {
+        console.log(`[GameEngine] Updated tuning for system: ${name}`);
+      }
+    }
+  }
+
+  /**
+   * Handle configuration changes
+   * Called by ConfigSystem when configuration is updated
+   */
+  public onConfigurationChanged(): void {
+    if (this.config.debugMode) {
+      console.log('[GameEngine] Configuration changed, updating systems...');
+    }
+
+    // Update all systems with new tuning values
+    this.updateSystemTuning();
+
+    // Queue a configuration change update
+    if (this.updatesQueue) {
+      const update = {
+        id: `config-change-${Date.now()}`,
+        type: UPDATE_TYPES.STATE_TRANSITION,
+        timestamp: Date.now(),
+        priority: 0,
+        payload: {
+          action: 'CONFIG_CHANGED',
+          data: {
+            timestamp: Date.now(),
+          },
+        },
+      };
+      // Use the queue's internal method to add update
+      this.updatesQueue.enqueue(update);
+    }
   }
 }
 

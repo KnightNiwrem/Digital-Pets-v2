@@ -4,7 +4,6 @@
 
 import { BaseSystem } from './BaseSystem';
 import type { SystemInitOptions, SystemError } from './BaseSystem';
-import { ConfigSystem } from './ConfigSystem';
 import type { GameState, GameUpdate, OfflineCalculation } from '../models/GameState';
 import type {
   Pet,
@@ -58,7 +57,6 @@ export interface GrowthCheckResult {
  * PetSystem class implementation
  */
 export class PetSystem extends BaseSystem {
-  private configSystem: ConfigSystem | null = null;
   private petCache: Pet | null = null;
   private lastDecayTick = 0;
   private poopSpawnTimer = 0;
@@ -70,11 +68,10 @@ export class PetSystem extends BaseSystem {
   /**
    * System-specific initialization
    */
-  protected async onInitialize(options: SystemInitOptions): Promise<void> {
-    // ConfigSystem will be injected by GameEngine
-    this.configSystem = options.config?.configSystem;
-    if (!this.configSystem) {
-      throw new Error('PetSystem requires ConfigSystem');
+  protected async onInitialize(_options: SystemInitOptions): Promise<void> {
+    // Tuning values are now provided via the base class
+    if (!this.tuning) {
+      console.warn('[PetSystem] Tuning values not provided, some features may not work correctly');
     }
   }
 
@@ -146,7 +143,6 @@ export class PetSystem extends BaseSystem {
    */
   public createPet(options: PetCreationOptions, speciesData?: any): Pet {
     const now = Date.now();
-    const tuning = this.configSystem?.getTuningValues();
 
     // Get initial stats based on species or defaults
     const initialStats = this.getInitialStats(options.species, speciesData);
@@ -165,8 +161,8 @@ export class PetSystem extends BaseSystem {
 
       // Stats
       stats: initialStats,
-      energy: tuning?.energy.maxByStage.HATCHLING || 50,
-      maxEnergy: tuning?.energy.maxByStage.HATCHLING || 50,
+      energy: this.tuning?.energy.maxByStage.HATCHLING || 50,
+      maxEnergy: this.tuning?.energy.maxByStage.HATCHLING || 50,
 
       // Care values (computed from hidden counters)
       careValues: {
@@ -177,10 +173,10 @@ export class PetSystem extends BaseSystem {
 
       // Hidden counters (initialized to max)
       hiddenCounters: {
-        satietyTicks: (tuning?.careTickMultipliers.satiety || 20) * 100,
-        hydrationTicks: (tuning?.careTickMultipliers.hydration || 15) * 100,
-        happinessTicks: (tuning?.careTickMultipliers.happiness || 30) * 100,
-        lifeTicks: tuning?.life.startingValue || 100,
+        satietyTicks: (this.tuning?.careTickMultipliers.satiety || 20) * 100,
+        hydrationTicks: (this.tuning?.careTickMultipliers.hydration || 15) * 100,
+        happinessTicks: (this.tuning?.careTickMultipliers.happiness || 30) * 100,
+        lifeTicks: this.tuning?.life.startingValue || 100,
       },
 
       // Status
@@ -241,17 +237,18 @@ export class PetSystem extends BaseSystem {
    * Calculate care values from hidden tick counters
    */
   public calculateCareValues(hiddenCounters: HiddenCounters): CareValues {
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) {
+    if (!this.tuning) {
       return { satiety: 0, hydration: 0, happiness: 0 };
     }
 
-    const satiety = Math.ceil(hiddenCounters.satietyTicks / tuning.careTickMultipliers.satiety);
+    const satiety = Math.ceil(
+      hiddenCounters.satietyTicks / this.tuning.careTickMultipliers.satiety,
+    );
     const hydration = Math.ceil(
-      hiddenCounters.hydrationTicks / tuning.careTickMultipliers.hydration,
+      hiddenCounters.hydrationTicks / this.tuning.careTickMultipliers.hydration,
     );
     const happiness = Math.ceil(
-      hiddenCounters.happinessTicks / tuning.careTickMultipliers.happiness,
+      hiddenCounters.happinessTicks / this.tuning.careTickMultipliers.happiness,
     );
 
     return {
@@ -267,8 +264,7 @@ export class PetSystem extends BaseSystem {
   public async processCareDecay(ticks: number, gameState: GameState): Promise<void> {
     if (!gameState.pet) return;
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) return;
+    if (!this.tuning) return;
 
     const pet = gameState.pet;
 
@@ -279,7 +275,7 @@ export class PetSystem extends BaseSystem {
 
     // Additional happiness decay from poop
     if (pet.poopCount > 0) {
-      const poopPenalty = pet.poopCount * tuning.poop.happinessDecayPerPoop;
+      const poopPenalty = pet.poopCount * this.tuning.poop.happinessDecayPerPoop;
       pet.hiddenCounters.happinessTicks = Math.max(
         0,
         pet.hiddenCounters.happinessTicks - poopPenalty,
@@ -292,25 +288,29 @@ export class PetSystem extends BaseSystem {
 
     // Update life based on overall care
     const avgCare = (careValues.satiety + careValues.hydration + careValues.happiness) / 3;
-    if (avgCare < 30) {
+    if (avgCare < 30 && this.tuning) {
       // Pet is neglected, decrease life
       pet.hiddenCounters.lifeTicks = Math.max(
         0,
-        pet.hiddenCounters.lifeTicks - (tuning.life.decayWhenNeglected * ticks) / 60,
+        pet.hiddenCounters.lifeTicks - (this.tuning.life.decayWhenNeglected * ticks) / 60,
       );
-    } else if (avgCare > 70 && pet.hiddenCounters.lifeTicks < tuning.life.startingValue) {
+    } else if (
+      avgCare > 70 &&
+      this.tuning &&
+      pet.hiddenCounters.lifeTicks < this.tuning.life.startingValue
+    ) {
       // Pet is well cared for, recover life
       pet.hiddenCounters.lifeTicks = Math.min(
-        tuning.life.startingValue,
-        pet.hiddenCounters.lifeTicks + (tuning.life.recoveryRatePerHour * ticks) / 60,
+        this.tuning.life.startingValue,
+        pet.hiddenCounters.lifeTicks + (this.tuning.life.recoveryRatePerHour * ticks) / 60,
       );
     }
 
     // Check if pet is sick and apply life decay
-    if (pet.status.primary === STATUS_TYPES.SICK) {
+    if (pet.status.primary === STATUS_TYPES.SICK && this.tuning) {
       pet.hiddenCounters.lifeTicks = Math.max(
         0,
-        pet.hiddenCounters.lifeTicks - (tuning.sickness.lifeDecayPerHour * ticks) / 60,
+        pet.hiddenCounters.lifeTicks - (this.tuning.sickness.lifeDecayPerHour * ticks) / 60,
       );
     }
   }
@@ -323,8 +323,7 @@ export class PetSystem extends BaseSystem {
       return { success: false, message: 'No active pet' };
     }
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) {
+    if (!this.tuning) {
       return { success: false, message: 'Configuration not loaded' };
     }
 
@@ -337,19 +336,22 @@ export class PetSystem extends BaseSystem {
 
     if (effectSize === 'SMALL') {
       ticksToAdd =
-        ((tuning.items.foodEffects?.SMALL || 20) * tuning.careTickMultipliers.satiety) / 100;
+        ((this.tuning.items.foodEffects?.SMALL || 20) * this.tuning.careTickMultipliers.satiety) /
+        100;
     } else if (effectSize === 'MEDIUM') {
       ticksToAdd =
-        ((tuning.items.foodEffects?.MEDIUM || 40) * tuning.careTickMultipliers.satiety) / 100;
+        ((this.tuning.items.foodEffects?.MEDIUM || 40) * this.tuning.careTickMultipliers.satiety) /
+        100;
     } else if (effectSize === 'LARGE') {
       ticksToAdd =
-        ((tuning.items.foodEffects?.LARGE || 60) * tuning.careTickMultipliers.satiety) / 100;
+        ((this.tuning.items.foodEffects?.LARGE || 60) * this.tuning.careTickMultipliers.satiety) /
+        100;
     }
 
     // Add ticks to satiety
     const oldValue = this.calculateCareValues(pet.hiddenCounters).satiety;
     pet.hiddenCounters.satietyTicks = Math.min(
-      tuning.careTickMultipliers.satiety * 100,
+      this.tuning.careTickMultipliers.satiety * 100,
       pet.hiddenCounters.satietyTicks + ticksToAdd,
     );
 
@@ -391,8 +393,7 @@ export class PetSystem extends BaseSystem {
       return { success: false, message: 'No active pet' };
     }
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) {
+    if (!this.tuning) {
       return { success: false, message: 'Configuration not loaded' };
     }
 
@@ -405,19 +406,25 @@ export class PetSystem extends BaseSystem {
 
     if (effectSize === 'SMALL') {
       ticksToAdd =
-        ((tuning.items.drinkEffects?.SMALL || 20) * tuning.careTickMultipliers.hydration) / 100;
+        ((this.tuning.items.drinkEffects?.SMALL || 20) *
+          this.tuning.careTickMultipliers.hydration) /
+        100;
     } else if (effectSize === 'MEDIUM') {
       ticksToAdd =
-        ((tuning.items.drinkEffects?.MEDIUM || 40) * tuning.careTickMultipliers.hydration) / 100;
+        ((this.tuning.items.drinkEffects?.MEDIUM || 40) *
+          this.tuning.careTickMultipliers.hydration) /
+        100;
     } else if (effectSize === 'LARGE') {
       ticksToAdd =
-        ((tuning.items.drinkEffects?.LARGE || 60) * tuning.careTickMultipliers.hydration) / 100;
+        ((this.tuning.items.drinkEffects?.LARGE || 60) *
+          this.tuning.careTickMultipliers.hydration) /
+        100;
     }
 
     // Add ticks to hydration
     const oldValue = this.calculateCareValues(pet.hiddenCounters).hydration;
     pet.hiddenCounters.hydrationTicks = Math.min(
-      tuning.careTickMultipliers.hydration * 100,
+      this.tuning.careTickMultipliers.hydration * 100,
       pet.hiddenCounters.hydrationTicks + ticksToAdd,
     );
 
@@ -459,8 +466,7 @@ export class PetSystem extends BaseSystem {
       return { success: false, message: 'No active pet' };
     }
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) {
+    if (!this.tuning) {
       return { success: false, message: 'Configuration not loaded' };
     }
 
@@ -478,13 +484,19 @@ export class PetSystem extends BaseSystem {
 
       if (effectSize === 'SMALL') {
         ticksToAdd =
-          ((tuning.items.toyEffects?.SMALL || 15) * tuning.careTickMultipliers.happiness) / 100;
+          ((this.tuning.items.toyEffects?.SMALL || 15) *
+            this.tuning.careTickMultipliers.happiness) /
+          100;
       } else if (effectSize === 'MEDIUM') {
         ticksToAdd =
-          ((tuning.items.toyEffects?.MEDIUM || 30) * tuning.careTickMultipliers.happiness) / 100;
+          ((this.tuning.items.toyEffects?.MEDIUM || 30) *
+            this.tuning.careTickMultipliers.happiness) /
+          100;
       } else if (effectSize === 'LARGE') {
         ticksToAdd =
-          ((tuning.items.toyEffects?.LARGE || 50) * tuning.careTickMultipliers.happiness) / 100;
+          ((this.tuning.items.toyEffects?.LARGE || 50) *
+            this.tuning.careTickMultipliers.happiness) /
+          100;
       }
 
       if (pet.energy < energyCost) {
@@ -492,13 +504,13 @@ export class PetSystem extends BaseSystem {
       }
     } else {
       // Simple play without toy - no energy cost, smaller happiness gain
-      ticksToAdd = (10 * tuning.careTickMultipliers.happiness) / 100;
+      ticksToAdd = (10 * this.tuning.careTickMultipliers.happiness) / 100;
     }
 
     // Add ticks to happiness
     const oldValue = this.calculateCareValues(pet.hiddenCounters).happiness;
     pet.hiddenCounters.happinessTicks = Math.min(
-      tuning.careTickMultipliers.happiness * 100,
+      this.tuning.careTickMultipliers.happiness * 100,
       pet.hiddenCounters.happinessTicks + ticksToAdd,
     );
 
@@ -581,8 +593,7 @@ export class PetSystem extends BaseSystem {
   private async checkPoopSpawn(gameState: GameState): Promise<void> {
     if (!gameState.pet) return;
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) return;
+    if (!this.tuning) return;
 
     const pet = gameState.pet;
 
@@ -593,8 +604,8 @@ export class PetSystem extends BaseSystem {
     this.poopSpawnTimer++;
 
     // Calculate spawn interval (in ticks/minutes)
-    const minTicks = tuning.poop.spawnRangeHours.min * 60;
-    const maxTicks = tuning.poop.spawnRangeHours.max * 60;
+    const minTicks = this.tuning.poop.spawnRangeHours.min * 60;
+    const maxTicks = this.tuning.poop.spawnRangeHours.max * 60;
     const spawnInterval = minTicks + Math.random() * (maxTicks - minTicks);
 
     if (this.poopSpawnTimer >= spawnInterval) {
@@ -611,8 +622,7 @@ export class PetSystem extends BaseSystem {
   private async checkSickness(gameState: GameState): Promise<void> {
     if (!gameState.pet) return;
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) return;
+    if (!this.tuning) return;
 
     const pet = gameState.pet;
 
@@ -620,11 +630,11 @@ export class PetSystem extends BaseSystem {
     if (pet.status.primary === STATUS_TYPES.SICK) return;
 
     // Calculate sickness chance
-    let sicknessChance = tuning.sickness.baseChancePerHour / 60; // Per tick chance
+    let sicknessChance = this.tuning.sickness.baseChancePerHour / 60; // Per tick chance
 
     // Increase chance based on poop
-    if (pet.poopCount >= tuning.poop.sicknessThreshold) {
-      sicknessChance *= tuning.sickness.poopMultiplier;
+    if (pet.poopCount >= this.tuning.poop.sicknessThreshold) {
+      sicknessChance *= this.tuning.sickness.poopMultiplier;
     }
 
     // Roll for sickness
@@ -650,13 +660,12 @@ export class PetSystem extends BaseSystem {
       return { success: false, message: `${pet.name} is not sick` };
     }
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) {
+    if (!this.tuning) {
       return { success: false, message: 'Configuration not loaded' };
     }
 
     // Reduce sickness severity
-    const effectiveness = tuning.items.medicineEffectiveness;
+    const effectiveness = this.tuning.items.medicineEffectiveness;
     pet.status.sicknessSeverity = Math.max(0, (pet.status.sicknessSeverity || 0) - effectiveness);
 
     // Cure if severity is 0
@@ -706,13 +715,12 @@ export class PetSystem extends BaseSystem {
       return { success: false, message: `${pet.name} is not injured` };
     }
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) {
+    if (!this.tuning) {
       return { success: false, message: 'Configuration not loaded' };
     }
 
     // Reduce injury severity
-    const effectiveness = tuning.items.bandageEffectiveness;
+    const effectiveness = this.tuning.items.bandageEffectiveness;
     pet.status.injurySeverity = Math.max(0, (pet.status.injurySeverity || 0) - effectiveness);
 
     // Heal if severity is 0
@@ -764,8 +772,7 @@ export class PetSystem extends BaseSystem {
       return result;
     }
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) {
+    if (!this.tuning) {
       return result;
     }
 
@@ -777,10 +784,10 @@ export class PetSystem extends BaseSystem {
 
     // Check if can advance
     if (pet.stage === GROWTH_STAGES.HATCHLING) {
-      result.requiredTime = tuning.growth.stageDurations?.HATCHLING || 24;
+      result.requiredTime = this.tuning.growth.stageDurations?.HATCHLING || 24;
       result.nextStage = GROWTH_STAGES.JUVENILE;
     } else if (pet.stage === GROWTH_STAGES.JUVENILE) {
-      result.requiredTime = tuning.growth.stageDurations?.JUVENILE || 72;
+      result.requiredTime = this.tuning.growth.stageDurations?.JUVENILE || 72;
       result.nextStage = GROWTH_STAGES.ADULT;
     } else {
       // Already adult
@@ -819,8 +826,7 @@ export class PetSystem extends BaseSystem {
       };
     }
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) {
+    if (!this.tuning) {
       return { success: false, message: 'Configuration not loaded' };
     }
 
@@ -832,7 +838,7 @@ export class PetSystem extends BaseSystem {
     pet.stageStartTime = Date.now();
 
     // Apply stat bonuses
-    const bonuses = tuning.growth.stageAdvancementBonuses;
+    const bonuses = this.tuning.growth.stageAdvancementBonuses;
     pet.stats.maxHealth += bonuses.health;
     pet.stats.health = pet.stats.maxHealth; // Full heal on advancement
     pet.stats.attack += bonuses.attack;
@@ -842,7 +848,7 @@ export class PetSystem extends BaseSystem {
     pet.stats.action = pet.stats.maxAction; // Full action on advancement
 
     // Update max energy
-    pet.maxEnergy = tuning.energy.maxByStage[pet.stage] || 120;
+    pet.maxEnergy = this.tuning.energy.maxByStage[pet.stage] || 120;
     pet.energy = pet.maxEnergy; // Full energy on advancement
 
     return {
@@ -857,15 +863,14 @@ export class PetSystem extends BaseSystem {
   private async checkCriticalConditions(gameState: GameState): Promise<void> {
     if (!gameState.pet) return;
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) return;
+    if (!this.tuning) return;
 
     const pet = gameState.pet;
 
     // Check if pet should die from neglect
     if (pet.hiddenCounters.lifeTicks <= 0) {
       await this.handlePetDeath(gameState, 'neglect');
-    } else if (pet.hiddenCounters.lifeTicks < tuning.life.criticalThreshold) {
+    } else if (pet.hiddenCounters.lifeTicks < this.tuning.life.criticalThreshold) {
       // Pet is in critical condition, send warning
       console.warn(`${pet.name} is in critical condition! Life: ${pet.hiddenCounters.lifeTicks}`);
     }
@@ -1034,9 +1039,8 @@ export class PetSystem extends BaseSystem {
     pet.status.injurySeverity = Math.min(100, severity);
 
     // Reduce happiness from injury
-    const tuning = this.configSystem?.getTuningValues();
-    if (tuning) {
-      const happinessPenalty = (severity / 2) * tuning.careTickMultipliers.happiness;
+    if (this.tuning) {
+      const happinessPenalty = (severity / 2) * this.tuning.careTickMultipliers.happiness;
       pet.hiddenCounters.happinessTicks = Math.max(
         0,
         pet.hiddenCounters.happinessTicks - happinessPenalty,
@@ -1145,8 +1149,7 @@ export class PetSystem extends BaseSystem {
 
     if (pet.status.primary !== STATUS_TYPES.INJURED) return;
 
-    const tuning = this.configSystem?.getTuningValues();
-    if (!tuning) return;
+    if (!this.tuning) return;
 
     // Passive recovery rate (default 5 severity points per hour)
     const recoveryRate = 5;

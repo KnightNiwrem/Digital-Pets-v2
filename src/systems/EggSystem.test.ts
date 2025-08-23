@@ -14,10 +14,12 @@ describe('EggSystem', () => {
   let configSystem: ConfigSystem;
   let mockGameUpdateWriter: any;
   let gameState: GameState;
+  let tuningValues: any;
 
   beforeEach(async () => {
-    // Create config system
+    // Create config system and get tuning values
     configSystem = new ConfigSystem();
+    tuningValues = configSystem.getTuningValues();
 
     // Create mock game update writer
     mockGameUpdateWriter = {
@@ -27,10 +29,10 @@ describe('EggSystem', () => {
     // Initialize egg system
     eggSystem = new EggSystem();
 
-    // Initialize with mocked dependencies
+    // Initialize with tuning values
     await eggSystem.initialize({
       gameUpdateWriter: mockGameUpdateWriter,
-      config: { configSystem },
+      tuning: tuningValues,
     });
 
     // Create a basic game state
@@ -42,11 +44,11 @@ describe('EggSystem', () => {
   });
 
   describe('Initialization', () => {
-    it('should initialize successfully with ConfigSystem', async () => {
+    it('should initialize successfully with tuning values', async () => {
       const system = new EggSystem();
       await system.initialize({
         gameUpdateWriter: mockGameUpdateWriter,
-        config: { configSystem },
+        tuning: tuningValues,
       });
 
       expect(system.isInitialized()).toBe(true);
@@ -54,13 +56,16 @@ describe('EggSystem', () => {
       await system.shutdown();
     });
 
-    it('should throw error if ConfigSystem is not provided', async () => {
+    it('should initialize with warning when tuning values are not provided', async () => {
       const system = new EggSystem();
-      expect(
-        system.initialize({
-          gameUpdateWriter: mockGameUpdateWriter,
-        }),
-      ).rejects.toThrow('EggSystem requires ConfigSystem');
+      // Should not throw, just log a warning
+      await system.initialize({
+        gameUpdateWriter: mockGameUpdateWriter,
+      });
+
+      expect(system.isInitialized()).toBe(true);
+      expect(system.isActive()).toBe(true);
+      await system.shutdown();
     });
   });
 

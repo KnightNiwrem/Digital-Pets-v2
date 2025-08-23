@@ -20,7 +20,6 @@ import {
   STACK_LIMITS,
   type ItemCategory,
 } from '../models/constants';
-import { ConfigSystem } from './ConfigSystem';
 
 /**
  * Inventory operation result
@@ -75,7 +74,6 @@ export interface InventoryStats {
  * InventorySystem class
  */
 export class InventorySystem extends BaseSystem {
-  private configSystem: ConfigSystem | null = null;
   private itemDefinitions: Map<string, Item> = new Map();
   private cooldowns: Map<string, number> = new Map(); // Item usage cooldowns
 
@@ -86,13 +84,13 @@ export class InventorySystem extends BaseSystem {
   /**
    * System initialization
    */
-  protected async onInitialize(_options: SystemInitOptions): Promise<void> {
-    // Load item definitions from config
-    this.configSystem = new ConfigSystem();
-
-    const itemsConfig = this.configSystem.get('items');
+  protected async onInitialize(options: SystemInitOptions): Promise<void> {
+    // Load item definitions from config passed by GameEngine
+    const itemsConfig = options.config?.items;
     if (itemsConfig) {
       this.loadItemDefinitions(itemsConfig);
+    } else {
+      console.warn('[InventorySystem] No items config provided');
     }
   }
 

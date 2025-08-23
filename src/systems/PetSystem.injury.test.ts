@@ -20,10 +20,12 @@ describe('PetSystem - Injury Mechanics', () => {
     // Initialize systems
     configSystem = new ConfigSystem();
     await configSystem.load();
+    const tuning = configSystem.getTuningValues();
 
     petSystem = new PetSystem();
     await petSystem.initialize({
-      config: { configSystem },
+      tuning: tuning,
+      config: {},
     } as SystemInitOptions);
 
     // Create mock pet

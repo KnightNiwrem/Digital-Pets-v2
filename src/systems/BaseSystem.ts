@@ -5,6 +5,7 @@
 
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { GameState } from '../models';
+import type { TuningConfig } from './ConfigSystem';
 
 /**
  * System initialization options
@@ -12,6 +13,7 @@ import type { GameState } from '../models';
 export interface SystemInitOptions {
   gameUpdateWriter: GameUpdateWriter;
   config?: any;
+  tuning?: TuningConfig; // Tuning values passed by GameEngine
 }
 
 /**
@@ -47,6 +49,7 @@ export abstract class BaseSystem {
   protected lastUpdate = 0;
   protected errorCount = 0;
   protected readonly version = '1.0.0';
+  protected tuning: TuningConfig | null = null; // Store tuning values locally
 
   constructor(name: string) {
     this.name = name;
@@ -62,6 +65,7 @@ export abstract class BaseSystem {
     }
 
     this.gameUpdateWriter = options.gameUpdateWriter;
+    this.tuning = options.tuning || null; // Store tuning values
 
     // Call system-specific initialization
     await this.onInitialize(options);
@@ -224,6 +228,25 @@ export abstract class BaseSystem {
       throw new Error(`Cannot set active state on uninitialized system ${this.name}`);
     }
     this.active = active;
+  }
+
+  /**
+   * Update tuning values (called by GameEngine when config changes)
+   * @param tuning New tuning configuration
+   */
+  public updateTuning(tuning: TuningConfig): void {
+    this.tuning = tuning;
+    this.onTuningUpdated(tuning);
+  }
+
+  /**
+   * Hook for systems to respond to tuning updates
+   * Override in derived classes if needed
+   * @param tuning New tuning configuration
+   */
+  protected onTuningUpdated(_tuning: TuningConfig): void {
+    // Default implementation does nothing
+    // Override in derived classes to handle tuning changes
   }
 
   // Abstract methods that must be implemented by derived classes

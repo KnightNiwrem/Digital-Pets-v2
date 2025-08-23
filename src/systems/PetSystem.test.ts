@@ -21,14 +21,16 @@ describe('PetSystem', () => {
       enqueue: () => {},
     };
 
-    // Initialize ConfigSystem (ConfigSystem doesn't need initialization)
+    // Initialize ConfigSystem to get tuning values
     configSystem = new ConfigSystem();
+    const tuning = configSystem.getTuningValues();
 
-    // Initialize PetSystem
+    // Initialize PetSystem with tuning values
     petSystem = new PetSystem();
     await petSystem.initialize({
       gameUpdateWriter: mockGameUpdateWriter,
-      config: { configSystem },
+      tuning: tuning,
+      config: {},
     });
 
     // Create empty game state
