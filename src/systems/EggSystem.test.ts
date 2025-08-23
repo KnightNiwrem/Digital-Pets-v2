@@ -259,7 +259,7 @@ describe('EggSystem', () => {
       await eggSystem.processOfflineIncubation(offlineCalculation, gameState);
 
       expect(offlineCalculation.eggsHatched.length).toBe(1);
-      expect(offlineCalculation.eggsHatched[0]).toBe(egg1.id);
+      expect(offlineCalculation.eggsHatched).toContain(egg1.id);
       expect(egg1.isIncubating).toBe(false);
       expect(egg2.isIncubating).toBe(true);
     });

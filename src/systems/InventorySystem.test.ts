@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { InventorySystem } from './InventorySystem';
-import type { InventoryItem } from '../models';
+import type { InventoryItem, GameState } from '../models';
 import { ITEM_CATEGORIES } from '../models/constants';
 import { createMockGameState, createMockPet, createMockGameUpdateWriter, mockItems } from '../testing';
 
@@ -66,7 +66,7 @@ describe('InventorySystem', () => {
 
       expect(result.success).toBe(true);
       expect(gameState.inventory.items).toHaveLength(3);
-      gameState.inventory.items.forEach((item) => {
+      gameState.inventory.items.forEach((item: InventoryItem) => {
         expect(item.itemId).toBe('pickaxe');
         expect(item.quantity).toBe(1);
       });
@@ -267,7 +267,7 @@ describe('InventorySystem', () => {
       system.sortInventory(gameState, 'category');
 
       const items = gameState.inventory.items;
-      const categories = items.map((item) => mockItems[item.itemId]?.category);
+      const categories = items.map((item: InventoryItem) => mockItems[item.itemId]?.category);
 
       // Categories should be sorted alphabetically
       expect(categories[0]).toBe(ITEM_CATEGORIES.DRINK);
