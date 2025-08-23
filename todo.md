@@ -253,26 +253,26 @@
 
 ### 6.2 ActivitySystem Implementation
 
-- [ ] Create `ActivitySystem` class
-  - [ ] Define activity types
-  - [ ] Track active activities
-  - [ ] Manage activity timers
-  - [ ] Handle concurrent restrictions
-- [ ] Implement activity mechanics
-  - [ ] Validate energy requirements
-  - [ ] Check tool requirements
-  - [ ] Start activity timers
-  - [ ] Process cancellations
-- [ ] Add activity outcomes
-  - [ ] Define reward tables
-  - [ ] Roll for rewards
-  - [ ] Handle rare finds
-  - [ ] Process tool durability
-- [ ] Handle activity completion
-  - [ ] Queue completion updates
-  - [ ] Distribute rewards
-  - [ ] Apply experience gains
-  - [ ] Check for random events
+- [x] Create `ActivitySystem` class
+  - [x] Define activity types
+  - [x] Track active activities
+  - [x] Manage activity timers
+  - [x] Handle concurrent restrictions
+- [x] Implement activity mechanics
+  - [x] Validate energy requirements
+  - [x] Check tool requirements
+  - [x] Start activity timers
+  - [x] Process cancellations
+- [x] Add activity outcomes
+  - [x] Define reward tables
+  - [x] Roll for rewards
+  - [x] Handle rare finds
+  - [x] Process tool durability
+- [x] Handle activity completion
+  - [x] Queue completion updates
+  - [x] Distribute rewards
+  - [x] Apply experience gains
+  - [x] Check for random events
 
 ## Phase 7: Battle System
 
