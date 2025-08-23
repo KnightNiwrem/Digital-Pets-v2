@@ -13,8 +13,6 @@ import {
   CITY_AREAS,
   WILD_BIOMES,
   TRAVEL_TIERS,
-  type LocationType,
-  type WildBiome,
   type TravelDistance,
   type GrowthStage,
   type CityArea,
@@ -76,7 +74,7 @@ export class LocationSystem extends BaseSystem {
     }
   }
 
-  protected async onTick(_deltaTime: number, gameState: GameState): Promise<void> {
+  protected async onTick(_deltaTime: number, _gameState: GameState): Promise<void> {
     // Check if travel is complete
     if (this.currentLocationState?.traveling && this.currentLocationState.travelRoute) {
       const now = Date.now();
@@ -854,7 +852,7 @@ export class LocationSystem extends BaseSystem {
     if (!currentLocation) return [];
 
     const destinations: string[] = [];
-    this.routes.forEach((route, key) => {
+    this.routes.forEach((route, _key) => {
       if (route.from === currentLocation) {
         destinations.push(route.to);
       }

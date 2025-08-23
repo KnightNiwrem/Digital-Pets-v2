@@ -375,9 +375,6 @@ describe('LocationSystem', () => {
 
   describe('Growth Stage Requirements', () => {
     it('should enforce minimum stage requirements for travel', () => {
-      // Create a route with stage requirement
-      const travelInfo = locationSystem.getTravelInfo('main_city', 'mountains');
-
       // Assuming mountains might have requirements, let's test the logic
       const canTravelAsHatchling = locationSystem.canTravel('forest', 100, GROWTH_STAGES.HATCHLING);
       const canTravelAsAdult = locationSystem.canTravel('forest', 100, GROWTH_STAGES.ADULT);
