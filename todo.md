@@ -215,41 +215,41 @@
 
 ### 5.2 ShopSystem Implementation
 
-- [ ] Create `ShopSystem` class
-  - [ ] Generate daily inventory
-  - [ ] Use date-based seed for consistency
-  - [ ] Set item prices by rarity
-  - [ ] Apply event discounts
-- [ ] Add shop transactions
-  - [ ] Implement purchase validation
-  - [ ] Process currency deduction
-  - [ ] Add items to inventory
-  - [ ] Handle sell transactions
-- [ ] Create shop inventory
-  - [ ] Define item pools by category
-  - [ ] Set rarity distribution
-  - [ ] Include special event items
-  - [ ] Rotate stock daily
+- [x] Create `ShopSystem` class
+  - [x] Generate daily inventory
+  - [x] Use date-based seed for consistency
+  - [x] Set item prices by rarity
+  - [x] Apply event discounts
+- [x] Add shop transactions
+  - [x] Implement purchase validation
+  - [x] Process currency deduction
+  - [x] Add items to inventory
+  - [x] Handle sell transactions
+- [x] Create shop inventory
+  - [x] Define item pools by category
+  - [x] Set rarity distribution
+  - [x] Include special event items
+  - [x] Rotate stock daily
 
 ## Phase 6: Location and Activity Systems
 
 ### 6.1 LocationSystem Implementation
 
-- [ ] Create `LocationSystem` class
-  - [ ] Define all locations
-  - [ ] Track current location
-  - [ ] Calculate travel distances
-  - [ ] Manage location properties
-- [ ] Implement travel mechanics
-  - [ ] Calculate travel time
-  - [ ] Determine energy costs
-  - [ ] Handle intra-city movement
-  - [ ] Process inter-city travel
-- [ ] Add travel modifiers
-  - [ ] Apply injury penalties
-  - [ ] Handle speed items
-  - [ ] Process travel interruptions
-  - [ ] Queue completion updates
+- [x] Create `LocationSystem` class
+  - [x] Define all locations
+  - [x] Track current location
+  - [x] Calculate travel distances
+  - [x] Manage location properties
+- [x] Implement travel mechanics
+  - [x] Calculate travel time
+  - [x] Determine energy costs
+  - [x] Handle intra-city movement
+  - [x] Process inter-city travel
+- [x] Add travel modifiers
+  - [x] Apply injury penalties
+  - [x] Handle speed items
+  - [x] Process travel interruptions
+  - [x] Queue completion updates
 
 ### 6.2 ActivitySystem Implementation
 
