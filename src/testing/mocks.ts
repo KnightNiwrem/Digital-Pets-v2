@@ -28,10 +28,17 @@ export interface MockPetOptions {
   rarity?: string;
   stage?: string;
   health?: number;
+  currentHealth?: number;
+  maxHealth?: number;
+  attack?: number;
+  defense?: number;
+  speed?: number;
+  maxAction?: number;
   energy?: number;
   satiety?: number;
   hydration?: number;
   happiness?: number;
+  knownMoves?: string[];
 }
 
 /**
@@ -195,31 +202,40 @@ export function createMockPet(options: MockPetOptions = {}): Pet {
     rarity = RARITY_TIERS.COMMON,
     stage = GROWTH_STAGES.HATCHLING,
     health = 20,
+    currentHealth,
+    maxHealth,
+    attack = 5,
+    defense = 5,
+    speed = 5,
+    maxAction = 10,
     energy = 50,
     satiety = 100,
     hydration = 100,
     happiness = 100,
+    knownMoves = ['tackle'],
   } = options;
 
   const now = Date.now();
+  const finalHealth = currentHealth ?? health;
+  const finalMaxHealth = maxHealth ?? health;
 
   return {
     id,
     name,
-    species,
+    species: species, // Just use the string ID
     rarity: rarity as any,
     stage: stage as any,
     birthTime: now,
     stageStartTime: now,
     lastInteractionTime: now,
     stats: {
-      health,
-      maxHealth: health,
-      attack: 5,
-      defense: 5,
-      speed: 5,
-      action: 10,
-      maxAction: 10,
+      health: finalHealth,
+      maxHealth: finalMaxHealth,
+      attack,
+      defense,
+      speed,
+      action: maxAction,
+      maxAction: maxAction,
     },
     energy,
     maxEnergy: energy,
@@ -236,7 +252,7 @@ export function createMockPet(options: MockPetOptions = {}): Pet {
     },
     status: { primary: STATUS_TYPES.HEALTHY },
     poopCount: 0,
-    moves: ['tackle'],
+    moves: knownMoves,
     experiencePoints: 0,
     trainingCounts: {
       health: 0,
@@ -367,5 +383,29 @@ export function createMockInventoryItem(
     itemId,
     quantity,
     obtainedTime: obtainedTime || Date.now(),
+  };
+}
+
+/**
+ * Create mock tuning config for testing
+ */
+export function createMockTuningConfig() {
+  return {
+    battle: {
+      maxMoves: 4,
+      baseAccuracy: 100,
+      criticalHitChance: 10,
+      criticalHitMultiplier: 1.5,
+      fleeBaseChance: 50,
+      actionRestoreOnSkip: 10,
+      damageFormula: {
+        base: 10,
+        attackMultiplier: 1.5,
+        defenseMultiplier: 0.8,
+      },
+    },
+    limits: {
+      maxBattleTurns: 100,
+    },
   };
 }
