@@ -2,29 +2,24 @@
  * Tests for ActivitySystem
  */
 
-import { describe, it, expect, beforeEach, afterEach, mock, spyOn } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { ActivitySystem } from './ActivitySystem';
-import { GameUpdatesQueue } from '../engine/GameUpdatesQueue';
 import type { GameState } from '../models';
 import {
   ACTIVITY_TYPES,
   STATUS_TYPES,
   GROWTH_STAGES,
-  ITEM_CATEGORIES,
-  TOOL_TYPES,
 } from '../models/constants';
 import { createMockGameState, createMockPet } from '../testing/mocks';
 
 describe('ActivitySystem', () => {
   let activitySystem: ActivitySystem;
-  let gameUpdatesQueue: GameUpdatesQueue;
   let gameState: GameState;
   let queuedUpdates: any[] = [];
 
   beforeEach(() => {
     // Create systems
     activitySystem = new ActivitySystem();
-    gameUpdatesQueue = new GameUpdatesQueue();
     queuedUpdates = [];
 
     // Initialize activity system with mock writer

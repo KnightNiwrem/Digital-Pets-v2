@@ -4,13 +4,12 @@
  */
 
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
-import type { GameState, Pet, Item } from '../models';
+import type { GameState, Pet } from '../models';
 import {
   UPDATE_TYPES,
   ACTIVITY_TYPES,
   ACTIVITY_DURATIONS,
   GROWTH_STAGES,
-  TOOL_TYPES,
   STATUS_TYPES,
   ITEM_CATEGORIES,
   RARITY_TIERS,
