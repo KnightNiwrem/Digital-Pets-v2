@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { ShopSystem } from './ShopSystem';
-import { InventorySystem } from './InventorySystem';
 import type { GameState } from '../models';
 import { RARITY_TIERS, ITEM_CATEGORIES } from '../models/constants';
 import { createMockGameState } from '../testing/mocks';
@@ -323,7 +322,6 @@ describe('ShopSystem', () => {
     it('should auto-rotate on new day during tick', async () => {
       // Set initial inventory
       shopSystem.forceRotation(20240101);
-      const initialInventory = shopSystem.getShopInventory();
 
       // Simulate a tick (which checks for new day)
       await shopSystem.tick(1000, gameState);
