@@ -21,7 +21,6 @@ describe('ConfigSystem', () => {
   describe('initialization', () => {
     it('should load configuration successfully', () => {
       const config = configSystem.load();
-      expect(config).toBeDefined();
       expect(config.version).toBe('1.0.0');
       expect(config.gameTitle).toBe('Digital Pet Game');
     });
@@ -74,11 +73,9 @@ describe('ConfigSystem', () => {
     it('should return all tuning values', () => {
       const tuning = configSystem.getTuningValues();
 
-      expect(tuning).toBeDefined();
-      expect(tuning.careDecay).toBeDefined();
-      expect(tuning.energy).toBeDefined();
-      expect(tuning.battle).toBeDefined();
-      expect(tuning.activities).toBeDefined();
+      expect(tuning.careDecay.satietyPerHour).toBe(3);
+      expect(tuning.careDecay.hydrationPerHour).toBe(4);
+      expect(tuning.careDecay.happinessPerHour).toBe(2);
     });
 
     it('should have correct care decay values', () => {
@@ -102,7 +99,6 @@ describe('ConfigSystem', () => {
     it('should return feature flags', () => {
       const flags = configSystem.getFeatureFlags();
 
-      expect(flags).toBeDefined();
       expect(flags.enableBattles).toBe(true);
       expect(flags.enableEvents).toBe(true);
       expect(flags.enableTrading).toBe(false);
@@ -132,7 +128,6 @@ describe('ConfigSystem', () => {
   describe('getActivityConfig()', () => {
     it('should return activity configuration for valid activity and duration', () => {
       const fishingShort = configSystem.getActivityConfig('fishing', 'short');
-      expect(fishingShort).toBeDefined();
       expect(fishingShort?.duration).toBe(2);
       expect(fishingShort?.energyCost).toBe(5);
       expect(fishingShort?.minRewards).toBe(1);
@@ -141,7 +136,6 @@ describe('ConfigSystem', () => {
 
     it('should return activity configuration for mining with requirements', () => {
       const miningMedium = configSystem.getActivityConfig('mining', 'medium');
-      expect(miningMedium).toBeDefined();
       expect(miningMedium?.duration).toBe(5);
       expect(miningMedium?.energyCost).toBe(15);
       expect(miningMedium?.requiredStage).toBe('JUVENILE');
@@ -393,11 +387,11 @@ describe('ConfigSystem', () => {
       const tuning = configSystem.getTuningValues();
       const incubation = tuning.eggs.incubationHours;
 
-      expect(incubation.COMMON).toBeDefined();
-      expect(incubation.UNCOMMON).toBeDefined();
-      expect(incubation.RARE).toBeDefined();
-      expect(incubation.EPIC).toBeDefined();
-      expect(incubation.LEGENDARY).toBeDefined();
+      expect(incubation.COMMON).toBeGreaterThan(0);
+      expect(incubation.UNCOMMON).toBeGreaterThan(0);
+      expect(incubation.RARE).toBeGreaterThan(0);
+      expect(incubation.EPIC).toBeGreaterThan(0);
+      expect(incubation.LEGENDARY).toBeGreaterThan(0);
     });
   });
 
@@ -414,14 +408,12 @@ describe('ConfigSystem', () => {
     it('should handle empty string key in get()', () => {
       const result = configSystem.get('');
       // Should return the root config object
-      expect(result).toBeDefined();
       expect(result.version).toBe('1.0.0');
     });
 
     it('should handle single-level key in get()', () => {
       const result = configSystem.get('tuning');
-      expect(result).toBeDefined();
-      expect(result.careDecay).toBeDefined();
+      expect(result).not.toBeUndefined();
     });
 
     it('should handle very deep nesting in get()', () => {

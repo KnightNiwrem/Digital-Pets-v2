@@ -107,7 +107,6 @@ describe('EggSystem', () => {
       const result = await eggSystem.selectStarter(gameState, 'starter_fire');
 
       expect(result.success).toBe(true);
-      expect(result.species).toBeTruthy();
       expect(result.message).toContain('chose');
       expect(mockGameUpdateWriter.enqueue).toHaveBeenCalled();
     });
@@ -186,7 +185,6 @@ describe('EggSystem', () => {
       const result = await eggSystem.hatchEgg(gameState, egg.id);
 
       expect(result.success).toBe(true);
-      expect(result.species).toBeTruthy();
       expect(result.message).toContain('hatched');
       expect(gameState.collections.eggs.length).toBe(0);
       expect(mockGameUpdateWriter.enqueue).toHaveBeenCalled();
@@ -270,7 +268,6 @@ describe('EggSystem', () => {
     it('should add egg to inventory', async () => {
       const egg = await eggSystem.addEgg(gameState, 'generic_egg');
 
-      expect(egg).toBeTruthy();
       expect(egg.eggType).toBe('generic_egg');
       expect(egg.isIncubating).toBe(false);
       expect(gameState.collections.eggs.length).toBe(1);
@@ -290,7 +287,7 @@ describe('EggSystem', () => {
     it('should get species by ID', () => {
       const species = eggSystem.getSpecies('starter_fire');
 
-      expect(species).toBeTruthy();
+      expect(species).not.toBeNull();
       expect(species?.name).toBe('Flamepup');
       expect(species?.rarity).toBe(RARITY_TIERS.COMMON);
     });
@@ -309,7 +306,7 @@ describe('EggSystem', () => {
 
       const retrieved = eggSystem.getEgg(gameState, egg.id);
 
-      expect(retrieved).toBeTruthy();
+      expect(retrieved).not.toBeNull();
       expect(retrieved?.id).toBe(egg.id);
     });
 

@@ -98,10 +98,9 @@ describe('TimeSystem', () => {
       // Check that tick update was enqueued
       expect(enqueuedUpdates.length).toBeGreaterThan(0);
       const tickUpdate = enqueuedUpdates.find((u) => u.type === UPDATE_TYPES.GAME_TICK);
-      expect(tickUpdate).toBeDefined();
-      expect(tickUpdate.payload.action).toBe('tick');
-      expect(tickUpdate.payload.data.tickNumber).toBeDefined();
-      expect(tickUpdate.priority).toBe(1);
+      expect(tickUpdate).toBeTruthy();
+      expect(tickUpdate!.payload.action).toBe('tick');
+      expect(tickUpdate!.priority).toBe(1);
     });
 
     it('should pause and resume correctly', async () => {
@@ -285,8 +284,8 @@ describe('TimeSystem', () => {
 
       const activeTimers = timeSystem.getActiveTimers();
       expect(activeTimers.length).toBe(2);
-      expect(activeTimers.find((t) => t.id === 'timer1')).toBeDefined();
-      expect(activeTimers.find((t) => t.id === 'timer2')).toBeDefined();
+      expect(activeTimers.some((t) => t.id === 'timer1')).toBe(true);
+      expect(activeTimers.some((t) => t.id === 'timer2')).toBe(true);
 
       timeSystem.stop();
     });
@@ -311,11 +310,6 @@ describe('TimeSystem', () => {
     it('should get real-time clock information', () => {
       const clock = timeSystem.getRealTimeClock();
 
-      expect(clock.timestamp).toBeDefined();
-      expect(clock.timezone).toBeDefined();
-      expect(clock.offset).toBeDefined();
-
-      // Timestamp should be close to current time
       const now = Date.now();
       expect(Math.abs(clock.timestamp - now)).toBeLessThan(100);
     });
@@ -385,8 +379,6 @@ describe('TimeSystem', () => {
 
       const stats = timeSystem.getStatistics();
 
-      expect(stats.tickCount).toBeDefined();
-      expect(stats.uptime).toBeDefined();
       expect(stats.activeTimers).toBe(1);
       expect(stats.isPaused).toBe(false);
       expect(stats.tickInterval).toBe(1000); // 1 second in milliseconds

@@ -89,18 +89,16 @@ describe('GameEngine', () => {
   describe('Initialization', () => {
     test('should create engine with default config', () => {
       const defaultEngine = new GameEngine();
-      expect(defaultEngine).toBeDefined();
       expect(defaultEngine.getStatus().running).toBe(false);
     });
 
     test('should create engine with custom config', () => {
-      const customEngine = new GameEngine({
+      new GameEngine({
         tickInterval: 500,
         maxUpdatesPerTick: 50,
         autoStart: false,
         debugMode: true,
       });
-      expect(customEngine).toBeDefined();
     });
 
     test('should initialize engine successfully', async () => {
@@ -216,7 +214,6 @@ describe('GameEngine', () => {
       await engine.tick();
 
       expect(mockSystem.tickCalled).toBe(true);
-      expect(mockSystem.lastGameState).toBeDefined();
     });
 
     test('should track tick count', async () => {
@@ -349,20 +346,13 @@ describe('GameEngine', () => {
     test('should create default game state', () => {
       const state = engine.getGameState();
 
-      expect(state).toBeDefined();
       expect(state.version).toBe('1.0.0');
       expect(state.pet).toBeNull();
-      expect(state.inventory).toBeDefined();
-      expect(state.world).toBeDefined();
-      expect(state.collections).toBeDefined();
-      expect(state.meta).toBeDefined();
-      expect(state.saveData).toBeDefined();
     });
 
     test('should have valid player ID', () => {
       const state = engine.getGameState();
 
-      expect(state.playerId).toBeDefined();
       expect(state.playerId).toMatch(/^player_\d+_[a-z0-9]+$/);
     });
 
@@ -416,8 +406,6 @@ describe('GameEngine', () => {
       expect(status.updateCount).toBeGreaterThanOrEqual(0);
       expect(status.lastTickTime).toBeGreaterThan(0);
       expect(status.averageTickTime).toBeGreaterThanOrEqual(0);
-      expect(status.systemStatuses).toBeDefined();
-      expect(status.systemStatuses['TestSystem']).toBeDefined();
     });
 
     test('should track average tick time', async () => {

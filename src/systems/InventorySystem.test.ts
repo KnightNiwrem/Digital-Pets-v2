@@ -263,8 +263,8 @@ describe('InventorySystem', () => {
 
       expect(result.success).toBe(true);
       expect(gameState.inventory.items).toHaveLength(1);
-      expect(gameState.inventory.items[0]?.itemId).toBe('apple');
-      expect(gameState.inventory.items[0]?.quantity).toBe(5);
+      expect(gameState.inventory.items[0]!.itemId).toBe('apple');
+      expect(gameState.inventory.items[0]!.quantity).toBe(5);
     });
 
     it('should stack items when adding to existing stack', () => {
@@ -307,9 +307,8 @@ describe('InventorySystem', () => {
       const result = system.addItem(gameState, 'apple', 250); // More than 2 stacks
 
       expect(result.success).toBe(true);
-      expect(result.overflow).toBeDefined();
       expect(gameState.inventory.items).toHaveLength(2);
-      expect(result.overflow![0]?.quantity).toBe(52); // 250 - 99 - 99 = 52
+      expect(result.overflow![0]!.quantity).toBe(52); // 250 - 99 - 99 = 52
     });
 
     it('should remove items from inventory', () => {

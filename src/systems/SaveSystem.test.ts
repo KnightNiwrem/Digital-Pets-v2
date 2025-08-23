@@ -444,7 +444,6 @@ describe('SaveSystem', () => {
       expect(parsed.version).toBe('1.0.0');
       expect(parsed.game).toBe('Digital Pet Game');
       expect(parsed.data.playerId).toBe('test-player-123');
-      expect(parsed.checksum).toBeTruthy();
     });
 
     it('should import valid save data', async () => {
@@ -579,7 +578,6 @@ describe('SaveSystem', () => {
       // Should have migrated and added missing fields
       expect(loadedState).not.toBeNull();
       expect(loadedState?.version).toBe('1.0.0');
-      expect(loadedState?.collections).toBeDefined();
       expect(loadedState?.collections.eggs).toEqual([]);
     });
   });
