@@ -13,9 +13,9 @@ import type {
   BattleStatusEffect,
 } from '../models/BattleMove';
 import type { Pet } from '../models/Pet';
-import { UPDATE_TYPES, RARITY_TIERS, type RarityTier } from '../models/constants';
+import { UPDATE_TYPES } from '../models/constants';
 import { randomInt } from '../utils/math';
-import { getMoveById } from '../data/moves';
+import { getMoveById as getMoveDef } from '../data/moves';
 
 export interface BattleAction {
   type: 'move' | 'item' | 'flee' | 'skip';
@@ -714,21 +714,8 @@ export class BattleSystem extends BaseSystem {
   }
 
   private getMoveById(moveId: string): BattleMove | null {
-    // In a real implementation, this would fetch from a moves database
-    // For now, return a basic move
-    return {
-      id: moveId,
-      name: moveId.replace('_', ' '),
-      description: `A basic move`,
-      actionCost: 20,
-      power: 30,
-      accuracy: 90,
-      priority: 0,
-      moveType: 'damage',
-      targetType: 'enemy',
-      animation: 'basic_attack',
-      soundEffect: 'hit',
-    };
+    // Use the moves database
+    return getMoveDef(moveId);
   }
 
   private getDefaultTarget(

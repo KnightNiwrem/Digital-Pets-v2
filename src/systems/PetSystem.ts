@@ -228,9 +228,10 @@ export class PetSystem extends BaseSystem {
   /**
    * Get starter moves for a species
    */
-  private getStarterMoves(species: string): string[] {
+  private getStarterMoves(_species: string): string[] {
     // Look up species-specific starter moves, or use default
     // For now, using a default set
+    // TODO: In future, use _species to look up specific starter moves
     return STARTER_MOVES.default ? [...STARTER_MOVES.default] : ['tackle', 'growl'];
   }
 
