@@ -151,6 +151,7 @@ export interface BattleState {
 
   // Battle properties
   turnCount: number;
+  maxTurns: number; // Turn limit before timeout
   allowFlee: boolean;
   allowItems: boolean;
   allowSwitch: boolean; // For future multi-pet battles
