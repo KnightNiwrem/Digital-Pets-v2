@@ -325,30 +325,30 @@
   - [x] Handle move replacement
   - [x] Limit to 4 moves
 
-## Phase 8: Event System
+## Phase 8: Event System ✅
 
 ### 8.1 EventSystem Implementation
 
-- [ ] Create `EventSystem` class
-  - [ ] Define calendar events
-  - [ ] Track active events
-  - [ ] Check time windows
-  - [ ] Handle participation
-- [ ] Implement event scheduling
-  - [ ] Use real-time clock
-  - [ ] Define weekly events
-  - [ ] Add seasonal events
-  - [ ] Handle timezone correctly
-- [ ] Add event mechanics
-  - [ ] Create event activities
-  - [ ] Implement event battles
-  - [ ] Track event progress
-  - [ ] Manage event tokens
-- [ ] Handle event closure
-  - [ ] Process graceful termination
-  - [ ] Distribute partial rewards
-  - [ ] Convert tokens to currency
-  - [ ] Return pet to safe location
+- [x] Create `EventSystem` class
+  - [x] Define calendar events
+  - [x] Track active events
+  - [x] Check time windows
+  - [x] Handle participation
+- [x] Implement event scheduling
+  - [x] Use real-time clock
+  - [x] Define weekly events
+  - [x] Add seasonal events
+  - [x] Handle timezone correctly
+- [x] Add event mechanics
+  - [x] Create event activities
+  - [x] Implement event battles
+  - [x] Track event progress
+  - [x] Manage event tokens
+- [x] Handle event closure
+  - [x] Process graceful termination
+  - [x] Distribute partial rewards
+  - [x] Convert tokens to currency
+  - [x] Return pet to safe location
 
 ## Phase 9: User Interface
 
