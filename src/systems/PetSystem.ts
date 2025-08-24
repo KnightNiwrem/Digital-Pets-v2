@@ -21,14 +21,16 @@ import { STARTER_MOVES } from '../data/moves';
 /**
  * Care action types
  */
-export enum CareActionType {
-  FEED = 'FEED',
-  DRINK = 'DRINK',
-  PLAY = 'PLAY',
-  CLEAN_POOP = 'CLEAN_POOP',
-  USE_MEDICINE = 'USE_MEDICINE',
-  USE_BANDAGE = 'USE_BANDAGE',
-}
+export const CareActionType = {
+  FEED: 'FEED',
+  DRINK: 'DRINK',
+  PLAY: 'PLAY',
+  CLEAN_POOP: 'CLEAN_POOP',
+  USE_MEDICINE: 'USE_MEDICINE',
+  USE_BANDAGE: 'USE_BANDAGE',
+} as const;
+
+export type CareActionType = (typeof CareActionType)[keyof typeof CareActionType];
 
 /**
  * Care action result
