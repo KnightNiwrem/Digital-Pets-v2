@@ -30,7 +30,6 @@ export interface EngineConfig {
  */
 export interface EngineStatus {
   running: boolean;
-  paused: boolean;
   tickCount: number;
   updateCount: number;
   lastTickTime: number;
@@ -64,7 +63,6 @@ export class GameEngine {
 
   // Engine state
   private running = false;
-  private paused = false;
   private tickCount = 0;
   private updateCount = 0;
   private lastTickTime = 0;
@@ -156,7 +154,6 @@ export class GameEngine {
     }
 
     this.running = true;
-    this.paused = false;
     this.lastTickTime = Date.now();
 
     // Start the game loop
@@ -191,43 +188,10 @@ export class GameEngine {
   }
 
   /**
-   * Pause the game engine
-   */
-  public pause(): void {
-    if (!this.running || this.paused) {
-      return;
-    }
-
-    if (this.config.debugMode) {
-      console.log('[GameEngine] Pausing engine');
-    }
-
-    this.paused = true;
-    this.stopGameLoop();
-  }
-
-  /**
-   * Resume the game engine
-   */
-  public resume(): void {
-    if (!this.running || !this.paused) {
-      return;
-    }
-
-    if (this.config.debugMode) {
-      console.log('[GameEngine] Resuming engine');
-    }
-
-    this.paused = false;
-    this.lastTickTime = Date.now();
-    this.startGameLoop();
-  }
-
-  /**
    * Process one game tick
    */
   public async tick(): Promise<void> {
-    if (!this.running || this.paused) {
+    if (!this.running) {
       return;
     }
 
@@ -316,7 +280,6 @@ export class GameEngine {
 
     return {
       running: this.running,
-      paused: this.paused,
       tickCount: this.tickCount,
       updateCount: this.updateCount,
       lastTickTime: this.lastTickTime,

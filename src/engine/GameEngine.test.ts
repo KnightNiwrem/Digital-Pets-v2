@@ -142,7 +142,6 @@ describe('GameEngine', () => {
       await engine.initialize();
       const status = engine.getStatus();
       expect(status.running).toBe(false);
-      expect(status.paused).toBe(false);
     });
 
     test('should auto-start if configured', async () => {
@@ -201,7 +200,6 @@ describe('GameEngine', () => {
 
       const status = engine.getStatus();
       expect(status.running).toBe(true);
-      expect(status.paused).toBe(false);
     });
 
     test('should stop engine', async () => {
@@ -211,17 +209,6 @@ describe('GameEngine', () => {
 
       const status = engine.getStatus();
       expect(status.running).toBe(false);
-    });
-
-    test('should pause and resume engine', async () => {
-      await engine.initialize();
-      await engine.start();
-
-      engine.pause();
-      expect(engine.getStatus().paused).toBe(true);
-
-      engine.resume();
-      expect(engine.getStatus().paused).toBe(false);
     });
 
     test('should not start when already running', async () => {
@@ -264,19 +251,6 @@ describe('GameEngine', () => {
 
       const newStatus = engine.getStatus();
       expect(newStatus.tickCount).toBe(initialTickCount + 1);
-    });
-
-    test('should not tick when paused', async () => {
-      const mockSystem = new MockSystem('TestSystem');
-      engine.registerSystem('TestSystem', mockSystem);
-
-      await engine.initialize();
-      await engine.start();
-      engine.pause();
-
-      await engine.tick();
-
-      expect(mockSystem.tickCalled).toBe(false);
     });
   });
 
@@ -438,7 +412,6 @@ describe('GameEngine', () => {
       const status = engine.getStatus();
 
       expect(status.running).toBe(true);
-      expect(status.paused).toBe(false);
       expect(status.tickCount).toBeGreaterThanOrEqual(0);
       expect(status.updateCount).toBeGreaterThanOrEqual(0);
       expect(status.lastTickTime).toBeGreaterThan(0);
