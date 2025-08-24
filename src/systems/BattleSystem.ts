@@ -118,6 +118,7 @@ export class BattleSystem extends BaseSystem {
       currentTurn: 0,
       turnOrder,
       turnCount: 0,
+      maxTurns: config.rules.maxTurns ?? 100,
       allowFlee: config.rules.maxTurns ? config.rules.maxTurns > 0 : true,
       allowItems: !config.rules.noHealing,
       allowSwitch: false, // Not implemented yet
@@ -478,8 +479,8 @@ export class BattleSystem extends BaseSystem {
       };
     }
 
-    // Check for timeout - use a reasonable default if tuning is not available
-    const maxTurns = 100; // Default max turns
+    // Check for timeout using configured turn limit
+    const maxTurns = this.currentBattle.maxTurns ?? 100;
     if (this.currentBattle.turnCount >= maxTurns) {
       return {
         winner: 'draw',

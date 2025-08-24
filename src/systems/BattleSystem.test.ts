@@ -310,18 +310,15 @@ describe('BattleSystem', () => {
   });
 
   describe('Battle End Conditions', () => {
-    beforeEach(async () => {
-      await battleSystem.initializeBattle(mockPlayerPet, mockOpponentPet, mockBattleConfig);
-    });
-
     test('should end battle when player pet is defeated', async () => {
+      await battleSystem.initializeBattle(mockPlayerPet, mockOpponentPet, mockBattleConfig);
       const battleState = battleSystem.getCurrentBattle()!;
       const playerParticipant = battleState.participants.find(p => p.team === 'player')!;
       const currentParticipant = battleSystem.getCurrentTurnParticipant()!;
-      
+
       // Reduce player health to 0
       playerParticipant.currentHealth = 0;
-      
+
       await battleSystem.processBattleAction({
         type: 'skip',
         participantId: currentParticipant.id
@@ -331,13 +328,14 @@ describe('BattleSystem', () => {
     });
 
     test('should end battle when opponent pet is defeated', async () => {
+      await battleSystem.initializeBattle(mockPlayerPet, mockOpponentPet, mockBattleConfig);
       const battleState = battleSystem.getCurrentBattle()!;
       const opponentParticipant = battleState.participants.find(p => p.team === 'enemy')!;
       const currentParticipant = battleSystem.getCurrentTurnParticipant()!;
-      
+
       // Reduce opponent health to 0
       opponentParticipant.currentHealth = 0;
-      
+
       await battleSystem.processBattleAction({
         type: 'skip',
         participantId: currentParticipant.id
@@ -347,12 +345,34 @@ describe('BattleSystem', () => {
     });
 
     test('should end battle on timeout', async () => {
+      await battleSystem.initializeBattle(mockPlayerPet, mockOpponentPet, mockBattleConfig);
       const battleState = battleSystem.getCurrentBattle()!;
       const currentParticipant = battleSystem.getCurrentTurnParticipant()!;
-      
-      // Set turn count to max
-      battleState.turnCount = 100; // Exceeds max turns from limits config
-      
+
+      // Set turn count to max from config
+      battleState.turnCount = mockBattleConfig.rules.maxTurns!;
+
+      await battleSystem.processBattleAction({
+        type: 'skip',
+        participantId: currentParticipant.id
+      });
+
+      expect(battleSystem.getCurrentBattle()).toBeNull(); // Battle ended
+    });
+
+    test('should end battle on timeout with custom max turns', async () => {
+      const customConfig = {
+        ...mockBattleConfig,
+        rules: { ...mockBattleConfig.rules, maxTurns: 10 }
+      };
+
+      await battleSystem.initializeBattle(mockPlayerPet, mockOpponentPet, customConfig);
+      const battleState = battleSystem.getCurrentBattle()!;
+      const currentParticipant = battleSystem.getCurrentTurnParticipant()!;
+
+      // Set turn count to custom max
+      battleState.turnCount = customConfig.rules.maxTurns!;
+
       await battleSystem.processBattleAction({
         type: 'skip',
         participantId: currentParticipant.id
