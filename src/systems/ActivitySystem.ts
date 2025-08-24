@@ -19,6 +19,7 @@ import {
   type ItemCategory,
   type StatType,
 } from '../models/constants';
+import { getPossibleMovesToLearn } from '../data/moves';
 
 /**
  * Activity configuration from tuning
@@ -71,6 +72,17 @@ export interface ActivityOutcome {
   injuryRisk?: boolean;
   sicknessRisk?: boolean;
   message?: string;
+  trainingResult?: TrainingResult;
+}
+
+/**
+ * Training result data
+ */
+export interface TrainingResult {
+  targetStat: StatType;
+  statIncrease: number;
+  newMove?: string;
+  moveReplaced?: string;
 }
 
 /**
@@ -368,7 +380,7 @@ export class ActivitySystem extends BaseSystem {
   /**
    * Handle activity completion (called by GameEngine when timer completes)
    */
-  public handleActivityCompletion(activityId: string): void {
+  public handleActivityCompletion(activityId: string, gameState?: GameState): void {
     const activity = this.activeActivities.get(activityId);
     if (!activity) {
       console.warn(`[ActivitySystem] Activity ${activityId} not found for completion`);
@@ -376,26 +388,33 @@ export class ActivitySystem extends BaseSystem {
     }
 
     // Process rewards
-    const outcome = this.processActivityOutcome(activity);
+    const outcome = this.processActivityOutcome(activity, gameState);
 
     // Remove activity
     this.activeActivities.delete(activityId);
 
-    // Queue completion update
+    // Queue completion update with training-specific data
+    const completionData: any = {
+      activityId,
+      type: activity.type,
+      success: outcome.success,
+      rewards: outcome.rewards,
+      experience: outcome.experience,
+      encounterTriggered: outcome.encounterTriggered,
+      message: outcome.message,
+    };
+
+    // Add training-specific completion data
+    if (activity.type === ACTIVITY_TYPES.TRAINING && outcome.trainingResult) {
+      completionData.trainingResult = outcome.trainingResult;
+    }
+
     if (this.gameUpdateWriter) {
       this.gameUpdateWriter.enqueue({
         type: UPDATE_TYPES.ACTIVITY_COMPLETE,
         payload: {
           action: 'activity_completed',
-          data: {
-            activityId,
-            type: activity.type,
-            success: outcome.success,
-            rewards: outcome.rewards,
-            experience: outcome.experience,
-            encounterTriggered: outcome.encounterTriggered,
-            message: outcome.message,
-          },
+          data: completionData,
         },
         priority: 1,
       });
@@ -409,7 +428,7 @@ export class ActivitySystem extends BaseSystem {
   /**
    * Process activity outcome and determine rewards
    */
-  private processActivityOutcome(activity: ActiveActivity): ActivityOutcome {
+  private processActivityOutcome(activity: ActiveActivity, gameState?: GameState): ActivityOutcome {
     // Use pre-rolled rewards if available
     const rewards = activity.rewards || [];
 
@@ -421,10 +440,13 @@ export class ActivitySystem extends BaseSystem {
     const injuryRisk = mishapChance < 2; // 2% chance
     const sicknessRisk = mishapChance < 5; // 5% chance
 
-    // Calculate experience for training
+    // Handle training outcomes
     let experience = 0;
+    let trainingResult: TrainingResult | undefined;
+
     if (activity.type === ACTIVITY_TYPES.TRAINING) {
       const training = activity as TrainingActivity;
+      trainingResult = this.processTrainingOutcome(training, gameState);
       experience = training.statIncrease;
     }
 
@@ -436,7 +458,62 @@ export class ActivitySystem extends BaseSystem {
       injuryRisk,
       sicknessRisk,
       message: this.generateCompletionMessage(activity.type, rewards.length),
+      trainingResult,
     };
+  }
+
+  /**
+   * Process training outcome - stat increases and move learning
+   */
+  private processTrainingOutcome(
+    training: TrainingActivity,
+    gameState?: GameState,
+  ): TrainingResult {
+    const result: TrainingResult = {
+      targetStat: training.targetStat,
+      statIncrease: training.statIncrease,
+    };
+
+    // Check for move learning if pet is provided
+    if (gameState?.pet && training.moveLearnChance > 0) {
+      const pet = gameState.pet;
+
+      // Get possible moves to learn
+      const possibleMoves = getPossibleMovesToLearn(
+        training.targetStat,
+        pet.stage,
+        {
+          health: pet.stats.maxHealth,
+          attack: pet.stats.attack,
+          defense: pet.stats.defense,
+          speed: pet.stats.speed,
+          action: pet.stats.maxAction,
+        },
+        pet.moves,
+      );
+
+      if (possibleMoves.length > 0) {
+        // Roll for move learning
+        const learnRoll = Math.random() * 100;
+
+        // Try each possible move
+        for (const moveRequirement of possibleMoves) {
+          if (learnRoll < moveRequirement.learnChance) {
+            result.newMove = moveRequirement.moveId;
+
+            // Check if need to replace a move (4 move limit)
+            if (pet.moves.length >= 4) {
+              // For now, replace the first move (could be made more intelligent)
+              result.moveReplaced = pet.moves[0];
+            }
+
+            break; // Only learn one move per training
+          }
+        }
+      }
+    }
+
+    return result;
   }
 
   /**

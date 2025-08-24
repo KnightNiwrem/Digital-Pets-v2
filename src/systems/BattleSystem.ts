@@ -10,11 +10,12 @@ import type {
   BattleMove,
   BattleLogEntry,
   BattleConfig,
-  BattleStatusEffect
+  BattleStatusEffect,
 } from '../models/BattleMove';
 import type { Pet } from '../models/Pet';
-import { UPDATE_TYPES } from '../models/constants';
+import { UPDATE_TYPES, RARITY_TIERS, type RarityTier } from '../models/constants';
 import { randomInt } from '../utils/math';
+import { getMoveById } from '../data/moves';
 
 export interface BattleAction {
   type: 'move' | 'item' | 'flee' | 'skip';
@@ -31,6 +32,11 @@ export interface BattleResult {
     experience: number;
     currency: number;
     items: { itemId: string; quantity: number }[];
+    specialRewards?: {
+      eggFragment?: boolean;
+      rarePetEncounter?: boolean;
+      moveUnlock?: string;
+    };
   };
 }
 
@@ -55,7 +61,7 @@ export class BattleSystem extends BaseSystem {
       await this.endBattle({
         winner: 'draw',
         endReason: 'timeout',
-        rewards: { experience: 0, currency: 0, items: [] }
+        rewards: { experience: 0, currency: 0, items: [] },
       });
     }
   }
@@ -77,7 +83,7 @@ export class BattleSystem extends BaseSystem {
 
   protected onError(error: any): void {
     console.error(`[BattleSystem] Error:`, error);
-    
+
     // End battle on critical errors
     if (this.currentBattle) {
       this.currentBattle = null;
@@ -90,18 +96,18 @@ export class BattleSystem extends BaseSystem {
   public async initializeBattle(
     playerPet: Pet,
     opponentPet: Pet | BattleParticipant,
-    config: BattleConfig
+    config: BattleConfig,
   ): Promise<BattleState> {
     if (this.currentBattle) {
       throw new Error('Battle already in progress');
     }
 
     const battleId = `battle_${Date.now()}_${randomInt(1000, 9999)}`;
-    
+
     // Create battle participants
     const playerParticipant = this.createParticipantFromPet(playerPet, 'player');
-    const opponentParticipant = this.isParticipant(opponentPet) 
-      ? opponentPet 
+    const opponentParticipant = this.isParticipant(opponentPet)
+      ? opponentPet
       : this.createParticipantFromPet(opponentPet, 'enemy');
 
     const participants = [playerParticipant, opponentParticipant];
@@ -123,7 +129,7 @@ export class BattleSystem extends BaseSystem {
       allowItems: !config.rules.noHealing,
       allowSwitch: false, // Not implemented yet
       log: [],
-      rewards: this.calculateRewards(config, opponentParticipant)
+      rewards: this.calculateRewards(config, opponentParticipant),
     };
 
     // Log battle start
@@ -132,7 +138,7 @@ export class BattleSystem extends BaseSystem {
       timestamp: Date.now(),
       type: 'other',
       message: `Battle started between ${playerParticipant.name} and ${opponentParticipant.name}!`,
-      important: true
+      important: true,
     });
 
     // Write battle start update
@@ -144,9 +150,9 @@ export class BattleSystem extends BaseSystem {
           action: 'battle_started',
           data: {
             battleId: battleId,
-            participants: participants.map(p => ({ id: p.id, name: p.name, team: p.team }))
-          }
-        }
+            participants: participants.map((p) => ({ id: p.id, name: p.name, team: p.team })),
+          },
+        },
       });
     }
 
@@ -161,7 +167,7 @@ export class BattleSystem extends BaseSystem {
       throw new Error('No battle in progress');
     }
 
-    const participant = this.currentBattle.participants.find(p => p.id === action.participantId);
+    const participant = this.currentBattle.participants.find((p) => p.id === action.participantId);
     if (!participant) {
       throw new Error('Participant not found');
     }
@@ -193,7 +199,11 @@ export class BattleSystem extends BaseSystem {
   /**
    * Execute a move in battle
    */
-  private async executeMove(participant: BattleParticipant, moveId: string, targetId?: string): Promise<void> {
+  private async executeMove(
+    participant: BattleParticipant,
+    moveId: string,
+    targetId?: string,
+  ): Promise<void> {
     if (!this.currentBattle) return;
 
     // For skip turn (always available)
@@ -215,15 +225,17 @@ export class BattleSystem extends BaseSystem {
 
     // Check action cost
     if (participant.currentAction < move.actionCost) {
-      throw new Error(`Not enough Action points. Need ${move.actionCost}, have ${participant.currentAction}`);
+      throw new Error(
+        `Not enough Action points. Need ${move.actionCost}, have ${participant.currentAction}`,
+      );
     }
 
     // Deduct action cost
     participant.currentAction -= move.actionCost;
 
     // Find target
-    const target = targetId 
-      ? this.currentBattle.participants.find(p => p.id === targetId)
+    const target = targetId
+      ? this.currentBattle.participants.find((p) => p.id === targetId)
       : this.getDefaultTarget(participant, move);
 
     if (!target) {
@@ -240,7 +252,7 @@ export class BattleSystem extends BaseSystem {
         target: target.id,
         action: moveId,
         message: `${participant.name} used ${move.name}, but it missed!`,
-        important: false
+        important: false,
       });
       return;
     }
@@ -283,7 +295,7 @@ export class BattleSystem extends BaseSystem {
       damage,
       healing,
       message,
-      important: damage > 0 || healing > 0
+      important: damage > 0 || healing > 0,
     });
   }
 
@@ -295,7 +307,10 @@ export class BattleSystem extends BaseSystem {
 
     const restoreAmount = this.tuning.battle?.actionRestoreOnSkip || 10;
     const oldAction = participant.currentAction;
-    participant.currentAction = Math.min(participant.maxAction, participant.currentAction + restoreAmount);
+    participant.currentAction = Math.min(
+      participant.maxAction,
+      participant.currentAction + restoreAmount,
+    );
     const actualRestore = participant.currentAction - oldAction;
 
     this.addBattleLogEntry({
@@ -304,7 +319,7 @@ export class BattleSystem extends BaseSystem {
       type: 'other',
       actor: participant.id,
       message: `${participant.name} rested and recovered ${actualRestore} Action points!`,
-      important: false
+      important: false,
     });
   }
 
@@ -328,13 +343,13 @@ export class BattleSystem extends BaseSystem {
         type: 'flee',
         actor: participant.id,
         message: `${participant.name} successfully fled from battle!`,
-        important: true
+        important: true,
       });
 
       await this.endBattle({
         winner: participant.team === 'player' ? 'draw' : 'player', // If player flees, it's not a win
         endReason: 'flee',
-        rewards: { experience: 0, currency: 0, items: [] }
+        rewards: { experience: 0, currency: 0, items: [] },
       });
     } else {
       this.addBattleLogEntry({
@@ -343,7 +358,7 @@ export class BattleSystem extends BaseSystem {
         type: 'flee',
         actor: participant.id,
         message: `${participant.name} couldn't escape!`,
-        important: false
+        important: false,
       });
     }
   }
@@ -351,7 +366,11 @@ export class BattleSystem extends BaseSystem {
   /**
    * Use an item in battle
    */
-  private async useItem(participant: BattleParticipant, itemId: string, targetId?: string): Promise<void> {
+  private async useItem(
+    participant: BattleParticipant,
+    itemId: string,
+    targetId?: string,
+  ): Promise<void> {
     if (!this.currentBattle) return;
 
     // Item usage would be implemented here
@@ -364,7 +383,7 @@ export class BattleSystem extends BaseSystem {
       target: targetId,
       action: itemId,
       message: `${participant.name} used ${itemId}!`,
-      important: false
+      important: false,
     });
   }
 
@@ -375,13 +394,17 @@ export class BattleSystem extends BaseSystem {
     return participants
       .map((participant, index) => ({ index, speed: participant.speed }))
       .sort((a, b) => b.speed - a.speed) // Higher speed goes first
-      .map(item => item.index);
+      .map((item) => item.index);
   }
 
   /**
    * Calculate damage for a move
    */
-  private calculateDamage(attacker: BattleParticipant, move: BattleMove, defender: BattleParticipant): number {
+  private calculateDamage(
+    attacker: BattleParticipant,
+    move: BattleMove,
+    defender: BattleParticipant,
+  ): number {
     if (!this.tuning?.battle?.damageFormula) return 0;
 
     const formula = this.tuning.battle.damageFormula;
@@ -389,8 +412,9 @@ export class BattleSystem extends BaseSystem {
     const attackStat = attacker.attack * attacker.statModifiers.attack;
     const defenseStat = defender.defense * defender.statModifiers.defense;
 
-    let damage = baseDamage + (attackStat * formula.attackMultiplier) - (defenseStat * formula.defenseMultiplier);
-    
+    let damage =
+      baseDamage + attackStat * formula.attackMultiplier - defenseStat * formula.defenseMultiplier;
+
     // Apply critical hit
     const critChance = this.tuning.battle?.criticalHitChance || 10;
     if (Math.random() * 100 < critChance) {
@@ -404,7 +428,11 @@ export class BattleSystem extends BaseSystem {
   /**
    * Check if an attack hits based on accuracy
    */
-  private checkAccuracy(attacker: BattleParticipant, move: BattleMove, defender: BattleParticipant): boolean {
+  private checkAccuracy(
+    attacker: BattleParticipant,
+    move: BattleMove,
+    defender: BattleParticipant,
+  ): boolean {
     const baseAccuracy = this.tuning?.battle?.baseAccuracy || 100;
     const moveAccuracy = move.accuracy || baseAccuracy;
     const attackerAccuracy = attacker.statModifiers.accuracy;
@@ -417,17 +445,23 @@ export class BattleSystem extends BaseSystem {
   /**
    * Check if the last hit was critical (for display purposes)
    */
-  private wasLastHitCritical(damage: number, attacker: BattleParticipant, move: BattleMove, defender: BattleParticipant): boolean {
+  private wasLastHitCritical(
+    damage: number,
+    attacker: BattleParticipant,
+    move: BattleMove,
+    defender: BattleParticipant,
+  ): boolean {
     if (!this.tuning?.battle) return false;
-    
+
     const formula = this.tuning.battle.damageFormula;
     const baseDamage = formula.base + move.power;
     const attackStat = attacker.attack * attacker.statModifiers.attack;
     const defenseStat = defender.defense * defender.statModifiers.defense;
-    
-    const normalDamage = baseDamage + (attackStat * formula.attackMultiplier) - (defenseStat * formula.defenseMultiplier);
+
+    const normalDamage =
+      baseDamage + attackStat * formula.attackMultiplier - defenseStat * formula.defenseMultiplier;
     const critMultiplier = this.tuning.battle.criticalHitMultiplier || 1.5;
-    
+
     return damage >= Math.round(normalDamage * critMultiplier);
   }
 
@@ -436,19 +470,24 @@ export class BattleSystem extends BaseSystem {
    */
   private applyStatusEffect(
     participant: BattleParticipant,
-    statusEffect: { type: BattleStatusEffect; duration: number; stackable: boolean }
+    statusEffect: { type: BattleStatusEffect; duration: number; stackable: boolean },
   ): void {
     // Check if effect already exists
-    const existingEffect = participant.statusEffects.find(effect => effect.type === statusEffect.type);
-    
+    const existingEffect = participant.statusEffects.find(
+      (effect) => effect.type === statusEffect.type,
+    );
+
     if (existingEffect && statusEffect.stackable) {
       existingEffect.intensity += 1;
-      existingEffect.turnsRemaining = Math.max(existingEffect.turnsRemaining, statusEffect.duration);
+      existingEffect.turnsRemaining = Math.max(
+        existingEffect.turnsRemaining,
+        statusEffect.duration,
+      );
     } else if (!existingEffect) {
       participant.statusEffects.push({
         type: statusEffect.type,
         turnsRemaining: statusEffect.duration,
-        intensity: 1
+        intensity: 1,
       });
     }
   }
@@ -460,22 +499,29 @@ export class BattleSystem extends BaseSystem {
     if (!this.currentBattle) return null;
 
     // Check if any participant is defeated
-    const playerParticipant = this.currentBattle.participants.find(p => p.team === 'player');
-    const enemyParticipant = this.currentBattle.participants.find(p => p.team === 'enemy');
+    const playerParticipant = this.currentBattle.participants.find((p) => p.team === 'player');
+    const enemyParticipant = this.currentBattle.participants.find((p) => p.team === 'enemy');
 
     if (playerParticipant && playerParticipant.currentHealth <= 0) {
       return {
         winner: 'enemy',
         endReason: 'defeat',
-        rewards: { experience: 0, currency: 0, items: [] }
+        rewards: { experience: 0, currency: 0, items: [] },
       };
     }
 
     if (enemyParticipant && enemyParticipant.currentHealth <= 0) {
+      // Process item drops when enemy is defeated
+      const rewards = this.currentBattle.rewards || { experience: 0, currency: 0, items: [] };
+      const actualItems = this.processItemDrops(rewards.items);
+
       return {
         winner: 'player',
         endReason: 'victory',
-        rewards: this.currentBattle.rewards || { experience: 0, currency: 0, items: [] }
+        rewards: {
+          ...rewards,
+          items: actualItems,
+        },
       };
     }
 
@@ -485,7 +531,7 @@ export class BattleSystem extends BaseSystem {
       return {
         winner: 'draw',
         endReason: 'timeout',
-        rewards: { experience: 0, currency: 0, items: [] }
+        rewards: { experience: 0, currency: 0, items: [] },
       };
     }
 
@@ -506,7 +552,7 @@ export class BattleSystem extends BaseSystem {
       damageDealt: 0, // Would be calculated from battle log
       damageTaken: 0, // Would be calculated from battle log
       experienceGained: result.rewards.experience,
-      itemsReceived: result.rewards.items
+      itemsReceived: result.rewards.items,
     };
 
     // Log battle end
@@ -531,7 +577,7 @@ export class BattleSystem extends BaseSystem {
       timestamp: Date.now(),
       type: 'other',
       message,
-      important: true
+      important: true,
     });
 
     // Write battle end update
@@ -543,9 +589,9 @@ export class BattleSystem extends BaseSystem {
           action: 'battle_ended',
           data: {
             battleId: this.currentBattle.id,
-            result: this.currentBattle.result
-          }
-        }
+            result: this.currentBattle.result,
+          },
+        },
       });
     }
 
@@ -559,8 +605,9 @@ export class BattleSystem extends BaseSystem {
   private advanceTurn(): void {
     if (!this.currentBattle) return;
 
-    this.currentBattle.currentTurn = (this.currentBattle.currentTurn + 1) % this.currentBattle.turnOrder.length;
-    
+    this.currentBattle.currentTurn =
+      (this.currentBattle.currentTurn + 1) % this.currentBattle.turnOrder.length;
+
     // If we're back to the first participant, increment turn count
     if (this.currentBattle.currentTurn === 0) {
       this.currentBattle.turnCount++;
@@ -580,7 +627,7 @@ export class BattleSystem extends BaseSystem {
       for (let i = participant.statusEffects.length - 1; i >= 0; i--) {
         const effect = participant.statusEffects[i];
         if (!effect) continue;
-        
+
         // Apply effect
         switch (effect.type) {
           case 'POISONED':
@@ -593,11 +640,11 @@ export class BattleSystem extends BaseSystem {
               actor: participant.id,
               damage: poisonDamage,
               message: `${participant.name} took ${poisonDamage} poison damage!`,
-              important: false
+              important: false,
             });
             break;
         }
-        
+
         // Reduce duration
         effect.turnsRemaining--;
         if (effect.turnsRemaining <= 0) {
@@ -619,10 +666,10 @@ export class BattleSystem extends BaseSystem {
    */
   public getCurrentTurnParticipant(): BattleParticipant | null {
     if (!this.currentBattle) return null;
-    
+
     const currentTurnIndex = this.currentBattle.turnOrder[this.currentBattle.currentTurn];
     if (currentTurnIndex === undefined) return null;
-    
+
     return this.currentBattle.participants[currentTurnIndex] || null;
   }
 
@@ -655,10 +702,10 @@ export class BattleSystem extends BaseSystem {
         defense: 1.0,
         speed: 1.0,
         accuracy: 1.0,
-        evasion: 1.0
+        evasion: 1.0,
       },
       team: team,
-      isWild: false
+      isWild: false,
     };
   }
 
@@ -680,43 +727,204 @@ export class BattleSystem extends BaseSystem {
       moveType: 'damage',
       targetType: 'enemy',
       animation: 'basic_attack',
-      soundEffect: 'hit'
+      soundEffect: 'hit',
     };
   }
 
-  private getDefaultTarget(participant: BattleParticipant, move: BattleMove): BattleParticipant | null {
+  private getDefaultTarget(
+    participant: BattleParticipant,
+    move: BattleMove,
+  ): BattleParticipant | null {
     if (!this.currentBattle) return null;
 
     switch (move.targetType) {
       case 'enemy':
-        return this.currentBattle.participants.find(p => p.team !== participant.team) || null;
+        return this.currentBattle.participants.find((p) => p.team !== participant.team) || null;
       case 'self':
         return participant;
       default:
-        return this.currentBattle.participants.find(p => p.team !== participant.team) || null;
+        return this.currentBattle.participants.find((p) => p.team !== participant.team) || null;
     }
   }
 
-  private calculateRewards(config: BattleConfig, _opponent: BattleParticipant): { experience: number; currency: number; items: { itemId: string; quantity: number; chance: number }[] } {
+  private calculateRewards(
+    config: BattleConfig,
+    opponent: BattleParticipant,
+  ): {
+    experience: number;
+    currency: number;
+    items: { itemId: string; quantity: number; chance: number }[];
+    specialRewards?: { eggFragment?: boolean; rarePetEncounter?: boolean; moveUnlock?: string };
+  } {
     const baseExp = 50;
     const baseCurrency = 25;
-    
+
+    // Calculate base rewards
+    const experience = Math.round(baseExp * config.rewardModifiers.experienceMultiplier);
+    const currency = Math.round(baseCurrency * config.rewardModifiers.currencyMultiplier);
+
+    // Generate item drops
+    const items = this.generateItemDrops(config, opponent);
+
+    // Generate special rewards
+    const specialRewards = this.generateSpecialRewards(config, opponent);
+
     return {
-      experience: Math.round(baseExp * config.rewardModifiers.experienceMultiplier),
-      currency: Math.round(baseCurrency * config.rewardModifiers.currencyMultiplier),
-      items: [] // Would be populated based on opponent type and drop tables
+      experience,
+      currency,
+      items,
+      ...(Object.keys(specialRewards).length > 0 && { specialRewards }),
     };
   }
 
-  private addBattleLogEntry(entry: Omit<BattleLogEntry, 'turn' | 'timestamp'> & { turn?: number; timestamp?: number }): void {
+  /**
+   * Generate item drops based on battle type and opponent
+   */
+  private generateItemDrops(
+    config: BattleConfig,
+    opponent: BattleParticipant,
+  ): { itemId: string; quantity: number; chance: number }[] {
+    const drops: { itemId: string; quantity: number; chance: number }[] = [];
+
+    // Common drops
+    drops.push({
+      itemId: 'potion_small',
+      quantity: 1,
+      chance: 30 * config.rewardModifiers.itemDropMultiplier,
+    });
+
+    // Type-specific drops
+    switch (config.type) {
+      case 'wild':
+        // Wild encounters drop nature items
+        drops.push({
+          itemId: 'berries',
+          quantity: randomInt(1, 3),
+          chance: 50 * config.rewardModifiers.itemDropMultiplier,
+        });
+        drops.push({
+          itemId: 'herb',
+          quantity: 1,
+          chance: 20 * config.rewardModifiers.itemDropMultiplier,
+        });
+        break;
+
+      case 'trainer':
+        // Trainer battles drop better items
+        drops.push({
+          itemId: 'potion_medium',
+          quantity: 1,
+          chance: 40 * config.rewardModifiers.itemDropMultiplier,
+        });
+        drops.push({
+          itemId: 'energy_drink',
+          quantity: 1,
+          chance: 25 * config.rewardModifiers.itemDropMultiplier,
+        });
+        break;
+
+      case 'arena':
+        // Arena battles drop competitive items
+        drops.push({
+          itemId: 'stat_booster',
+          quantity: 1,
+          chance: 15 * config.rewardModifiers.itemDropMultiplier,
+        });
+        drops.push({
+          itemId: 'rare_candy',
+          quantity: 1,
+          chance: 5 * config.rewardModifiers.itemDropMultiplier,
+        });
+        break;
+
+      case 'event':
+        // Event battles drop event-specific items
+        drops.push({
+          itemId: 'event_token',
+          quantity: randomInt(5, 10),
+          chance: 100 * config.rewardModifiers.itemDropMultiplier,
+        });
+        drops.push({
+          itemId: 'mystery_box',
+          quantity: 1,
+          chance: 10 * config.rewardModifiers.itemDropMultiplier,
+        });
+        break;
+    }
+
+    // Rare drops based on opponent level
+    if (opponent.level && opponent.level >= 30) {
+      drops.push({
+        itemId: 'rare_egg_fragment',
+        quantity: 1,
+        chance: 2 * config.rewardModifiers.itemDropMultiplier,
+      });
+    }
+
+    return drops;
+  }
+
+  /**
+   * Generate special rewards for exceptional battles
+   */
+  private generateSpecialRewards(
+    config: BattleConfig,
+    opponent: BattleParticipant,
+  ): { eggFragment?: boolean; rarePetEncounter?: boolean; moveUnlock?: string } {
+    const rewards: { eggFragment?: boolean; rarePetEncounter?: boolean; moveUnlock?: string } = {};
+
+    // Special conditions for egg fragments
+    if (config.type === 'arena' && Math.random() < 0.05) {
+      rewards.eggFragment = true;
+    }
+
+    // Rare pet encounter chance (for future capturing mechanic)
+    if (config.type === 'wild' && opponent.level && opponent.level >= 40 && Math.random() < 0.01) {
+      rewards.rarePetEncounter = true;
+    }
+
+    // Move unlock for perfect victories
+    if (config.type === 'trainer' && Math.random() < 0.1) {
+      // Could unlock a specific move based on the trainer
+      const possibleMoves = ['slash', 'protect', 'quick_attack'];
+      rewards.moveUnlock = possibleMoves[randomInt(0, possibleMoves.length - 1)];
+    }
+
+    return rewards;
+  }
+
+  private addBattleLogEntry(
+    entry: Omit<BattleLogEntry, 'turn' | 'timestamp'> & { turn?: number; timestamp?: number },
+  ): void {
     if (!this.currentBattle) return;
 
     const logEntry: BattleLogEntry = {
       turn: entry.turn ?? this.currentBattle.turnCount,
       timestamp: entry.timestamp ?? Date.now(),
-      ...entry
+      ...entry,
     };
 
     this.currentBattle.log.push(logEntry);
+  }
+
+  /**
+   * Process item drops based on chance
+   */
+  private processItemDrops(
+    potentialDrops: { itemId: string; quantity: number; chance: number }[],
+  ): { itemId: string; quantity: number }[] {
+    const actualDrops: { itemId: string; quantity: number }[] = [];
+
+    for (const drop of potentialDrops) {
+      // Roll for each potential drop
+      if (Math.random() * 100 < drop.chance) {
+        actualDrops.push({
+          itemId: drop.itemId,
+          quantity: drop.quantity,
+        });
+      }
+    }
+
+    return actualDrops;
   }
 }

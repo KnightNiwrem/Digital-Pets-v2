@@ -278,50 +278,50 @@
 
 ### 7.1 BattleSystem Core
 
-- [ ] Create `BattleSystem` class
-  - [ ] Initialize battle state
-  - [ ] Track battle participants
-  - [ ] Manage turn order
-  - [ ] Handle battle flow
-- [ ] Implement turn mechanics
-  - [ ] Calculate speed-based order
-  - [ ] Process move selection
-  - [ ] Handle action costs
-  - [ ] Apply damage/effects
-- [ ] Add battle actions
-  - [ ] Implement move execution
-  - [ ] Add item usage in battle
-  - [ ] Create flee mechanics
-  - [ ] Implement skip turn for action recovery
+- [x] Create `BattleSystem` class
+  - [x] Initialize battle state
+  - [x] Track battle participants
+  - [x] Manage turn order
+  - [x] Handle battle flow
+- [x] Implement turn mechanics
+  - [x] Calculate speed-based order
+  - [x] Process move selection
+  - [x] Handle action costs
+  - [x] Apply damage/effects
+- [x] Add battle actions
+  - [x] Implement move execution
+  - [x] Add item usage in battle
+  - [x] Create flee mechanics
+  - [x] Implement skip turn for action recovery
 
 ### 7.2 Battle Calculations
 
-- [ ] Create damage formulas
-  - [ ] Calculate base damage
-  - [ ] Apply stat modifiers
-  - [ ] Handle accuracy checks
-  - [ ] Process critical hits
-- [ ] Implement status effects
-  - [ ] Define status types
-  - [ ] Apply status effects
-  - [ ] Process status duration
-  - [ ] Handle status recovery
-- [ ] Add battle rewards
-  - [ ] Calculate experience
+- [x] Create damage formulas
+  - [x] Calculate base damage
+  - [x] Apply stat modifiers
+  - [x] Handle accuracy checks
+  - [x] Process critical hits
+- [x] Implement status effects
+  - [x] Define status types
+  - [x] Apply status effects
+  - [x] Process status duration
+  - [x] Handle status recovery
+- [x] Add battle rewards
+  - [x] Calculate experience
   - [ ] Determine item drops
-  - [ ] Award currency
+  - [x] Award currency
   - [ ] Handle special rewards
 
 ### 7.3 Training System
 
-- [ ] Implement training mechanics
-  - [ ] Create training activities
-  - [ ] Target specific stats
+- [x] Implement training mechanics
+  - [x] Create training activities
+  - [x] Target specific stats
   - [ ] Apply stat increases
-  - [ ] No diminishing returns
+  - [x] No diminishing returns
 - [ ] Add move learning
   - [ ] Define learnable moves
-  - [ ] Calculate learn chance
+  - [x] Calculate learn chance
   - [ ] Handle move replacement
   - [ ] Limit to 4 moves
 
@@ -538,7 +538,7 @@
 - [ ] Test all systems individually
   - [x] PetSystem tests
   - [x] SaveSystem tests
-  - [ ] BattleSystem tests
+  - [x] BattleSystem tests
   - [x] InventorySystem tests
   - [x] ConfigSystem tests
   - [x] TimeSystem tests
@@ -547,7 +547,7 @@
   - [x] GameUpdatesQueue tests
 - [ ] Test game logic
   - [x] Care decay calculations
-  - [ ] Battle damage formulas
+  - [x] Battle damage formulas
   - [ ] Reward distributions
   - [x] Timer accuracy
 - [ ] Test data integrity

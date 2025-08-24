@@ -14,8 +14,9 @@ import type {
   BattleStats,
 } from '../models/Pet';
 import type { Item, FoodItem, DrinkItem, ToyItem } from '../models/Item';
-import { UPDATE_TYPES, GROWTH_STAGES, STATUS_TYPES } from '../models/constants';
-import type { GrowthStage, RarityTier, DeathCause } from '../models/constants';
+import { UPDATE_TYPES, GROWTH_STAGES, STATUS_TYPES, BATTLE_CONSTANTS } from '../models/constants';
+import type { GrowthStage, RarityTier, DeathCause, StatType } from '../models/constants';
+import { STARTER_MOVES } from '../data/moves';
 
 /**
  * Care action types
@@ -227,10 +228,10 @@ export class PetSystem extends BaseSystem {
   /**
    * Get starter moves for a species
    */
-  private getStarterMoves(_species: string): string[] {
-    // Default starter move
-    // TODO: In the future, this would look up species-specific starter moves
-    return ['tackle']; // This would reference actual move IDs
+  private getStarterMoves(species: string): string[] {
+    // Look up species-specific starter moves, or use default
+    // For now, using a default set
+    return STARTER_MOVES.default ? [...STARTER_MOVES.default] : ['tackle', 'growl'];
   }
 
   /**
@@ -1205,5 +1206,158 @@ export class PetSystem extends BaseSystem {
    */
   private generateId(): string {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Apply training stat increase
+   */
+  public applyTrainingStatIncrease(
+    gameState: GameState,
+    targetStat: StatType,
+    increaseAmount: number,
+  ): CareActionResult {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    const pet = gameState.pet;
+    const oldValue = pet.stats[targetStat as keyof BattleStats] as number;
+
+    // Apply stat increase based on target stat
+    switch (targetStat) {
+      case 'health':
+        pet.stats.maxHealth += increaseAmount;
+        pet.stats.health += increaseAmount; // Also increase current health
+        break;
+      case 'attack':
+        pet.stats.attack += increaseAmount;
+        break;
+      case 'defense':
+        pet.stats.defense += increaseAmount;
+        break;
+      case 'speed':
+        pet.stats.speed += increaseAmount;
+        break;
+      case 'action':
+        pet.stats.maxAction += increaseAmount;
+        pet.stats.action += increaseAmount; // Also increase current action
+        break;
+    }
+
+    // Update training count
+    pet.trainingCounts[targetStat] += 1;
+
+    const newValue = pet.stats[targetStat as keyof BattleStats] as number;
+
+    return {
+      success: true,
+      message: `${pet.name}'s ${targetStat} increased by ${increaseAmount}!`,
+      valueChange: newValue - oldValue,
+      newValue,
+    };
+  }
+
+  /**
+   * Learn a new move
+   */
+  public learnMove(gameState: GameState, moveId: string, replaceIndex?: number): CareActionResult {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    const pet = gameState.pet;
+
+    // Check if pet already knows the move
+    if (pet.moves.includes(moveId)) {
+      return { success: false, message: `${pet.name} already knows this move!` };
+    }
+
+    // Check move limit
+    if (pet.moves.length >= BATTLE_CONSTANTS.MAX_MOVES) {
+      if (replaceIndex === undefined || replaceIndex < 0 || replaceIndex >= pet.moves.length) {
+        return {
+          success: false,
+          message: `${pet.name} already knows ${BATTLE_CONSTANTS.MAX_MOVES} moves. Choose a move to replace.`,
+        };
+      }
+
+      // Replace the move at the specified index
+      const oldMove = pet.moves[replaceIndex];
+      pet.moves[replaceIndex] = moveId;
+
+      return {
+        success: true,
+        message: `${pet.name} forgot ${oldMove} and learned ${moveId}!`,
+      };
+    }
+
+    // Add the new move
+    pet.moves.push(moveId);
+
+    return {
+      success: true,
+      message: `${pet.name} learned ${moveId}!`,
+    };
+  }
+
+  /**
+   * Get the pet's known moves
+   */
+  public getKnownMoves(pet: Pet): string[] {
+    return [...pet.moves];
+  }
+
+  /**
+   * Check if pet can learn more moves
+   */
+  public canLearnMoreMoves(pet: Pet): boolean {
+    return pet.moves.length < BATTLE_CONSTANTS.MAX_MOVES;
+  }
+
+  /**
+   * Process training completion (called by GameEngine when activity completes)
+   */
+  public processTrainingCompletion(
+    gameState: GameState,
+    trainingResult: {
+      targetStat: StatType;
+      statIncrease: number;
+      newMove?: string;
+      moveReplaced?: string;
+    },
+  ): CareActionResult {
+    if (!gameState.pet) {
+      return { success: false, message: 'No active pet' };
+    }
+
+    // Apply stat increase
+    const statResult = this.applyTrainingStatIncrease(
+      gameState,
+      trainingResult.targetStat,
+      trainingResult.statIncrease,
+    );
+
+    let message = statResult.message;
+
+    // Handle move learning if applicable
+    if (trainingResult.newMove) {
+      if (trainingResult.moveReplaced) {
+        // Find the index of the move to replace
+        const replaceIndex = gameState.pet.moves.indexOf(trainingResult.moveReplaced);
+        if (replaceIndex >= 0) {
+          const moveResult = this.learnMove(gameState, trainingResult.newMove, replaceIndex);
+          message += ` ${moveResult.message}`;
+        }
+      } else {
+        // Just add the new move
+        const moveResult = this.learnMove(gameState, trainingResult.newMove);
+        message += ` ${moveResult.message}`;
+      }
+    }
+
+    return {
+      success: true,
+      message,
+    };
   }
 }

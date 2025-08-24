@@ -182,6 +182,10 @@ export const BATTLE_STATUS_EFFECTS = {
   STUNNED: 'STUNNED',
   WEAKENED: 'WEAKENED',
   BUFFED: 'BUFFED',
+  ASLEEP: 'ASLEEP',
+  PARALYZED: 'PARALYZED',
+  CONFUSED: 'CONFUSED',
+  REGENERATING: 'REGENERATING',
 } as const;
 
 export type BattleStatusEffect = (typeof BATTLE_STATUS_EFFECTS)[keyof typeof BATTLE_STATUS_EFFECTS];
@@ -325,7 +329,7 @@ export type BattleLogType =
 export type AIStrategy = 'random' | 'aggressive' | 'defensive' | 'balanced' | 'smart';
 
 // Move Types
-export type MoveType = 'damage' | 'status' | 'healing' | 'buff' | 'debuff' | 'special';
+export type MoveType = 'damage' | 'status' | 'healing' | 'buff' | 'debuff' | 'special' | 'counter';
 
 // Target Types
 export type TargetType = 'self' | 'enemy' | 'all_enemies' | 'all_allies';
@@ -334,7 +338,12 @@ export type TargetType = 'self' | 'enemy' | 'all_enemies' | 'all_allies';
 export type StatType = 'health' | 'attack' | 'defense' | 'speed' | 'action';
 
 // Condition Types
-export type ConditionType = 'low_health' | 'high_health' | 'status_effect' | 'weather';
+export type ConditionType =
+  | 'low_health'
+  | 'high_health'
+  | 'status_effect'
+  | 'weather'
+  | 'LAST_DAMAGE_TAKEN';
 
 // Lighting Types
 export type LightingType = 'day' | 'night' | 'dawn' | 'dusk' | 'indoor';
