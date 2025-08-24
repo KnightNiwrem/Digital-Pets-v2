@@ -308,22 +308,22 @@
   - [x] Handle status recovery
 - [x] Add battle rewards
   - [x] Calculate experience
-  - [ ] Determine item drops
+  - [x] Determine item drops
   - [x] Award currency
-  - [ ] Handle special rewards
+  - [x] Handle special rewards
 
 ### 7.3 Training System
 
 - [x] Implement training mechanics
   - [x] Create training activities
   - [x] Target specific stats
-  - [ ] Apply stat increases
+  - [x] Apply stat increases
   - [x] No diminishing returns
-- [ ] Add move learning
-  - [ ] Define learnable moves
+- [x] Add move learning
+  - [x] Define learnable moves
   - [x] Calculate learn chance
-  - [ ] Handle move replacement
-  - [ ] Limit to 4 moves
+  - [x] Handle move replacement
+  - [x] Limit to 4 moves
 
 ## Phase 8: Event System
 
