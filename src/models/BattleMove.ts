@@ -20,6 +20,8 @@ import type {
   AIStrategy,
 } from './constants';
 
+export type { BattleStatusEffect } from './constants';
+
 /**
  * Base battle move definition
  */

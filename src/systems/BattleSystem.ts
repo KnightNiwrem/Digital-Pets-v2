@@ -4,12 +4,13 @@
  */
 
 import { BaseSystem } from './BaseSystem';
-import type { 
-  BattleState, 
-  BattleParticipant, 
+import type {
+  BattleState,
+  BattleParticipant,
   BattleMove,
   BattleLogEntry,
-  BattleConfig 
+  BattleConfig,
+  BattleStatusEffect
 } from '../models/BattleMove';
 import type { Pet } from '../models/Pet';
 import { UPDATE_TYPES } from '../models/constants';
@@ -432,7 +433,10 @@ export class BattleSystem extends BaseSystem {
   /**
    * Apply status effect to a participant
    */
-  private applyStatusEffect(participant: BattleParticipant, statusEffect: { type: any, duration: number, stackable: boolean }): void {
+  private applyStatusEffect(
+    participant: BattleParticipant,
+    statusEffect: { type: BattleStatusEffect; duration: number; stackable: boolean }
+  ): void {
     // Check if effect already exists
     const existingEffect = participant.statusEffects.find(effect => effect.type === statusEffect.type);
     
