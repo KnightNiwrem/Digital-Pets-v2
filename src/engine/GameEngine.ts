@@ -3,7 +3,7 @@
  * Manages all systems, processes updates, and maintains game state
  */
 
-import { GameUpdatesQueue, type GameUpdateReader } from './GameUpdatesQueue';
+import { GameUpdatesQueue, type GameUpdateReader, type GameUpdateWriter } from './GameUpdatesQueue';
 import { BaseSystem, isUpdateHandler, type SystemInitOptions } from '../systems/BaseSystem';
 import { ConfigSystem } from '../systems/ConfigSystem';
 import type { GameState, GameUpdate } from '../models';
@@ -445,7 +445,7 @@ export class GameEngine {
    */
   private async initializeSystem(name: string, system: BaseSystem): Promise<void> {
     // Only create writer for authorized systems
-    let writer: any = null;
+    let writer: GameUpdateWriter | undefined = undefined;
     const authorizedSystems = [
       'UISystem',
       'TimeSystem',
@@ -465,7 +465,7 @@ export class GameEngine {
     const tuningValues = this.configSystem.getTuningValues();
 
     const initOptions: SystemInitOptions = {
-      gameUpdateWriter: writer,
+      ...(writer && { gameUpdateWriter: writer }),
       tuning: tuningValues,
       config: {
         // Pass any system-specific config

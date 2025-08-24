@@ -11,7 +11,7 @@ import type { TuningConfig } from './ConfigSystem';
  * System initialization options
  */
 export interface SystemInitOptions {
-  gameUpdateWriter: GameUpdateWriter;
+  gameUpdateWriter?: GameUpdateWriter;
   config?: any;
   tuning?: TuningConfig; // Tuning values passed by GameEngine
 }
@@ -43,7 +43,7 @@ export interface SystemStatus {
  */
 export abstract class BaseSystem {
   protected readonly name: string;
-  protected gameUpdateWriter: GameUpdateWriter | null = null;
+  protected gameUpdateWriter: GameUpdateWriter | undefined = undefined;
   protected initialized = false;
   protected active = false;
   protected lastUpdate = 0;
@@ -89,7 +89,7 @@ export abstract class BaseSystem {
     await this.onShutdown();
 
     this.initialized = false;
-    this.gameUpdateWriter = null;
+    this.gameUpdateWriter = undefined;
   }
 
   /**
