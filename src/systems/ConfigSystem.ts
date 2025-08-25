@@ -183,12 +183,14 @@ export interface GameLimits {
   maxQuestObjectives: number;
 }
 
+import type { TextSize, ColorBlindMode } from '../models/constants';
+
 export interface DefaultSettings {
   masterVolume: number;
   musicVolume: number;
   sfxVolume: number;
-  textSize: string;
-  colorBlindMode: string;
+  textSize: TextSize;
+  colorBlindMode: ColorBlindMode;
   highContrast: boolean;
   reducedMotion: boolean;
   showParticles: boolean;
