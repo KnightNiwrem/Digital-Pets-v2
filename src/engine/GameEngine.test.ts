@@ -4,8 +4,6 @@ import { BaseSystem, type SystemInitOptions, type SystemError } from '../systems
 import { ConfigSystem } from '../systems/ConfigSystem';
 import { UPDATE_TYPES } from '../models/constants';
 import type { GameState, GameUpdate } from '../models';
-import type { DefaultSettings } from '../systems/ConfigSystem';
-import type { TextSize, ColorBlindMode } from '../models/constants';
 
 // Mock localStorage for GameEngine tests (needed for SaveSystem)
 class LocalStorageMock {
