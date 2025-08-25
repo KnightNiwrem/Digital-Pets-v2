@@ -10,18 +10,12 @@ describe('ShopSystem', () => {
   let queuedUpdates: any[] = [];
 
   beforeEach(async () => {
-    shopSystem = new ShopSystem();
-    gameState = createMockGameState();
     queuedUpdates = [];
+    shopSystem = new ShopSystem({ enqueue: (update: any) => queuedUpdates.push(update) });
+    gameState = createMockGameState();
 
-    // Initialize system with a mock update writer
-    await shopSystem.initialize({
-      gameUpdateWriter: {
-        enqueue: (update: any) => {
-          queuedUpdates.push(update);
-        },
-      },
-    } as any);
+    // Initialize system
+    await shopSystem.initialize({} as any);
 
     // Give player some starting currency
     gameState.inventory.currency.coins = 1000;
@@ -417,7 +411,7 @@ describe('ShopSystem', () => {
     });
 
     it('should validate purchase without queuing when no writer', async () => {
-      const newShopSystem = new ShopSystem();
+      const newShopSystem = new ShopSystem(undefined as any);
       // Initialize without gameUpdateWriter
       await newShopSystem.initialize();
 

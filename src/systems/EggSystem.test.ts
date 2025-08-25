@@ -29,11 +29,10 @@ describe('EggSystem', () => {
     };
 
     // Initialize egg system
-    eggSystem = new EggSystem();
+    eggSystem = new EggSystem(mockGameUpdateWriter);
 
     // Initialize with tuning values
     await eggSystem.initialize({
-      gameUpdateWriter: mockGameUpdateWriter,
       tuning: tuningValues,
     });
 
@@ -47,9 +46,8 @@ describe('EggSystem', () => {
 
   describe('Initialization', () => {
     it('should initialize successfully with tuning values', async () => {
-      const system = new EggSystem();
+      const system = new EggSystem(mockGameUpdateWriter);
       await system.initialize({
-        gameUpdateWriter: mockGameUpdateWriter,
         tuning: tuningValues,
       });
 
@@ -59,11 +57,9 @@ describe('EggSystem', () => {
     });
 
     it('should initialize with warning when tuning values are not provided', async () => {
-      const system = new EggSystem();
+      const system = new EggSystem(mockGameUpdateWriter);
       // Should not throw, just log a warning
-      await system.initialize({
-        gameUpdateWriter: mockGameUpdateWriter,
-      });
+      await system.initialize({});
 
       expect(system.isInitialized()).toBe(true);
       expect(system.isActive()).toBe(true);

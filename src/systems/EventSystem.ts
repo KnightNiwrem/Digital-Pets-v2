@@ -5,6 +5,7 @@
 
 import { BaseSystem } from './BaseSystem';
 import type { SystemInitOptions, SystemError } from './BaseSystem';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { GameState } from '../models';
 import { UPDATE_TYPES, EVENT_TYPES } from '../models/constants';
 import type { EventType } from '../models/constants';
@@ -154,8 +155,8 @@ export class EventSystem extends BaseSystem {
   private lastEventCheck: number = 0;
   private eventCheckFrequency = 60000; // Check every minute
 
-  constructor() {
-    super('EventSystem');
+  constructor(gameUpdateWriter: GameUpdateWriter) {
+    super('EventSystem', gameUpdateWriter);
     this.loadEventDefinitions();
   }
 

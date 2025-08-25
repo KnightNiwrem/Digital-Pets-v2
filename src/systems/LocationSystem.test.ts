@@ -10,18 +10,12 @@ describe('LocationSystem', () => {
   let queuedUpdates: any[] = [];
 
   beforeEach(async () => {
-    locationSystem = new LocationSystem();
-    gameState = createMockGameState();
     queuedUpdates = [];
+    locationSystem = new LocationSystem({ enqueue: (update: any) => queuedUpdates.push(update) });
+    gameState = createMockGameState();
 
-    // Initialize system with a mock update writer
-    await locationSystem.initialize({
-      gameUpdateWriter: {
-        enqueue: (update: any) => {
-          queuedUpdates.push(update);
-        },
-      },
-    } as any);
+    // Initialize system
+    await locationSystem.initialize({} as any);
   });
 
   describe('Location Management', () => {

@@ -14,17 +14,18 @@ describe('ActivitySystem', () => {
   let queuedUpdates: any[] = [];
 
   beforeEach(() => {
-    // Create systems
-    activitySystem = new ActivitySystem();
     queuedUpdates = [];
 
-    // Initialize activity system with mock writer
-    activitySystem.initialize({
-      gameUpdateWriter: {
-        enqueue: (update: any) => {
-          queuedUpdates.push(update);
-        },
+    const writer = {
+      enqueue: (update: any) => {
+        queuedUpdates.push(update);
       },
+    };
+
+    activitySystem = new ActivitySystem(writer);
+
+    // Initialize activity system with tuning
+    activitySystem.initialize({
       tuning: {
         activities: {
           fishing: {

@@ -20,9 +20,8 @@ describe('PetSystem', () => {
     const tuning = configSystem.getTuningValues();
 
     // Initialize PetSystem with tuning values
-    petSystem = new PetSystem();
+    petSystem = new PetSystem(createMockGameUpdateWriter());
     await petSystem.initialize({
-      gameUpdateWriter: createMockGameUpdateWriter(),
       tuning: tuning,
       config: {},
     });

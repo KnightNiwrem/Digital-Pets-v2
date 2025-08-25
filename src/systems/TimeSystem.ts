@@ -4,6 +4,7 @@
  */
 
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { GameState } from '../models';
 import { UPDATE_TYPES, GAME_TICK_INTERVAL } from '../models/constants';
 
@@ -43,8 +44,8 @@ export class TimeSystem extends BaseSystem {
   private maxOfflineTicks: number;
   private isPaused: boolean;
 
-  constructor(config?: TimeSystemConfig) {
-    super('TimeSystem');
+  constructor(gameUpdateWriter: GameUpdateWriter, config?: TimeSystemConfig) {
+    super('TimeSystem', gameUpdateWriter);
     this.tickInterval = (config?.tickInterval ?? GAME_TICK_INTERVAL) * 1000; // Convert to milliseconds
     this.maxOfflineTicks = config?.maxOfflineTicks ?? 10080; // Default: 1 week worth of ticks
     this.tickCounter = 0;
@@ -513,6 +514,6 @@ export class TimeSystem extends BaseSystem {
 /**
  * Factory function to create a new TimeSystem
  */
-export function createTimeSystem(config?: TimeSystemConfig): TimeSystem {
-  return new TimeSystem(config);
+export function createTimeSystem(gameUpdateWriter: GameUpdateWriter, config?: TimeSystemConfig): TimeSystem {
+  return new TimeSystem(gameUpdateWriter, config);
 }

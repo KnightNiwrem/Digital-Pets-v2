@@ -1,4 +1,5 @@
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { GameState, GameUpdate } from '../models';
 import type {
   Location,
@@ -39,8 +40,8 @@ export class LocationSystem extends BaseSystem {
   private currentLocationState: LocationState | null = null;
   private travelTimer: NodeJS.Timeout | null = null;
 
-  constructor() {
-    super('LocationSystem');
+  constructor(gameUpdateWriter: GameUpdateWriter) {
+    super('LocationSystem', gameUpdateWriter);
     this.initializeLocations();
     this.initializeRoutes();
   }

@@ -3,6 +3,7 @@
  */
 
 import { BaseSystem } from './BaseSystem';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { SystemInitOptions, SystemError } from './BaseSystem';
 import type { GameState, GameUpdate, OfflineCalculation } from '../models/GameState';
 import type {
@@ -64,8 +65,8 @@ export class PetSystem extends BaseSystem {
   private lastDecayTick = 0;
   private poopSpawnTimer = 0;
 
-  constructor() {
-    super('PetSystem');
+  constructor(gameUpdateWriter: GameUpdateWriter) {
+    super('PetSystem', gameUpdateWriter);
   }
 
   /**
