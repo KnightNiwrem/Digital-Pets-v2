@@ -266,7 +266,6 @@ describe('GameEngine', () => {
       const queue = (engine as any).updatesQueue;
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
-        priority: 0,
         payload: {
           action: 'test',
         },
@@ -296,7 +295,6 @@ describe('GameEngine', () => {
       const queue = (engine as any).updatesQueue;
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
-        priority: 0,
         payload: {
           action: 'error-test',
         },
@@ -331,7 +329,6 @@ describe('GameEngine', () => {
       for (let i = 0; i < 5; i++) {
         queue.enqueue({
           type: UPDATE_TYPES.USER_ACTION,
-          priority: 0,
           payload: {
             action: `test-${i}`,
           },

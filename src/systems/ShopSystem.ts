@@ -477,7 +477,6 @@ export class ShopSystem extends BaseSystem {
         id: `shop-purchase-${Date.now()}`,
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 1,
         payload: {
           action: 'SHOP_PURCHASE',
           data: {
@@ -517,7 +516,6 @@ export class ShopSystem extends BaseSystem {
         id: `shop-sell-${Date.now()}`,
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 1,
         payload: {
           action: 'SHOP_SELL',
           data: {

@@ -596,7 +596,6 @@ export class GameEngine {
   private queueGameTick(): void {
     this.updatesQueue.enqueue({
       type: UPDATE_TYPES.GAME_TICK,
-      priority: 1,
       payload: {
         data: {
           tick: this.tickCount,
@@ -784,7 +783,6 @@ export class GameEngine {
         id: `config-change-${Date.now()}`,
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {
           action: 'CONFIG_CHANGED',
           data: {

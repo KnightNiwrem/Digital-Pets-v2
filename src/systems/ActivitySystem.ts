@@ -207,7 +207,6 @@ export class ActivitySystem extends BaseSystem {
             systemCallback: 'ActivitySystem.handleActivityCompletion',
           },
         },
-        priority: 1,
       });
     }
 
@@ -228,7 +227,6 @@ export class ActivitySystem extends BaseSystem {
             location,
           },
         },
-        priority: 0,
       });
     }
 
@@ -261,7 +259,6 @@ export class ActivitySystem extends BaseSystem {
             timerId: activity.timerId,
           },
         },
-        priority: 1,
       });
     }
 
@@ -280,7 +277,6 @@ export class ActivitySystem extends BaseSystem {
             energyRefunded: refundEnergy ? activity.energyCost : 0,
           },
         },
-        priority: 0,
       });
     }
 
@@ -323,7 +319,6 @@ export class ActivitySystem extends BaseSystem {
             timerId: activity.timerId,
           },
         },
-        priority: 1,
       });
     }
 
@@ -369,7 +364,6 @@ export class ActivitySystem extends BaseSystem {
             systemCallback: 'ActivitySystem.handleActivityCompletion',
           },
         },
-        priority: 1,
       });
     }
 
@@ -417,7 +411,6 @@ export class ActivitySystem extends BaseSystem {
           action: 'activity_completed',
           data: completionData,
         },
-        priority: 1,
       });
     }
 

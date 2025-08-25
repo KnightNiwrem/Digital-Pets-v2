@@ -201,7 +201,6 @@ export class EggSystem extends BaseSystem {
         id: this.generateId(),
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: now,
-        priority: 0,
         payload: {
           action: 'CONSUME_ITEM',
           data: { itemId: eggItem.id },
@@ -296,7 +295,6 @@ export class EggSystem extends BaseSystem {
         id: this.generateId(),
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: now,
-        priority: 1,
         payload: {
           action: 'CREATE_PET_FROM_EGG',
           data: {
@@ -489,7 +487,6 @@ export class EggSystem extends BaseSystem {
         id: this.generateId(),
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: Date.now(),
-        priority: 1,
         payload: {
           action: 'CREATE_STARTER_PET',
           data: {
@@ -565,7 +562,6 @@ export class EggSystem extends BaseSystem {
           id: this.generateId(),
           type: UPDATE_TYPES.STATE_TRANSITION,
           timestamp: now,
-          priority: 0,
           payload: {
             action: 'EGG_READY_TO_HATCH',
             data: { eggId: egg.id },

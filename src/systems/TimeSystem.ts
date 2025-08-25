@@ -173,7 +173,6 @@ export class TimeSystem extends BaseSystem {
             deltaTime: this.tickInterval,
           },
         },
-        priority: 1, // Higher priority for tick updates
       });
     }
 
@@ -260,7 +259,6 @@ export class TimeSystem extends BaseSystem {
               batchSize: currentBatch,
             },
           },
-          priority: 2, // Higher priority for offline catch-up
         });
       }
 

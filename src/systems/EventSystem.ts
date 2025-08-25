@@ -648,7 +648,6 @@ export class EventSystem extends BaseSystem {
             endTime,
           },
         },
-        priority: 1,
       });
     }
 
@@ -689,7 +688,6 @@ export class EventSystem extends BaseSystem {
             gracefulClosure: currentTime < activeEvent.endTime,
           },
         },
-        priority: 2,
       });
     }
 
@@ -881,7 +879,6 @@ export class EventSystem extends BaseSystem {
             entryCost: eventDef.entryCost || 0,
           },
         },
-        priority: 0,
       });
     }
 
@@ -927,7 +924,6 @@ export class EventSystem extends BaseSystem {
             completesAt,
           },
         },
-        priority: 0,
       });
     }
 
@@ -980,7 +976,6 @@ export class EventSystem extends BaseSystem {
               newMilestones,
             },
           },
-          priority: 0,
         });
       }
     } else {
@@ -999,7 +994,6 @@ export class EventSystem extends BaseSystem {
               newMilestones: [],
             },
           },
-          priority: 0,
         });
       }
     }
@@ -1036,7 +1030,6 @@ export class EventSystem extends BaseSystem {
             opponentId: battle.opponentId,
           },
         },
-        priority: 1,
       });
     }
 
@@ -1086,7 +1079,6 @@ export class EventSystem extends BaseSystem {
               newMilestones,
             },
           },
-          priority: 0,
         });
       }
     } else {
@@ -1105,7 +1097,6 @@ export class EventSystem extends BaseSystem {
               newMilestones: [],
             },
           },
-          priority: 0,
         });
       }
     }

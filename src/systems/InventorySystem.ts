@@ -268,7 +268,6 @@ export class InventorySystem extends BaseSystem {
         id: `inventory-add-${Date.now()}`,
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {
           action: 'INVENTORY_UPDATED',
           data: {
@@ -339,7 +338,6 @@ export class InventorySystem extends BaseSystem {
         id: `inventory-remove-${Date.now()}`,
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {
           action: 'INVENTORY_UPDATED',
           data: {
@@ -542,7 +540,6 @@ export class InventorySystem extends BaseSystem {
               id: `item-broken-${Date.now()}`,
               type: UPDATE_TYPES.STATE_TRANSITION,
               timestamp: Date.now(),
-              priority: 1,
               payload: {
                 action: 'ITEM_BROKEN',
                 data: { itemId },
@@ -594,7 +591,6 @@ export class InventorySystem extends BaseSystem {
         id: `currency-add-${Date.now()}`,
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {
           action: 'CURRENCY_UPDATED',
           data: {
@@ -644,7 +640,6 @@ export class InventorySystem extends BaseSystem {
         id: `currency-remove-${Date.now()}`,
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {
           action: 'CURRENCY_UPDATED',
           data: {

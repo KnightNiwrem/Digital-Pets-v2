@@ -146,7 +146,6 @@ export class BattleSystem extends BaseSystem {
     if (this.gameUpdateWriter) {
       this.gameUpdateWriter.enqueue({
         type: UPDATE_TYPES.BATTLE_ACTION,
-        priority: 1,
         payload: {
           action: 'battle_started',
           data: {
@@ -585,7 +584,6 @@ export class BattleSystem extends BaseSystem {
     if (this.gameUpdateWriter) {
       this.gameUpdateWriter.enqueue({
         type: UPDATE_TYPES.BATTLE_ACTION,
-        priority: 1,
         payload: {
           action: 'battle_ended',
           data: {

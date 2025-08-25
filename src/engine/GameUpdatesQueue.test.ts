@@ -22,12 +22,10 @@ describe('GameUpdatesQueue', () => {
       const update1 = {
         type: UPDATE_TYPES.USER_ACTION,
         payload: { action: 'feed' },
-        priority: 0,
       };
       const update2 = {
         type: UPDATE_TYPES.GAME_TICK,
         payload: { data: { tick: 1 } },
-        priority: 0,
       };
 
       queue.enqueue(update1);
@@ -50,7 +48,6 @@ describe('GameUpdatesQueue', () => {
       const update = {
         type: UPDATE_TYPES.USER_ACTION,
         payload: { action: 'play' },
-        priority: 0,
       };
 
       queue.enqueue(update);
@@ -68,12 +65,10 @@ describe('GameUpdatesQueue', () => {
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: { action: 'feed' },
-        priority: 0,
       });
       queue.enqueue({
         type: UPDATE_TYPES.GAME_TICK,
         payload: { data: { tick: 1 } },
-        priority: 0,
       });
 
       expect(queue.size()).toBe(2);
@@ -86,138 +81,33 @@ describe('GameUpdatesQueue', () => {
     });
   });
 
-  describe('Priority Queue Behavior', () => {
-    test('should prioritize higher priority updates', () => {
-      queue.enqueue({
-        type: UPDATE_TYPES.USER_ACTION,
-        payload: { action: 'normal' },
-        priority: 0,
-      });
-      queue.enqueue({
-        type: UPDATE_TYPES.BATTLE_ACTION,
-        payload: { action: 'critical' },
-        priority: 2,
-      });
-      queue.enqueue({
-        type: UPDATE_TYPES.EVENT_TRIGGER,
-        payload: { action: 'important' },
-        priority: 1,
-      });
-
-      const first = queue.dequeue();
-      expect(first?.payload.action).toBe('critical');
-      expect(first?.priority).toBe(2);
-
-      const second = queue.dequeue();
-      expect(second?.payload.action).toBe('important');
-      expect(second?.priority).toBe(1);
-
-      const third = queue.dequeue();
-      expect(third?.payload.action).toBe('normal');
-      expect(third?.priority).toBe(0);
-    });
-
-    test('should maintain FIFO order for same priority', () => {
-      queue.enqueue({
-        type: UPDATE_TYPES.USER_ACTION,
-        payload: { action: 'first' },
-        priority: 1,
-      });
-      queue.enqueue({
-        type: UPDATE_TYPES.USER_ACTION,
-        payload: { action: 'second' },
-        priority: 1,
-      });
-      queue.enqueue({
-        type: UPDATE_TYPES.USER_ACTION,
-        payload: { action: 'third' },
-        priority: 1,
-      });
-
-      expect(queue.dequeue()?.payload.action).toBe('first');
-      expect(queue.dequeue()?.payload.action).toBe('second');
-      expect(queue.dequeue()?.payload.action).toBe('third');
-    });
-
-    test('should handle mixed priorities correctly', () => {
-      // Add updates with various priorities
-      for (let i = 0; i < 10; i++) {
-        queue.enqueue({
-          type: UPDATE_TYPES.USER_ACTION,
-          payload: { data: { id: i } },
-          priority: i % 3, // 0, 1, 2, 0, 1, 2...
-        });
-      }
-
-      expect(queue.size()).toBe(10);
-
-      // Should dequeue in priority order, then FIFO within same priority
-      const dequeued = [];
-      while (!queue.isEmpty()) {
-        const update = queue.dequeue();
-        if (update) dequeued.push(update);
-      }
-
-      // Check that higher priorities come first
-      for (let i = 1; i < dequeued.length; i++) {
-        const current = dequeued[i];
-        const previous = dequeued[i - 1];
-        if (current && previous) {
-          expect(current.priority).toBeLessThanOrEqual(previous.priority);
-        }
-      }
-    });
-  });
 
   describe('Update Validation', () => {
     test('should validate update types', () => {
-      expect(() => {
-        queue.enqueue({
-          type: 'INVALID_TYPE' as any,
-          payload: {},
-          priority: 0,
-        });
-      }).toThrow('Invalid update type');
+    expect(() => {
+      queue.enqueue({
+        type: 'INVALID_TYPE' as any,
+        payload: {},
+      });
+    }).toThrow('Invalid update type');
     });
 
     test('should validate payload is an object', () => {
-      expect(() => {
-        queue.enqueue({
-          type: UPDATE_TYPES.USER_ACTION,
-          payload: null as any,
-          priority: 0,
-        });
-      }).toThrow('Invalid update payload');
-
-      expect(() => {
-        queue.enqueue({
-          type: UPDATE_TYPES.USER_ACTION,
-          payload: 'string' as any,
-          priority: 0,
-        });
-      }).toThrow('Invalid update payload');
-    });
-
-    test('should validate priority is non-negative', () => {
-      expect(() => {
-        queue.enqueue({
-          type: UPDATE_TYPES.USER_ACTION,
-          payload: {},
-          priority: -1,
-        });
-      }).toThrow('Update priority must be non-negative');
-    });
-
-    test('should set default priority to 0', () => {
+    expect(() => {
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
-        payload: { action: 'test' },
-        priority: undefined as any,
+        payload: null as any,
       });
+    }).toThrow('Invalid update payload');
 
-      const update = queue.dequeue();
-      expect(update?.priority).toBe(0);
+    expect(() => {
+      queue.enqueue({
+        type: UPDATE_TYPES.USER_ACTION,
+        payload: 'string' as any,
+      });
+    }).toThrow('Invalid update payload');
     });
+
   });
 
   describe('Unique ID Generation', () => {
@@ -228,7 +118,6 @@ describe('GameUpdatesQueue', () => {
         queue.enqueue({
           type: UPDATE_TYPES.USER_ACTION,
           payload: { data: { index: i } },
-          priority: 0,
         });
       }
 
@@ -249,7 +138,6 @@ describe('GameUpdatesQueue', () => {
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: {},
-        priority: 0,
       });
 
       const after = Date.now();
@@ -269,7 +157,6 @@ describe('GameUpdatesQueue', () => {
       writer.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: { action: 'click' },
-        priority: 0,
       });
 
       const update = queue.dequeue();
@@ -283,7 +170,6 @@ describe('GameUpdatesQueue', () => {
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: { data: { test: true } },
-        priority: 0,
       });
 
       expect(reader.size()).toBe(1);
@@ -309,13 +195,11 @@ describe('GameUpdatesQueue', () => {
       uiWriter.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: { data: { from: 'ui' } },
-        priority: 0,
       });
 
       timeWriter.enqueue({
         type: UPDATE_TYPES.GAME_TICK,
         payload: { data: { from: 'time' } },
-        priority: 0,
       });
 
       expect(queue.size()).toBe(2);
@@ -333,24 +217,19 @@ describe('GameUpdatesQueue', () => {
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: {},
-        priority: 0,
       });
       queue.enqueue({
         type: UPDATE_TYPES.BATTLE_ACTION,
         payload: {},
-        priority: 2,
       });
       queue.enqueue({
         type: UPDATE_TYPES.EVENT_TRIGGER,
         payload: {},
-        priority: 1,
       });
 
       const stats = queue.getStatistics();
 
       expect(stats.size).toBe(3);
-      expect(stats.highPriorityCount).toBe(2);
-      expect(stats.normalPriorityCount).toBe(1);
       expect(stats.averageAge).toBeGreaterThanOrEqual(0);
     });
 
@@ -358,12 +237,10 @@ describe('GameUpdatesQueue', () => {
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: { data: { id: 1 } },
-        priority: 0,
       });
       queue.enqueue({
         type: UPDATE_TYPES.GAME_TICK,
         payload: { data: { id: 2 } },
-        priority: 0,
       });
 
       const allUpdates = queue.getAllUpdates();
@@ -380,17 +257,14 @@ describe('GameUpdatesQueue', () => {
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: { data: { id: 1 } },
-        priority: 0,
       });
       queue.enqueue({
         type: UPDATE_TYPES.GAME_TICK,
         payload: { data: { id: 2 } },
-        priority: 0,
       });
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: { data: { id: 3 } },
-        priority: 0,
       });
 
       const userActions = queue.getUpdatesByType(UPDATE_TYPES.USER_ACTION);
@@ -405,7 +279,6 @@ describe('GameUpdatesQueue', () => {
         queue.enqueue({
           type: UPDATE_TYPES.USER_ACTION,
           payload: { data: { value: i } },
-          priority: 0,
         });
       }
 
@@ -430,7 +303,6 @@ describe('GameUpdatesQueue', () => {
         id: 'test-id',
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 2,
         payload: { action: 'retry-test' },
         retryable: true,
         maxRetries: 3,
@@ -444,7 +316,6 @@ describe('GameUpdatesQueue', () => {
 
       const requeued = queue.dequeue();
       expect(requeued?.retryCount).toBe(1);
-      expect(requeued?.priority).toBe(1); // Priority reduced
       expect(requeued?.payload.action).toBe('retry-test');
     });
 
@@ -453,7 +324,6 @@ describe('GameUpdatesQueue', () => {
         id: 'test-id',
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {},
         retryable: false,
       };
@@ -469,7 +339,6 @@ describe('GameUpdatesQueue', () => {
         id: 'test-id',
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {},
         retryable: true,
         maxRetries: 2,
@@ -487,7 +356,6 @@ describe('GameUpdatesQueue', () => {
         id: 'test-id',
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {},
         retryable: true,
         retryCount: 3, // Default max is 3
@@ -498,23 +366,6 @@ describe('GameUpdatesQueue', () => {
       expect(result).toBe(false);
     });
 
-    test('should not reduce priority below 0', () => {
-      const update: GameUpdate = {
-        id: 'test-id',
-        type: UPDATE_TYPES.USER_ACTION,
-        timestamp: Date.now(),
-        priority: 0,
-        payload: {},
-        retryable: true,
-        maxRetries: 3,
-        retryCount: 0,
-      };
-
-      queue.requeueForRetry(update);
-
-      const requeued = queue.dequeue();
-      expect(requeued?.priority).toBe(0); // Should stay at 0, not go negative
-    });
   });
 
   describe('Edge Cases', () => {
@@ -523,7 +374,6 @@ describe('GameUpdatesQueue', () => {
         queue.enqueue({
           type: UPDATE_TYPES.USER_ACTION,
           payload: { data: { index: i } },
-          priority: i % 5,
         });
 
         if (i % 3 === 0) {
@@ -547,7 +397,6 @@ describe('GameUpdatesQueue', () => {
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: {},
-        priority: 0,
       });
 
       const update = queue.dequeue();
@@ -571,7 +420,6 @@ describe('GameUpdatesQueue', () => {
       queue.enqueue({
         type: UPDATE_TYPES.USER_ACTION,
         payload: complexPayload,
-        priority: 0,
       });
 
       const update = queue.dequeue();
@@ -593,7 +441,6 @@ describe('GameUpdatesQueue', () => {
           writer.enqueue({
             type: UPDATE_TYPES.USER_ACTION,
             payload: { data: { writerId: i % 3, index: i } },
-            priority: i % 4,
           });
         }
       }

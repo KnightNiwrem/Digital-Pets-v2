@@ -271,7 +271,6 @@ export class LocationSystem extends BaseSystem {
         id: `travel-start-${Date.now()}`,
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: now,
-        priority: 1,
         payload: {
           action: 'TRAVEL_START',
           data: {
@@ -368,7 +367,6 @@ export class LocationSystem extends BaseSystem {
         id: `travel-cancel-${Date.now()}`,
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: Date.now(),
-        priority: 1,
         payload: {
           action: 'TRAVEL_CANCEL',
           data: {
@@ -425,7 +423,6 @@ export class LocationSystem extends BaseSystem {
           id: `travel-complete-${Date.now()}`,
           type: UPDATE_TYPES.STATE_TRANSITION,
           timestamp: Date.now(),
-          priority: 1,
           payload: {
             action: 'TRAVEL_COMPLETE',
             data: {
@@ -467,7 +464,6 @@ export class LocationSystem extends BaseSystem {
         id: `area-change-${Date.now()}`,
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: Date.now(),
-        priority: 1,
         payload: {
           action: 'AREA_CHANGE',
           data: {
