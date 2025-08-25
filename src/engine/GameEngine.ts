@@ -296,6 +296,10 @@ export class GameEngine {
    * Create the default game state
    */
   private createDefaultGameState(): GameState {
+    // Get config values for inventory and settings
+    const limits = this.configSystem.getLimits();
+    const defaultSettings = this.configSystem.getDefaultSettings();
+
     return {
       version: '1.0.0',
       timestamp: Date.now(),
@@ -306,8 +310,8 @@ export class GameEngine {
         currency: {
           coins: 0,
         },
-        maxSlots: 50,
-        unlockedSlots: 20,
+        maxSlots: limits.maxInventorySlots,
+        unlockedSlots: 20, // Keep this hard-coded as it's user progression, not config
       },
       world: {
         currentLocation: {
@@ -333,25 +337,25 @@ export class GameEngine {
       },
       meta: {
         settings: {
-          masterVolume: 100,
-          musicVolume: 80,
-          sfxVolume: 80,
-          textSize: 'medium',
-          colorBlindMode: 'off',
-          highContrast: false,
-          reducedMotion: false,
-          showParticles: true,
-          autoSave: true,
-          autoSaveInterval: 1,
-          confirmActions: true,
-          showTutorialHints: true,
-          enableNotifications: true,
-          lowCareWarning: true,
-          activityComplete: true,
-          eventReminders: true,
-          touchControls: true,
-          keyboardShortcuts: true,
-          swipeGestures: true,
+          masterVolume: defaultSettings.masterVolume,
+          musicVolume: defaultSettings.musicVolume,
+          sfxVolume: defaultSettings.sfxVolume,
+          textSize: defaultSettings.textSize,
+          colorBlindMode: defaultSettings.colorBlindMode,
+          highContrast: defaultSettings.highContrast,
+          reducedMotion: defaultSettings.reducedMotion,
+          showParticles: defaultSettings.showParticles,
+          autoSave: defaultSettings.autoSave,
+          autoSaveInterval: defaultSettings.autoSaveInterval,
+          confirmActions: defaultSettings.confirmActions,
+          showTutorialHints: defaultSettings.showTutorialHints,
+          enableNotifications: defaultSettings.enableNotifications,
+          lowCareWarning: defaultSettings.lowCareWarning,
+          activityComplete: defaultSettings.activityComplete,
+          eventReminders: defaultSettings.eventReminders,
+          touchControls: defaultSettings.touchControls,
+          keyboardShortcuts: defaultSettings.keyboardShortcuts,
+          swipeGestures: defaultSettings.swipeGestures,
         },
         tutorialProgress: {
           completed: [],
