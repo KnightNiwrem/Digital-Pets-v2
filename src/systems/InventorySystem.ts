@@ -3,6 +3,7 @@
  */
 
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { GameState, GameUpdate, InventoryItem } from '../models';
 import type {
   Item,
@@ -77,8 +78,8 @@ export class InventorySystem extends BaseSystem {
   private itemDefinitions: Map<string, Item> = new Map();
   private cooldowns: Map<string, number> = new Map(); // Item usage cooldowns
 
-  constructor() {
-    super('InventorySystem');
+  constructor(gameUpdateWriter: GameUpdateWriter) {
+    super('InventorySystem', gameUpdateWriter);
   }
 
   /**

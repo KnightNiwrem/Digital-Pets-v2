@@ -15,9 +15,16 @@ describe('EventSystem', () => {
   let mockGameState: GameState;
   let mockUpdateWriter: GameUpdateWriter;
   let originalDateNow: () => number;
+  let queuedUpdates: any[] = [];
 
   beforeEach(() => {
-    eventSystem = new EventSystem();
+    queuedUpdates = [];
+    mockUpdateWriter = {
+      enqueue: mock((update: any) => {
+        queuedUpdates.push(update);
+      }),
+    } as GameUpdateWriter;
+    eventSystem = new EventSystem(mockUpdateWriter);
     mockGameState = createMockGameState();
 
     // Ensure pet is initialized
@@ -84,7 +91,7 @@ describe('EventSystem', () => {
     });
 
     it('should start event checking on initialization', async () => {
-      await eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      await eventSystem.initialize({});
 
       // Check that event checking has started (internal state)
       const activeEvents = eventSystem.getActiveEvents();
@@ -99,8 +106,8 @@ describe('EventSystem', () => {
       mockDate.setHours(14, 0, 0, 0);
       Date.now = () => mockDate.getTime();
 
-      // Initialize system with mock writer
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      // Initialize system
+      eventSystem.initialize({});
 
       // Force check events
       eventSystem['checkAllEvents']();
@@ -117,7 +124,7 @@ describe('EventSystem', () => {
       Date.now = () => mockDate.getTime();
 
       // Initialize system
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
 
       // Force check events
       eventSystem['checkAllEvents']();
@@ -137,7 +144,7 @@ describe('EventSystem', () => {
       Date.now = () => mockDate.getTime();
 
       // Initialize system
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
 
       // Force check events
       eventSystem['checkAllEvents']();
@@ -160,7 +167,7 @@ describe('EventSystem', () => {
       Date.now = () => mockDate.getTime();
 
       // Initialize system
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
 
       // Force check events
       eventSystem['checkAllEvents']();
@@ -178,7 +185,7 @@ describe('EventSystem', () => {
       Date.now = () => mockDate.getTime();
 
       // Initialize system
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
 
       // Force check events
       eventSystem['checkAllEvents']();
@@ -194,7 +201,7 @@ describe('EventSystem', () => {
       Date.now = () => mockDate.getTime();
 
       // Initialize system
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
 
       // Force check events
       eventSystem['checkAllEvents']();
@@ -211,14 +218,14 @@ describe('EventSystem', () => {
       mockDate.setHours(14, 0, 0, 0);
       Date.now = () => mockDate.getTime();
 
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
       eventSystem['checkAllEvents']();
     });
 
     it('should allow joining an active event', () => {
       const result = eventSystem.joinEvent('daily_arena', mockGameState);
       expect(result).toBe(true);
-      expect(mockUpdateWriter.enqueue).toHaveBeenCalled();
+      expect(queuedUpdates.length).toBeGreaterThan(0);
     });
 
     it('should not allow joining an inactive event', () => {
@@ -287,7 +294,7 @@ describe('EventSystem', () => {
       mockDate.setMonth(3); // April
       Date.now = () => mockDate.getTime();
 
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
       eventSystem['checkAllEvents']();
     });
 
@@ -301,7 +308,7 @@ describe('EventSystem', () => {
           mockGameState,
         );
         expect(result).toBe(true);
-        expect(mockUpdateWriter.enqueue).toHaveBeenCalled();
+        expect(queuedUpdates.length).toBeGreaterThan(0);
       }
     });
 
@@ -321,7 +328,7 @@ describe('EventSystem', () => {
         eventSystem['completeActivity']('spring_festival', 'flower_picking');
 
         // Check that update was queued
-        expect(mockUpdateWriter.enqueue).toHaveBeenCalled();
+        expect(queuedUpdates.length).toBeGreaterThan(0);
       }
     });
   });
@@ -333,14 +340,14 @@ describe('EventSystem', () => {
       mockDate.setHours(14, 0, 0, 0);
       Date.now = () => mockDate.getTime();
 
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
       eventSystem['checkAllEvents']();
     });
 
     it('should start an event battle', () => {
       const result = eventSystem.startBattle('daily_arena', 'arena_easy', mockGameState);
       expect(result).toBe(true);
-      expect(mockUpdateWriter.enqueue).toHaveBeenCalled();
+      expect(queuedUpdates.length).toBeGreaterThan(0);
     });
 
     it('should complete battles and award tokens', () => {
@@ -381,7 +388,7 @@ describe('EventSystem', () => {
       mockDate.setHours(14, 0, 0, 0);
       Date.now = () => mockDate.getTime();
 
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
       eventSystem['checkAllEvents']();
 
       const activeEvent = eventSystem['activeEvents'].get('daily_arena');
@@ -457,7 +464,6 @@ describe('EventSystem', () => {
     it('should use tuning values for conversion rate', () => {
       // Initialize with tuning
       eventSystem.initialize({
-        gameUpdateWriter: mockUpdateWriter,
         tuning: {
           events: { tokenToCoinsRate: 5 },
         } as any,
@@ -475,7 +481,7 @@ describe('EventSystem', () => {
       mockDate.setHours(14, 0, 0, 0);
       Date.now = () => mockDate.getTime();
 
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
       eventSystem['checkAllEvents']();
 
       const activeEvent = eventSystem['activeEvents'].get('daily_arena');
@@ -503,7 +509,7 @@ describe('EventSystem', () => {
       mockDate.setHours(14, 0, 0, 0);
       Date.now = () => mockDate.getTime();
 
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
       eventSystem['checkAllEvents']();
 
       // Fast forward time past event end
@@ -518,8 +524,7 @@ describe('EventSystem', () => {
       expect(isActive).toBe(false);
 
       // Should have queued event end update
-      const calls = (mockUpdateWriter.enqueue as any).mock.calls;
-      const endCall = calls.find((call: any[]) => call[0].payload?.action === 'event_end');
+      const endCall = queuedUpdates.find((u) => u.payload?.action === 'event_end');
       expect(endCall).toBeDefined();
     });
 
@@ -529,7 +534,7 @@ describe('EventSystem', () => {
       mockDate.setHours(14, 0, 0, 0);
       Date.now = () => mockDate.getTime();
 
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
       eventSystem['checkAllEvents']();
 
       const activeEvent = eventSystem['activeEvents'].get('daily_arena');
@@ -542,12 +547,11 @@ describe('EventSystem', () => {
         eventSystem['endEvent']('daily_arena', Date.now());
 
         // Check that rewards were calculated
-        const calls = (mockUpdateWriter.enqueue as any).mock.calls;
-        const endCall = calls.find((call: any[]) => call[0].payload?.action === 'event_end');
+        const endCall = queuedUpdates.find((u) => u.payload?.action === 'event_end');
 
         expect(endCall).toBeDefined();
-        expect(endCall[0].payload.data.finalRewards).toBeDefined();
-        expect(endCall[0].payload.data.tokenConversion).toBeDefined();
+        expect(endCall!.payload.data.finalRewards).toBeDefined();
+        expect(endCall!.payload.data.tokenConversion).toBeDefined();
       }
     });
   });
@@ -559,7 +563,7 @@ describe('EventSystem', () => {
       mockDate.setHours(10, 0, 0, 0); // Morning
       Date.now = () => mockDate.getTime();
 
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
 
       const upcoming = eventSystem.getUpcomingEvents(24);
 
@@ -579,7 +583,7 @@ describe('EventSystem', () => {
       mockDate.setMonth(3); // April
       Date.now = () => mockDate.getTime();
 
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
 
       // Manually activate events
       eventSystem['checkAllEvents']();
@@ -616,7 +620,7 @@ describe('EventSystem', () => {
       mockDate.setHours(14, 0, 0, 0);
       Date.now = () => mockDate.getTime();
 
-      eventSystem.initialize({ gameUpdateWriter: mockUpdateWriter });
+      eventSystem.initialize({});
       eventSystem['checkAllEvents']();
 
       const activeEvent = eventSystem['activeEvents'].get('daily_arena');

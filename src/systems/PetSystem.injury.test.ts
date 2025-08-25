@@ -23,7 +23,7 @@ describe('PetSystem - Injury Mechanics', () => {
     await configSystem.load();
     const tuning = configSystem.getTuningValues();
 
-    petSystem = new PetSystem();
+    petSystem = new PetSystem({ enqueue: () => {} });
     await petSystem.initialize({
       tuning: tuning,
       config: {},

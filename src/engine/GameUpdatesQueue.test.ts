@@ -263,7 +263,7 @@ describe('GameUpdatesQueue', () => {
   });
 
   describe('Writer/Reader Interfaces', () => {
-    test('should create writer for authorized systems', () => {
+    test('should create writer with source tagging', () => {
       const writer = queue.createWriter('UISystem');
 
       writer.enqueue({
@@ -275,12 +275,6 @@ describe('GameUpdatesQueue', () => {
       const update = queue.dequeue();
       expect(update?.payload.source).toBe('UISystem');
       expect(update?.payload.action).toBe('click');
-    });
-
-    test('should reject writer for unauthorized systems', () => {
-      expect(() => {
-        queue.createWriter('UnauthorizedSystem');
-      }).toThrow('not authorized');
     });
 
     test('should create reader interface', () => {

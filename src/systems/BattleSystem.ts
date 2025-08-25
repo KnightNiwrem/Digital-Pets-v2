@@ -4,6 +4,7 @@
  */
 
 import { BaseSystem } from './BaseSystem';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type {
   BattleState,
   BattleParticipant,
@@ -46,8 +47,8 @@ export interface BattleResult {
 export class BattleSystem extends BaseSystem {
   private currentBattle: BattleState | null = null;
 
-  constructor() {
-    super('BattleSystem');
+  constructor(gameUpdateWriter: GameUpdateWriter) {
+    super('BattleSystem', gameUpdateWriter);
   }
 
   // Implement abstract methods from BaseSystem

@@ -4,6 +4,7 @@
  */
 
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { GameState, Pet } from '../models';
 import {
   UPDATE_TYPES,
@@ -103,8 +104,8 @@ export class ActivitySystem extends BaseSystem {
   private activityCounter: number;
   private readonly concurrentRestrictions: Set<ActivityType>;
 
-  constructor() {
-    super('ActivitySystem');
+  constructor(gameUpdateWriter: GameUpdateWriter) {
+    super('ActivitySystem', gameUpdateWriter);
     this.activeActivities = new Map();
     this.activityCounter = 0;
 
@@ -970,6 +971,6 @@ export class ActivitySystem extends BaseSystem {
 /**
  * Factory function to create a new ActivitySystem
  */
-export function createActivitySystem(): ActivitySystem {
-  return new ActivitySystem();
+export function createActivitySystem(gameUpdateWriter: GameUpdateWriter): ActivitySystem {
+  return new ActivitySystem(gameUpdateWriter);
 }

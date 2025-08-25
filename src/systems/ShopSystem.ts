@@ -1,4 +1,5 @@
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { GameState, GameUpdate } from '../models';
 import type { Item } from '../models/Item';
 import {
@@ -56,8 +57,8 @@ export class ShopSystem extends BaseSystem {
     [ITEM_CATEGORIES.MATERIAL]: 3,
   };
 
-  constructor() {
-    super('ShopSystem');
+  constructor(gameUpdateWriter: GameUpdateWriter) {
+    super('ShopSystem', gameUpdateWriter);
     this.initializeItemPools();
   }
 
