@@ -21,6 +21,7 @@ import {
   STACK_LIMITS,
   type ItemCategory,
 } from '../models/constants';
+import { ITEMS_DATA, getItemById } from '../data/items';
 
 /**
  * Inventory operation result
@@ -85,14 +86,10 @@ export class InventorySystem extends BaseSystem {
   /**
    * System initialization
    */
-  protected async onInitialize(options: SystemInitOptions): Promise<void> {
-    // Load item definitions from config passed by GameEngine
-    const itemsConfig = options.config?.items;
-    if (itemsConfig) {
-      this.loadItemDefinitions(itemsConfig);
-    } else {
-      console.warn('[InventorySystem] No items config provided');
-    }
+  protected async onInitialize(_options: SystemInitOptions): Promise<void> {
+    // Load item definitions from data file
+    this.loadItemDefinitions();
+    console.log(`[InventorySystem] Loaded ${this.itemDefinitions.size} item definitions`);
   }
 
   /**
@@ -138,13 +135,12 @@ export class InventorySystem extends BaseSystem {
   }
 
   /**
-   * Load item definitions from config
+   * Load item definitions from data file
    */
-  private loadItemDefinitions(itemsConfig: any): void {
-    if (Array.isArray(itemsConfig)) {
-      for (const item of itemsConfig) {
-        this.itemDefinitions.set(item.id, item);
-      }
+  private loadItemDefinitions(): void {
+    // Load all items from the data file
+    for (const [itemId, item] of Object.entries(ITEMS_DATA)) {
+      this.itemDefinitions.set(itemId, item);
     }
   }
 
@@ -152,7 +148,15 @@ export class InventorySystem extends BaseSystem {
    * Get item definition
    */
   public getItemDefinition(itemId: string): Item | undefined {
-    return this.itemDefinitions.get(itemId);
+    // First check the cached definitions, then fall back to data file
+    let item = this.itemDefinitions.get(itemId);
+    if (!item) {
+      item = getItemById(itemId) || undefined;
+      if (item) {
+        this.itemDefinitions.set(itemId, item);
+      }
+    }
+    return item;
   }
 
   /**

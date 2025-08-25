@@ -386,7 +386,7 @@ export type ItemObtainSource = 'shop' | 'activity' | 'event' | 'gift' | 'wild';
 export type ExtendedCurrencyType = 'coins' | 'event_tokens' | 'premium';
 
 // Cure Status Types
-export type CureStatusType = 'sickness' | 'poison' | 'all';
+export type CureStatusType = 'sickness' | 'poison' | 'paralysis' | 'all';
 
 // Food Effect Types
 export type FoodEffectType = 'energy_boost' | 'cure_sickness' | 'growth_boost';
