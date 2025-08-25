@@ -422,8 +422,7 @@ export const TEMPERAMENT_TYPES = {
   HYPERACTIVE: 'hyperactive',
   PROUD: 'proud',
 } as const;
-export type PetTemperament =
-  (typeof TEMPERAMENT_TYPES)[keyof typeof TEMPERAMENT_TYPES];
+export type PetTemperament = (typeof TEMPERAMENT_TYPES)[keyof typeof TEMPERAMENT_TYPES];
 
 // Pet Habitats
 export const HABITAT_TYPES = {

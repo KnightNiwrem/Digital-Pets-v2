@@ -442,7 +442,7 @@ export class GameEngine {
 
   /**
    * Initialize a system
-  */
+   */
   private async initializeSystem(name: string, system: BaseSystem): Promise<void> {
     // Get tuning values from ConfigSystem
     const tuningValues = this.configSystem.getTuningValues();

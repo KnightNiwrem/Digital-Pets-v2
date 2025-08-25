@@ -12,12 +12,12 @@ import {
   UPDATE_TYPES,
   LOCATION_TYPES,
   CITY_AREAS,
-  WILD_BIOMES,
-  TRAVEL_TIERS,
   type TravelDistance,
   type GrowthStage,
   type CityArea,
 } from '../models/constants';
+import { LOCATIONS_DATA } from '../data/locations';
+import { ROUTES_MAP, getRoute, getConnectedLocations } from '../data/routes';
 
 export interface TravelInfo {
   from: string;
@@ -42,8 +42,12 @@ export class LocationSystem extends BaseSystem {
 
   constructor(gameUpdateWriter: GameUpdateWriter) {
     super('LocationSystem', gameUpdateWriter);
-    this.initializeLocations();
-    this.initializeRoutes();
+    // Initialize locations from data
+    Object.values(LOCATIONS_DATA).forEach((location) => {
+      this.locations.set(location.id, location);
+    });
+    // Initialize routes from data
+    this.routes = new Map(ROUTES_MAP);
   }
 
   protected async onInitialize(_options: SystemInitOptions): Promise<void> {
@@ -104,354 +108,6 @@ export class LocationSystem extends BaseSystem {
     console.error(`[LocationSystem] Error: ${error.error.message}`);
   }
 
-  private initializeLocations(): void {
-    // Initialize cities
-    const mainCity: CityLocation = {
-      id: 'main_city',
-      name: 'Main City',
-      description: 'The bustling central hub of the region',
-      type: LOCATION_TYPES.CITY,
-      sprite: 'sprites/locations/main_city.png',
-      lightingType: 'day',
-      areas: {
-        [CITY_AREAS.SQUARE]: {
-          available: true,
-          name: 'Town Square',
-          description: 'The heart of the city where pets gather',
-          sprite: 'sprites/locations/town_square.png',
-          npcCount: 5,
-        },
-        [CITY_AREAS.SHOP]: {
-          available: true,
-          name: 'General Store',
-          description: 'Buy and sell various items',
-          sprite: 'sprites/locations/shop.png',
-          npcCount: 1,
-        },
-        [CITY_AREAS.GYM]: {
-          available: true,
-          name: 'Training Gym',
-          description: 'Train your pet to become stronger',
-          sprite: 'sprites/locations/gym.png',
-          npcCount: 3,
-        },
-        [CITY_AREAS.ARENA]: {
-          available: true,
-          name: 'Battle Arena',
-          description: 'Test your skills in battle',
-          sprite: 'sprites/locations/arena.png',
-          npcCount: 2,
-        },
-      },
-      population: 'large',
-      prosperityLevel: 8,
-      hasShop: true,
-      hasArena: true,
-      hasGym: true,
-      hasInn: true,
-    };
-
-    const forestTown: CityLocation = {
-      id: 'forest_town',
-      name: 'Forest Town',
-      description: 'A peaceful town surrounded by trees',
-      type: LOCATION_TYPES.CITY,
-      sprite: 'sprites/locations/forest_town.png',
-      lightingType: 'day',
-      areas: {
-        [CITY_AREAS.SQUARE]: {
-          available: true,
-          name: 'Village Center',
-          description: 'A quiet meeting place',
-          sprite: 'sprites/locations/village_center.png',
-          npcCount: 3,
-        },
-        [CITY_AREAS.SHOP]: {
-          available: true,
-          name: 'Forest Shop',
-          description: 'Specializes in nature items',
-          sprite: 'sprites/locations/forest_shop.png',
-          npcCount: 1,
-        },
-      },
-      population: 'small',
-      prosperityLevel: 5,
-      hasShop: true,
-      hasArena: false,
-      hasGym: false,
-      hasInn: true,
-    };
-
-    const mountainVillage: CityLocation = {
-      id: 'mountain_village',
-      name: 'Mountain Village',
-      description: 'A hardy village high in the mountains',
-      type: LOCATION_TYPES.CITY,
-      sprite: 'sprites/locations/mountain_village.png',
-      lightingType: 'day',
-      areas: {
-        [CITY_AREAS.SQUARE]: {
-          available: true,
-          name: 'Mountain Plaza',
-          description: 'A stone plaza with mountain views',
-          sprite: 'sprites/locations/mountain_plaza.png',
-          npcCount: 4,
-        },
-        [CITY_AREAS.SHOP]: {
-          available: true,
-          name: 'Mining Supplies',
-          description: 'Tools and minerals',
-          sprite: 'sprites/locations/mining_shop.png',
-          npcCount: 1,
-        },
-        [CITY_AREAS.GYM]: {
-          available: true,
-          name: 'Mountain Gym',
-          description: 'Train in harsh conditions',
-          sprite: 'sprites/locations/mountain_gym.png',
-          npcCount: 2,
-        },
-      },
-      population: 'medium',
-      prosperityLevel: 6,
-      hasShop: true,
-      hasArena: false,
-      hasGym: true,
-      hasInn: true,
-    };
-
-    // Initialize wild locations
-    const forest: WildLocation = {
-      id: 'forest',
-      name: 'Dense Forest',
-      description: 'A thick forest full of life',
-      type: LOCATION_TYPES.WILD,
-      sprite: 'sprites/locations/forest.png',
-      lightingType: 'day',
-      biome: WILD_BIOMES.FOREST,
-      dangerLevel: 3,
-      explorationDifficulty: 'easy',
-      availableActivities: ['FISHING', 'FORAGING'],
-      resources: {
-        abundant: ['wood', 'berries', 'mushrooms'],
-        rare: ['rare_flower', 'ancient_seed'],
-        exclusive: ['forest_gem'],
-      },
-      wildPetSpecies: [
-        {
-          speciesId: 'forest_sprite',
-          encounterRate: 30,
-          level: { min: 5, max: 15 },
-        },
-        {
-          speciesId: 'tree_guardian',
-          encounterRate: 10,
-          level: { min: 10, max: 20 },
-        },
-      ],
-    };
-
-    const mountains: WildLocation = {
-      id: 'mountains',
-      name: 'Rocky Mountains',
-      description: 'Towering peaks with valuable minerals',
-      type: LOCATION_TYPES.WILD,
-      sprite: 'sprites/locations/mountains.png',
-      lightingType: 'day',
-      biome: WILD_BIOMES.MOUNTAINS,
-      dangerLevel: 6,
-      explorationDifficulty: 'hard',
-      availableActivities: ['MINING', 'FORAGING'],
-      resources: {
-        abundant: ['stone', 'iron_ore'],
-        rare: ['gold_ore', 'crystal'],
-        exclusive: ['mountain_ruby'],
-      },
-      wildPetSpecies: [
-        {
-          speciesId: 'rock_golem',
-          encounterRate: 25,
-          level: { min: 15, max: 30 },
-        },
-        {
-          speciesId: 'sky_eagle',
-          encounterRate: 15,
-          level: { min: 20, max: 35 },
-        },
-      ],
-      hazards: [
-        {
-          type: 'extreme_cold',
-          chance: 20,
-          effect: 'Reduces energy regeneration',
-        },
-      ],
-    };
-
-    const lake: WildLocation = {
-      id: 'lake',
-      name: 'Crystal Lake',
-      description: 'A pristine lake with abundant fish',
-      type: LOCATION_TYPES.WILD,
-      sprite: 'sprites/locations/lake.png',
-      lightingType: 'day',
-      biome: WILD_BIOMES.LAKE,
-      dangerLevel: 2,
-      explorationDifficulty: 'easy',
-      availableActivities: ['FISHING', 'FORAGING'],
-      resources: {
-        abundant: ['fish', 'water_plants'],
-        rare: ['pearl', 'rare_fish'],
-        exclusive: ['lake_crystal'],
-      },
-      wildPetSpecies: [
-        {
-          speciesId: 'water_sprite',
-          encounterRate: 35,
-          level: { min: 5, max: 15 },
-        },
-      ],
-    };
-
-    // Add all locations to the map
-    this.locations.set('main_city', mainCity);
-    this.locations.set('forest_town', forestTown);
-    this.locations.set('mountain_village', mountainVillage);
-    this.locations.set('forest', forest);
-    this.locations.set('mountains', mountains);
-    this.locations.set('lake', lake);
-  }
-
-  private initializeRoutes(): void {
-    // Main City connections
-    this.addRoute({
-      id: 'main_city_to_forest_town',
-      from: 'main_city',
-      to: 'forest_town',
-      distance: 'short',
-      baseTravelTime: TRAVEL_TIERS.SHORT,
-      energyCost: 10,
-      routeType: 'road',
-      safety: 'safe',
-    });
-
-    this.addRoute({
-      id: 'main_city_to_mountain_village',
-      from: 'main_city',
-      to: 'mountain_village',
-      distance: 'medium',
-      baseTravelTime: TRAVEL_TIERS.MEDIUM,
-      energyCost: 20,
-      routeType: 'road',
-      safety: 'moderate',
-    });
-
-    this.addRoute({
-      id: 'main_city_to_forest',
-      from: 'main_city',
-      to: 'forest',
-      distance: 'short',
-      baseTravelTime: TRAVEL_TIERS.SHORT,
-      energyCost: 10,
-      routeType: 'path',
-      safety: 'moderate',
-    });
-
-    this.addRoute({
-      id: 'main_city_to_lake',
-      from: 'main_city',
-      to: 'lake',
-      distance: 'medium',
-      baseTravelTime: TRAVEL_TIERS.MEDIUM,
-      energyCost: 20,
-      routeType: 'path',
-      safety: 'safe',
-    });
-
-    // Forest Town connections
-    this.addRoute({
-      id: 'forest_town_to_forest',
-      from: 'forest_town',
-      to: 'forest',
-      distance: 'instant',
-      baseTravelTime: TRAVEL_TIERS.INSTANT,
-      energyCost: 0,
-      routeType: 'path',
-      safety: 'safe',
-    });
-
-    this.addRoute({
-      id: 'forest_town_to_lake',
-      from: 'forest_town',
-      to: 'lake',
-      distance: 'short',
-      baseTravelTime: TRAVEL_TIERS.SHORT,
-      energyCost: 10,
-      routeType: 'path',
-      safety: 'safe',
-    });
-
-    // Mountain Village connections
-    this.addRoute({
-      id: 'mountain_village_to_mountains',
-      from: 'mountain_village',
-      to: 'mountains',
-      distance: 'instant',
-      baseTravelTime: TRAVEL_TIERS.INSTANT,
-      energyCost: 0,
-      routeType: 'path',
-      safety: 'moderate',
-    });
-
-    // Forest to Mountains (wilderness route)
-    this.addRoute({
-      id: 'forest_to_mountains',
-      from: 'forest',
-      to: 'mountains',
-      distance: 'long',
-      baseTravelTime: TRAVEL_TIERS.LONG,
-      energyCost: 35,
-      routeType: 'wilderness',
-      safety: 'dangerous',
-      encounters: [
-        {
-          type: 'battle',
-          chance: 30,
-          pool: ['wild_encounter_1', 'wild_encounter_2'],
-        },
-      ],
-    });
-
-    // Create reverse routes
-    this.createReverseRoutes();
-  }
-
-  private addRoute(route: TravelRoute): void {
-    const key = `${route.from}_${route.to}`;
-    this.routes.set(key, route);
-  }
-
-  private createReverseRoutes(): void {
-    const reverseRoutes: TravelRoute[] = [];
-
-    this.routes.forEach((route) => {
-      const reverseRoute: TravelRoute = {
-        ...route,
-        id: `${route.id}_reverse`,
-        from: route.to,
-        to: route.from,
-      };
-      reverseRoutes.push(reverseRoute);
-    });
-
-    reverseRoutes.forEach((route) => {
-      const key = `${route.from}_${route.to}`;
-      if (!this.routes.has(key)) {
-        this.routes.set(key, route);
-      }
-    });
-  }
-
   private createDefaultLocationState(): LocationState {
     return {
       currentLocationId: 'main_city',
@@ -493,8 +149,7 @@ export class LocationSystem extends BaseSystem {
   }
 
   getTravelInfo(from: string, to: string): TravelInfo | null {
-    const key = `${from}_${to}`;
-    const route = this.routes.get(key);
+    const route = getRoute(from, to);
 
     if (!route) {
       return null;
@@ -852,19 +507,11 @@ export class LocationSystem extends BaseSystem {
     const currentLocation = this.currentLocationState?.currentLocationId;
     if (!currentLocation) return [];
 
-    const destinations: string[] = [];
-    this.routes.forEach((route, _key) => {
-      if (route.from === currentLocation) {
-        destinations.push(route.to);
-      }
-    });
-
-    return destinations;
+    return getConnectedLocations(currentLocation);
   }
 
   // Check if a route exists between two locations
   hasRoute(from: string, to: string): boolean {
-    const key = `${from}_${to}`;
-    return this.routes.has(key);
+    return getRoute(from, to) !== null;
   }
 }
