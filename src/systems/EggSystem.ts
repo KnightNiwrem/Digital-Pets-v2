@@ -11,8 +11,8 @@ import type { Pet, PetCreationOptions } from '../models/Pet';
 import type { EggItem } from '../models/Item';
 import { UPDATE_TYPES, RARITY_TIERS } from '../models/constants';
 import type { RarityTier } from '../models/constants';
-import { SPECIES_DATA, getAllSpecies } from '../data/species';
-import { EGG_TYPES_DATA, getAllEggTypes } from '../data/eggTypes';
+import { getAllSpecies } from '../data/species';
+import { getAllEggTypes } from '../data/eggTypes';
 
 /**
  * Incubation status for an egg

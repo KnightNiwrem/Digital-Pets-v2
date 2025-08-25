@@ -216,6 +216,7 @@ export const SPECIES_DATA: Record<string, Species> = {
         playing: [16, 17, 18],
       },
       defaultColor: '#87CEEB',
+      availableColors: ['#87CEEB'],
       size: { width: 64, height: 64 },
     },
     traits: {
@@ -257,6 +258,7 @@ export const SPECIES_DATA: Record<string, Species> = {
         playing: [16, 17, 18],
       },
       defaultColor: '#8B7355',
+      availableColors: ['#8B7355'],
       size: { width: 64, height: 64 },
     },
     traits: {
@@ -304,6 +306,7 @@ export const SPECIES_DATA: Record<string, Species> = {
         playing: [16, 17, 18],
       },
       defaultColor: '#FFD700',
+      availableColors: ['#FFD700'],
       size: { width: 64, height: 64 },
     },
     traits: {
@@ -354,6 +357,7 @@ export const SPECIES_DATA: Record<string, Species> = {
         playing: [16, 17, 18],
       },
       defaultColor: '#8B0000',
+      availableColors: ['#8B0000'],
       size: { width: 96, height: 96 },
     },
     traits: {
