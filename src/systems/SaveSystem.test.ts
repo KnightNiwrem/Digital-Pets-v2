@@ -63,9 +63,7 @@ describe('SaveSystem', () => {
 
   describe('Initialization', () => {
     it('should initialize successfully', async () => {
-      await saveSystem.initialize({
-        gameUpdateWriter: null as any,
-      });
+      await saveSystem.initialize();
 
       expect(saveSystem.isInitialized()).toBe(true);
       expect(saveSystem.isActive()).toBe(true);
@@ -76,9 +74,7 @@ describe('SaveSystem', () => {
       global.localStorage = undefined as any;
 
       try {
-        await saveSystem.initialize({
-          gameUpdateWriter: null as any,
-        });
+        await saveSystem.initialize();
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
         expect((error as Error).message).toBe('localStorage is not available');
@@ -91,9 +87,7 @@ describe('SaveSystem', () => {
 
   describe('Save Operations', () => {
     beforeEach(async () => {
-      await saveSystem.initialize({
-        gameUpdateWriter: null as any,
-      });
+      await saveSystem.initialize();
     });
 
     it('should save game state successfully', async () => {
@@ -212,9 +206,7 @@ describe('SaveSystem', () => {
 
   describe('Load Operations', () => {
     beforeEach(async () => {
-      await saveSystem.initialize({
-        gameUpdateWriter: null as any,
-      });
+      await saveSystem.initialize();
     });
 
     it('should load saved game state', async () => {
@@ -322,9 +314,7 @@ describe('SaveSystem', () => {
 
   describe('Save Rotation', () => {
     beforeEach(async () => {
-      await saveSystem.initialize({
-        gameUpdateWriter: null as any,
-      });
+      await saveSystem.initialize();
     });
 
     it('should rotate saves correctly', async () => {
@@ -400,9 +390,7 @@ describe('SaveSystem', () => {
 
   describe('Import/Export', () => {
     beforeEach(async () => {
-      await saveSystem.initialize({
-        gameUpdateWriter: null as any,
-      });
+      await saveSystem.initialize();
     });
 
     it('should export save as JSON', async () => {
@@ -467,7 +455,7 @@ describe('SaveSystem', () => {
 
       // Generate checksum
       const saveSystem2 = new SaveSystem();
-      await saveSystem2.initialize({ gameUpdateWriter: null as any });
+      await saveSystem2.initialize();
       exportData.checksum = (saveSystem2 as any).generateChecksum(exportData.data);
 
       const success = await saveSystem.importSave(JSON.stringify(exportData));
@@ -565,9 +553,7 @@ describe('SaveSystem', () => {
 
   describe('Save Validation', () => {
     beforeEach(async () => {
-      await saveSystem.initialize({
-        gameUpdateWriter: null as any,
-      });
+      await saveSystem.initialize();
     });
 
     it('should validate save structure', async () => {
@@ -676,9 +662,7 @@ describe('SaveSystem', () => {
 
   describe('Delete Operations', () => {
     beforeEach(async () => {
-      await saveSystem.initialize({
-        gameUpdateWriter: null as any,
-      });
+      await saveSystem.initialize();
     });
 
     it('should delete current save', async () => {
@@ -778,9 +762,7 @@ describe('SaveSystem', () => {
 
   describe('Storage Quota Handling', () => {
     beforeEach(async () => {
-      await saveSystem.initialize({
-        gameUpdateWriter: null as any,
-      });
+      await saveSystem.initialize();
     });
 
     it('should handle storage quota exceeded', async () => {
@@ -835,8 +817,8 @@ describe('SaveSystem', () => {
       const system1 = new SaveSystem({ checksumAlgorithm: 'simple' });
       const system2 = new SaveSystem({ checksumAlgorithm: 'simple' });
 
-      await system1.initialize({ gameUpdateWriter: null as any });
-      await system2.initialize({ gameUpdateWriter: null as any });
+      await system1.initialize();
+      await system2.initialize();
 
       const gameState = createMockGameState({
         playerId: 'test-player-123',
@@ -867,8 +849,8 @@ describe('SaveSystem', () => {
       const system1 = new SaveSystem({ checksumAlgorithm: 'crc32' });
       const system2 = new SaveSystem({ checksumAlgorithm: 'crc32' });
 
-      await system1.initialize({ gameUpdateWriter: null as any });
-      await system2.initialize({ gameUpdateWriter: null as any });
+      await system1.initialize();
+      await system2.initialize();
 
       const gameState = createMockGameState({
         playerId: 'test-player-123',
@@ -897,7 +879,7 @@ describe('SaveSystem', () => {
 
     it('should detect data changes with checksums', async () => {
       const system = new SaveSystem();
-      await system.initialize({ gameUpdateWriter: null as any });
+      await system.initialize();
 
       const gameState1 = createMockGameState({
         playerId: 'test-player-123',
@@ -946,9 +928,7 @@ describe('SaveSystem', () => {
 
   describe('Error Recovery', () => {
     beforeEach(async () => {
-      await saveSystem.initialize({
-        gameUpdateWriter: null as any,
-      });
+      await saveSystem.initialize();
     });
 
     it('should recover from corrupted current save', async () => {
@@ -998,9 +978,7 @@ describe('SaveSystem', () => {
 
   describe('File Operations', () => {
     beforeEach(async () => {
-      await saveSystem.initialize({
-        gameUpdateWriter: null as any,
-      });
+      await saveSystem.initialize();
     });
 
     it('should prepare save for file download', async () => {
