@@ -23,7 +23,7 @@ describe('TimeSystem', () => {
     };
 
     // Create TimeSystem with shorter tick interval for testing
-    timeSystem = createTimeSystem({ tickInterval: 1 }); // 1 second for testing
+    timeSystem = createTimeSystem(gameUpdateWriter, { tickInterval: 1 }); // 1 second for testing
   });
 
   afterEach(() => {
@@ -33,14 +33,14 @@ describe('TimeSystem', () => {
 
   describe('Initialization', () => {
     it('should initialize with default configuration', () => {
-      const defaultSystem = new TimeSystem();
+      const defaultSystem = new TimeSystem(gameUpdateWriter);
       expect(defaultSystem.getName()).toBe('TimeSystem');
       expect(defaultSystem.isInitialized()).toBe(false);
       expect(defaultSystem.getCurrentTick()).toBe(0);
     });
 
     it('should initialize with custom configuration', () => {
-      const customSystem = new TimeSystem({
+      const customSystem = new TimeSystem(gameUpdateWriter, {
         tickInterval: 30,
         maxOfflineTicks: 5000,
       });
@@ -50,7 +50,7 @@ describe('TimeSystem', () => {
     });
 
     it('should initialize with game update writer', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
       expect(timeSystem.isInitialized()).toBe(true);
       expect(timeSystem.isActive()).toBe(true);
     });
@@ -58,7 +58,7 @@ describe('TimeSystem', () => {
 
   describe('Tick Management', () => {
     it('should start and stop tick timer', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
 
       timeSystem.start();
       const initialTick = timeSystem.getCurrentTick();
@@ -72,7 +72,7 @@ describe('TimeSystem', () => {
     });
 
     it('should increment tick counter on each tick', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
 
       timeSystem.start();
       const initialTick = timeSystem.getCurrentTick();
@@ -86,7 +86,7 @@ describe('TimeSystem', () => {
     });
 
     it('should queue GAME_TICK updates', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
 
       timeSystem.start();
 
@@ -104,7 +104,7 @@ describe('TimeSystem', () => {
     });
 
     it('should pause and resume correctly', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
 
       timeSystem.start();
 
@@ -144,7 +144,7 @@ describe('TimeSystem', () => {
     });
 
     it('should cap offline ticks at maximum', () => {
-      const customSystem = new TimeSystem({
+      const customSystem = new TimeSystem(gameUpdateWriter, {
         tickInterval: 1,
         maxOfflineTicks: 100,
       });
@@ -157,7 +157,7 @@ describe('TimeSystem', () => {
     });
 
     it('should process offline ticks in batches', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
 
       await timeSystem.processOfflineTicks(250, 100);
 
@@ -326,7 +326,7 @@ describe('TimeSystem', () => {
 
   describe('System Lifecycle', () => {
     it('should handle shutdown correctly', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
       timeSystem.start();
 
       timeSystem.registerTimer('shutdown-timer', 1000, () => {});
@@ -338,7 +338,7 @@ describe('TimeSystem', () => {
     });
 
     it('should handle reset correctly', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
 
       timeSystem.setTickCounter(100);
       timeSystem.registerTimer('reset-timer', 1000, () => {});
@@ -350,7 +350,7 @@ describe('TimeSystem', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
 
       // Register a timer with a callback that throws
       const errorCallback = () => {
@@ -372,7 +372,7 @@ describe('TimeSystem', () => {
 
   describe('Statistics', () => {
     it('should provide system statistics', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
       timeSystem.start();
 
       timeSystem.registerTimer('stats-timer', 1000, () => {});
@@ -387,7 +387,7 @@ describe('TimeSystem', () => {
     });
 
     it('should provide accurate uptime', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
       timeSystem.start();
 
       await new Promise((resolve) => setTimeout(resolve, 2100));
@@ -431,7 +431,7 @@ describe('TimeSystem', () => {
     });
 
     it('should handle zero offline ticks', async () => {
-      await timeSystem.initialize({ gameUpdateWriter });
+      await timeSystem.initialize({});
 
       await timeSystem.processOfflineTicks(0);
 

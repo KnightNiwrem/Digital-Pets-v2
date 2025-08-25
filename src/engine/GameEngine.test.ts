@@ -226,11 +226,8 @@ describe('GameEngine', () => {
 
       await engine.initialize();
 
-      // Initialize the system manually since it's not an authorized system
-      await mockSystem.initialize({
-        gameUpdateWriter: null as any,
-        config: {},
-      });
+      // Initialize the custom system manually since it's not part of default initialization
+      await mockSystem.initialize({ config: {} });
 
       await engine.start();
 

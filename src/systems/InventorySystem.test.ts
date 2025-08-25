@@ -18,7 +18,7 @@ describe('InventorySystem', () => {
   let gameState: GameState;
 
   beforeEach(async () => {
-    system = new InventorySystem();
+    system = new InventorySystem(createMockGameUpdateWriter());
     gameState = createMockGameState({
       pet: createMockPet({ name: 'Fluffy', species: 'cat' }),
       maxSlots: 20,
@@ -26,9 +26,7 @@ describe('InventorySystem', () => {
     });
 
     // Initialize system
-    await system.initialize({
-      gameUpdateWriter: createMockGameUpdateWriter(),
-    });
+    await system.initialize({});
 
     // Mock item definitions
     (system as any).itemDefinitions = new Map(Object.entries(mockItems));

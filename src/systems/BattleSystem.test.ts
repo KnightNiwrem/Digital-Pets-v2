@@ -17,8 +17,8 @@ describe('BattleSystem', () => {
   let mockBattleConfig: BattleConfig;
 
   beforeEach(async () => {
-    battleSystem = new BattleSystem();
     mockUpdatesQueue = new GameUpdatesQueue();
+    battleSystem = new BattleSystem(mockUpdatesQueue.createWriter('BattleSystem'));
 
     // Create mock pets
     mockPlayerPet = createMockPet({
@@ -67,7 +67,6 @@ describe('BattleSystem', () => {
 
     // Initialize system
     await battleSystem.initialize({
-      gameUpdateWriter: mockUpdatesQueue.createWriter('BattleSystem'),
       tuning: createMockTuningConfig() as any, // Type cast to bypass full config requirement
     });
   });

@@ -3,7 +3,7 @@
  * Manages all systems, processes updates, and maintains game state
  */
 
-import { GameUpdatesQueue, type GameUpdateReader, type GameUpdateWriter } from './GameUpdatesQueue';
+import { GameUpdatesQueue, type GameUpdateReader } from './GameUpdatesQueue';
 import { BaseSystem, isUpdateHandler, type SystemInitOptions } from '../systems/BaseSystem';
 import { ConfigSystem } from '../systems/ConfigSystem';
 import type { GameState, GameUpdate } from '../models';
@@ -442,30 +442,12 @@ export class GameEngine {
 
   /**
    * Initialize a system
-   */
+  */
   private async initializeSystem(name: string, system: BaseSystem): Promise<void> {
-    // Only create writer for authorized systems
-    let writer: GameUpdateWriter | undefined = undefined;
-    const authorizedSystems = [
-      'UISystem',
-      'TimeSystem',
-      'ActivitySystem',
-      'BattleSystem',
-      'EventSystem',
-      'LocationSystem',
-      'PetSystem',
-      'EggSystem',
-    ];
-
-    if (authorizedSystems.includes(name)) {
-      writer = this.updatesQueue.createWriter(name);
-    }
-
     // Get tuning values from ConfigSystem
     const tuningValues = this.configSystem.getTuningValues();
 
     const initOptions: SystemInitOptions = {
-      ...(writer && { gameUpdateWriter: writer }),
       tuning: tuningValues,
       config: {
         // Pass any system-specific config
@@ -492,17 +474,17 @@ export class GameEngine {
     await this.initializeSystem('SaveSystem', saveSystem);
 
     // 2. TimeSystem (depends on ConfigSystem)
-    const timeSystem = new TimeSystem();
+    const timeSystem = new TimeSystem(this.updatesQueue.createWriter('TimeSystem'));
     this.registerSystem('TimeSystem', timeSystem);
     await this.initializeSystem('TimeSystem', timeSystem);
 
     // 3. PetSystem (depends on ConfigSystem)
-    const petSystem = new PetSystem();
+    const petSystem = new PetSystem(this.updatesQueue.createWriter('PetSystem'));
     this.registerSystem('PetSystem', petSystem);
     await this.initializeSystem('PetSystem', petSystem);
 
     // 4. EggSystem (depends on ConfigSystem and PetSystem)
-    const eggSystem = new EggSystem();
+    const eggSystem = new EggSystem(this.updatesQueue.createWriter('EggSystem'));
     this.registerSystem('EggSystem', eggSystem);
     await this.initializeSystem('EggSystem', eggSystem);
 

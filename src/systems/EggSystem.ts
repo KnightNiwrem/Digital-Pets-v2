@@ -3,6 +3,7 @@
  */
 
 import { BaseSystem } from './BaseSystem';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { SystemInitOptions, SystemError } from './BaseSystem';
 import type { GameState, GameUpdate, OfflineCalculation } from '../models/GameState';
 import type { Egg, EggType, Species, StarterSpecies } from '../models/Species';
@@ -53,8 +54,8 @@ export class EggSystem extends BaseSystem {
   // Common starter species IDs
   private readonly STARTER_SPECIES_IDS = ['starter_fire', 'starter_water', 'starter_grass'];
 
-  constructor() {
-    super('EggSystem');
+  constructor(gameUpdateWriter: GameUpdateWriter) {
+    super('EggSystem', gameUpdateWriter);
   }
 
   /**

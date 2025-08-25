@@ -31,16 +31,6 @@ export interface GameUpdateReader {
 export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
   private queue: GameUpdate[] = [];
   private updateCounter = 0;
-  private readonly authorizedSystems = new Set([
-    'UISystem',
-    'TimeSystem',
-    'ActivitySystem',
-    'BattleSystem',
-    'EventSystem',
-    'LocationSystem',
-    'PetSystem',
-    'EggSystem',
-  ]);
 
   /**
    * Create a writer interface for a specific system
@@ -48,10 +38,6 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
    * @returns A write-only interface to the queue
    */
   public createWriter(systemName: string): GameUpdateWriter {
-    if (!this.authorizedSystems.has(systemName)) {
-      throw new Error(`System ${systemName} is not authorized to write to GameUpdates queue`);
-    }
-
     return {
       enqueue: (update: Omit<GameUpdate, 'id' | 'timestamp'>) => {
         this.enqueue({

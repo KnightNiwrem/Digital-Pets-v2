@@ -11,7 +11,6 @@ import type { TuningConfig } from './ConfigSystem';
  * System initialization options
  */
 export interface SystemInitOptions {
-  gameUpdateWriter?: GameUpdateWriter;
   config?: any;
   tuning?: TuningConfig; // Tuning values passed by GameEngine
 }
@@ -51,20 +50,20 @@ export abstract class BaseSystem {
   protected readonly version = '1.0.0';
   protected tuning: TuningConfig | null = null; // Store tuning values locally
 
-  constructor(name: string) {
+  constructor(name: string, gameUpdateWriter?: GameUpdateWriter) {
     this.name = name;
+    this.gameUpdateWriter = gameUpdateWriter;
   }
 
   /**
    * Initialize the system with required dependencies
-   * @param options Initialization options including GameUpdateWriter
+   * @param options Initialization options
    */
   public async initialize(options: SystemInitOptions): Promise<void> {
     if (this.initialized) {
       throw new Error(`System ${this.name} is already initialized`);
     }
 
-    this.gameUpdateWriter = options.gameUpdateWriter;
     this.tuning = options.tuning || null; // Store tuning values
 
     // Call system-specific initialization
