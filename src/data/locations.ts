@@ -225,10 +225,10 @@ export const WILD_LOCATIONS: Record<string, WildLocation> = {
 /**
  * All locations combined
  */
-export const LOCATIONS_DATA = {
+export const LOCATIONS_DATA: Readonly<Record<string, CityLocation | WildLocation>> = Object.freeze({
   ...CITY_LOCATIONS,
   ...WILD_LOCATIONS,
-};
+});
 
 /**
  * Get a location by ID
