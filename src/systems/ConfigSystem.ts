@@ -163,14 +163,7 @@ export interface TuningConfig {
 export interface FeatureFlags {
   enableBattles: boolean;
   enableEvents: boolean;
-  enableTrading: boolean;
-  enableMultiplePets: boolean;
-  enableAchievements: boolean;
-  enableDailyQuests: boolean;
-  enablePvP: boolean;
   debugMode: boolean;
-  showAdvancedStats: boolean;
-  allowCheatCodes: boolean;
 }
 
 export interface GameLimits {
