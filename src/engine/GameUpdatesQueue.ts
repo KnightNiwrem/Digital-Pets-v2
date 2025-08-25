@@ -232,7 +232,7 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
     }
 
     // Re-enqueue with incremented retry count
-    const { id: _ignoredId, timestamp: _ignoredTimestamp, ...rest } = update;
+    const { id, timestamp, ...rest } = update;
     this.enqueue({
       ...rest,
       retryCount: currentRetries + 1,
