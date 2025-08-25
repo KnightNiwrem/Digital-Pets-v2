@@ -3,6 +3,7 @@ import { GameEngine, createGameEngine } from './GameEngine';
 import { BaseSystem, type SystemInitOptions, type SystemError } from '../systems/BaseSystem';
 import { UPDATE_TYPES } from '../models/constants';
 import type { GameState, GameUpdate } from '../models';
+import gameConfig from '../config/gameConfig.json';
 
 // Mock localStorage for GameEngine tests (needed for SaveSystem)
 class LocalStorageMock {
@@ -486,6 +487,39 @@ describe('GameEngine', () => {
       // Both should be shutdown (in reverse order internally)
       expect(system1.shutdownCalled).toBe(false); // Not initialized, so not shutdown
       expect(system2.shutdownCalled).toBe(false);
+    });
+  });
+
+  describe('Configuration defaults', () => {
+    test('should reflect config values in default game state', () => {
+      const originalMaxSlots = gameConfig.limits.maxInventorySlots;
+      const originalMasterVolume = gameConfig.defaultSettings.masterVolume;
+      const originalStartingSlots = (gameConfig.limits as any).startingInventorySlots;
+
+      const newMaxSlots = 200;
+      const newStartingSlots = 25;
+      const newMasterVolume = 55;
+
+      gameConfig.limits.maxInventorySlots = newMaxSlots;
+      (gameConfig.limits as any).startingInventorySlots = newStartingSlots;
+      gameConfig.defaultSettings.masterVolume = newMasterVolume;
+
+      const customEngine = new GameEngine();
+      const state = customEngine.getGameState();
+
+      expect(state.inventory.maxSlots).toBe(newMaxSlots);
+      expect(state.inventory.unlockedSlots).toBe(newStartingSlots);
+      expect(state.meta.settings.masterVolume).toBe(newMasterVolume);
+
+      // Cleanup
+      customEngine.stop();
+      gameConfig.limits.maxInventorySlots = originalMaxSlots;
+      if (originalStartingSlots === undefined) {
+        delete (gameConfig.limits as any).startingInventorySlots;
+      } else {
+        (gameConfig.limits as any).startingInventorySlots = originalStartingSlots;
+      }
+      gameConfig.defaultSettings.masterVolume = originalMasterVolume;
     });
   });
 });

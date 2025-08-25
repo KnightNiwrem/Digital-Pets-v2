@@ -300,6 +300,10 @@ export class GameEngine {
    * Create the default game state
    */
   private createDefaultGameState(): GameState {
+    const limits = this.configSystem.getLimits();
+    const defaultSettings = this.configSystem.getDefaultSettings();
+    const startingSlots = limits.startingInventorySlots ?? 20;
+
     return {
       version: '1.0.0',
       timestamp: Date.now(),
@@ -310,8 +314,8 @@ export class GameEngine {
         currency: {
           coins: 0,
         },
-        maxSlots: 50,
-        unlockedSlots: 20,
+        maxSlots: limits.maxInventorySlots,
+        unlockedSlots: Math.min(startingSlots, limits.maxInventorySlots),
       },
       world: {
         currentLocation: {
@@ -336,27 +340,7 @@ export class GameEngine {
         memorials: [],
       },
       meta: {
-        settings: {
-          masterVolume: 100,
-          musicVolume: 80,
-          sfxVolume: 80,
-          textSize: 'medium',
-          colorBlindMode: 'off',
-          highContrast: false,
-          reducedMotion: false,
-          showParticles: true,
-          autoSave: true,
-          autoSaveInterval: 1,
-          confirmActions: true,
-          showTutorialHints: true,
-          enableNotifications: true,
-          lowCareWarning: true,
-          activityComplete: true,
-          eventReminders: true,
-          touchControls: true,
-          keyboardShortcuts: true,
-          swipeGestures: true,
-        },
+        settings: { ...defaultSettings },
         tutorialProgress: {
           completed: [],
           skipped: false,
