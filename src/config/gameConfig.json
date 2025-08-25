@@ -70,7 +70,8 @@
       "heavyHitChance": 10,
       "activityMishapChance": 2,
       "travelSpeedPenalty": 0.5,
-      "happinessDecayPerHour": 1
+      "happinessDecayPerHour": 1,
+      "recoveryRatePerHour": 5
     },
     "sleep": {
       "maxDurationHours": 8,

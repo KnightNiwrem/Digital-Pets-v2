@@ -1155,8 +1155,8 @@ export class PetSystem extends BaseSystem {
 
     if (!this.tuning) return;
 
-    // Passive recovery rate (default 5 severity points per hour)
-    const recoveryRate = 5;
+    // Passive recovery rate from tuning
+    const recoveryRate = this.tuning.injury?.recoveryRatePerHour || 5;
     const recoveryAmount = (recoveryRate * ticks) / 60;
 
     pet.status.injurySeverity = Math.max(0, (pet.status.injurySeverity || 0) - recoveryAmount);
