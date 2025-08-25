@@ -101,8 +101,7 @@ describe('ConfigSystem', () => {
 
       expect(flags.enableBattles).toBe(true);
       expect(flags.enableEvents).toBe(true);
-      expect(flags.enableTrading).toBe(false);
-      expect(flags.enableMultiplePets).toBe(false);
+      expect(flags.debugMode).toBe(false);
     });
   });
 
@@ -110,7 +109,6 @@ describe('ConfigSystem', () => {
     it('should return correct feature flag status', () => {
       expect(configSystem.isFeatureEnabled('enableBattles')).toBe(true);
       expect(configSystem.isFeatureEnabled('enableEvents')).toBe(true);
-      expect(configSystem.isFeatureEnabled('enableTrading')).toBe(false);
       expect(configSystem.isFeatureEnabled('debugMode')).toBe(false);
     });
   });

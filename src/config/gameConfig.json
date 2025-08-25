@@ -253,14 +253,7 @@
   "featureFlags": {
     "enableBattles": true,
     "enableEvents": true,
-    "enableTrading": false,
-    "enableMultiplePets": false,
-    "enableAchievements": false,
-    "enableDailyQuests": false,
-    "enablePvP": false,
-    "debugMode": false,
-    "showAdvancedStats": false,
-    "allowCheatCodes": false
+    "debugMode": false
   },
   "limits": {
     "maxInventorySlots": 100,
