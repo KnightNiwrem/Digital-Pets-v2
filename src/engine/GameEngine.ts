@@ -100,8 +100,8 @@ export class GameEngine {
     this.systemInitOrder = [];
     this.updateHandlers = this.createUpdateHandlerMap();
 
-    // Initialize config system (special case - always first)
-    this.configSystem = new ConfigSystem();
+    // Initialize config system
+    this.configSystem = new ConfigSystem(this.updatesQueue.createWriter('ConfigSystem'));
 
     // Initialize default game state
     this.gameState = this.createDefaultGameState();
@@ -120,11 +120,7 @@ export class GameEngine {
     }
 
     try {
-      // Initialize config system first (special case - doesn't extend BaseSystem yet)
-      // We'll handle ConfigSystem initialization separately for now
-
-      // Initialize other systems in order
-      // This will be expanded as systems are implemented
+      // Initialize all systems
       await this.initializeAllSystems();
 
       // Load saved game state if available
@@ -486,6 +482,10 @@ export class GameEngine {
    */
   private async initializeAllSystems(): Promise<void> {
     // Initialize systems in dependency order
+
+    // 0. ConfigSystem (no dependencies)
+    this.registerSystem('ConfigSystem', this.configSystem);
+    await this.initializeSystem('ConfigSystem', this.configSystem);
 
     // 1. SaveSystem (no dependencies)
     const saveSystem = new SaveSystem();
