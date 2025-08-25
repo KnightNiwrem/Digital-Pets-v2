@@ -14,6 +14,12 @@ import { PetSystem } from '../systems/PetSystem';
 import { SaveSystem } from '../systems/SaveSystem';
 import { TimeSystem } from '../systems/TimeSystem';
 import { EggSystem } from '../systems/EggSystem';
+import { InventorySystem } from '../systems/InventorySystem';
+import { LocationSystem } from '../systems/LocationSystem';
+import { ActivitySystem } from '../systems/ActivitySystem';
+import { BattleSystem } from '../systems/BattleSystem';
+import { EventSystem } from '../systems/EventSystem';
+import { ShopSystem } from '../systems/ShopSystem';
 
 /**
  * Engine configuration options
@@ -430,13 +436,26 @@ export class GameEngine {
    */
   private createUpdateHandlerMap(): UpdateHandlerMap {
     return {
-      [UPDATE_TYPES.USER_ACTION]: ['PetSystem', 'InventorySystem', 'LocationSystem', 'EggSystem'],
-      [UPDATE_TYPES.GAME_TICK]: ['TimeSystem', 'PetSystem', 'EggSystem'],
-      [UPDATE_TYPES.ACTIVITY_COMPLETE]: ['ActivitySystem', 'InventorySystem'],
-      [UPDATE_TYPES.BATTLE_ACTION]: ['BattleSystem'],
-      [UPDATE_TYPES.EVENT_TRIGGER]: ['EventSystem'],
+      [UPDATE_TYPES.USER_ACTION]: [
+        'PetSystem',
+        'InventorySystem',
+        'LocationSystem',
+        'EggSystem',
+        'ShopSystem',
+        'ActivitySystem',
+      ],
+      [UPDATE_TYPES.GAME_TICK]: [
+        'TimeSystem',
+        'PetSystem',
+        'EggSystem',
+        'EventSystem',
+        'ActivitySystem',
+      ],
+      [UPDATE_TYPES.ACTIVITY_COMPLETE]: ['ActivitySystem', 'InventorySystem', 'PetSystem'],
+      [UPDATE_TYPES.BATTLE_ACTION]: ['BattleSystem', 'PetSystem'],
+      [UPDATE_TYPES.EVENT_TRIGGER]: ['EventSystem', 'ActivitySystem'],
       [UPDATE_TYPES.SAVE_REQUEST]: ['SaveSystem'],
-      [UPDATE_TYPES.STATE_TRANSITION]: ['GameEngine', 'PetSystem', 'EggSystem'],
+      [UPDATE_TYPES.STATE_TRANSITION]: ['GameEngine', 'PetSystem', 'EggSystem', 'LocationSystem'],
     };
   }
 
@@ -488,14 +507,37 @@ export class GameEngine {
     this.registerSystem('EggSystem', eggSystem);
     await this.initializeSystem('EggSystem', eggSystem);
 
-    // TODO: Add remaining systems as they are implemented:
-    // - InventorySystem
-    // - LocationSystem
-    // - ActivitySystem
-    // - BattleSystem
-    // - EventSystem
-    // - UISystem
-    // - ShopSystem
+    // 5. InventorySystem (depends on ConfigSystem)
+    const inventorySystem = new InventorySystem(this.updatesQueue.createWriter('InventorySystem'));
+    this.registerSystem('InventorySystem', inventorySystem);
+    await this.initializeSystem('InventorySystem', inventorySystem);
+
+    // 6. LocationSystem (depends on ConfigSystem)
+    const locationSystem = new LocationSystem(this.updatesQueue.createWriter('LocationSystem'));
+    this.registerSystem('LocationSystem', locationSystem);
+    await this.initializeSystem('LocationSystem', locationSystem);
+
+    // 7. ActivitySystem (depends on ConfigSystem, LocationSystem, InventorySystem)
+    const activitySystem = new ActivitySystem(this.updatesQueue.createWriter('ActivitySystem'));
+    this.registerSystem('ActivitySystem', activitySystem);
+    await this.initializeSystem('ActivitySystem', activitySystem);
+
+    // 8. BattleSystem (depends on ConfigSystem, PetSystem)
+    const battleSystem = new BattleSystem(this.updatesQueue.createWriter('BattleSystem'));
+    this.registerSystem('BattleSystem', battleSystem);
+    await this.initializeSystem('BattleSystem', battleSystem);
+
+    // 9. EventSystem (depends on ConfigSystem)
+    const eventSystem = new EventSystem(this.updatesQueue.createWriter('EventSystem'));
+    this.registerSystem('EventSystem', eventSystem);
+    await this.initializeSystem('EventSystem', eventSystem);
+
+    // 10. ShopSystem (depends on ConfigSystem, InventorySystem)
+    const shopSystem = new ShopSystem(this.updatesQueue.createWriter('ShopSystem'));
+    this.registerSystem('ShopSystem', shopSystem);
+    await this.initializeSystem('ShopSystem', shopSystem);
+
+    // Note: UISystem will be implemented in the UI phase
 
     if (this.config.debugMode) {
       console.log('[GameEngine] All systems initialized');
