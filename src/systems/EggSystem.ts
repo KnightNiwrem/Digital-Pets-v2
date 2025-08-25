@@ -11,6 +11,8 @@ import type { Pet, PetCreationOptions } from '../models/Pet';
 import type { EggItem } from '../models/Item';
 import { UPDATE_TYPES, RARITY_TIERS } from '../models/constants';
 import type { RarityTier } from '../models/constants';
+import { getAllSpecies } from '../data/species';
+import { getAllEggTypes } from '../data/eggTypes';
 
 /**
  * Incubation status for an egg
@@ -67,7 +69,7 @@ export class EggSystem extends BaseSystem {
       console.warn('[EggSystem] Tuning values not provided, some features may not work correctly');
     }
 
-    // Load species and egg type data (would normally come from data files)
+    // Load species and egg type data from TypeScript files
     await this.loadSpeciesData();
     await this.loadEggTypes();
   }
@@ -112,178 +114,45 @@ export class EggSystem extends BaseSystem {
   }
 
   /**
-   * Load species data (mock implementation - would load from JSON)
+   * Load species data from TypeScript file
    */
   private async loadSpeciesData(): Promise<void> {
-    // Mock starter species data
-    const starterSpecies: Species[] = [
-      {
-        id: 'starter_fire',
-        name: 'Flamepup',
-        description: 'A playful fire-type pet that loves warm places.',
-        rarity: RARITY_TIERS.COMMON,
-        baseStats: {
-          HATCHLING: { health: 20, attack: 7, defense: 4, speed: 5, action: 10 },
-          JUVENILE: { health: 35, attack: 12, defense: 8, speed: 8, action: 15 },
-          ADULT: { health: 50, attack: 18, defense: 12, speed: 12, action: 20 },
-        },
-        appearance: {
-          spriteSheet: 'sprites/flamepup.png',
-          animations: {
-            idle: [0, 1, 2, 3],
-            happy: [4, 5, 6, 7],
-            sad: [8, 9],
-            sick: [10, 11],
-            sleeping: [12, 13],
-            eating: [14, 15],
-            playing: [16, 17, 18],
-          },
-          defaultColor: '#FF6B35',
-          size: { width: 64, height: 64 },
-        },
-        traits: {
-          temperament: 'energetic' as any,
-          habitat: 'desert' as any,
-          activityPreference: 'diurnal' as any,
-        },
-        learnableMoves: [
-          { moveId: 'ember', learnStage: 'HATCHLING' as any, learnChance: 100 },
-          { moveId: 'flame_burst', learnStage: 'JUVENILE' as any, learnChance: 50 },
-        ],
-        startingMoves: ['tackle', 'ember'],
-        eggSprite: 'sprites/eggs/fire_egg.png',
-        incubationTime: 12,
-        isStarter: true,
-        isEventExclusive: false,
-      },
-      {
-        id: 'starter_water',
-        name: 'Aquapaw',
-        description: 'A calm water-type pet that enjoys swimming.',
-        rarity: RARITY_TIERS.COMMON,
-        baseStats: {
-          HATCHLING: { health: 22, attack: 5, defense: 6, speed: 4, action: 10 },
-          JUVENILE: { health: 38, attack: 9, defense: 11, speed: 7, action: 15 },
-          ADULT: { health: 55, attack: 14, defense: 16, speed: 10, action: 20 },
-        },
-        appearance: {
-          spriteSheet: 'sprites/aquapaw.png',
-          animations: {
-            idle: [0, 1, 2, 3],
-            happy: [4, 5, 6, 7],
-            sad: [8, 9],
-            sick: [10, 11],
-            sleeping: [12, 13],
-            eating: [14, 15],
-            playing: [16, 17, 18],
-          },
-          defaultColor: '#4A90E2',
-          size: { width: 64, height: 64 },
-        },
-        traits: {
-          temperament: 'calm' as any,
-          habitat: 'lake' as any,
-          activityPreference: 'crepuscular' as any,
-        },
-        learnableMoves: [
-          { moveId: 'bubble', learnStage: 'HATCHLING' as any, learnChance: 100 },
-          { moveId: 'water_pulse', learnStage: 'JUVENILE' as any, learnChance: 50 },
-        ],
-        startingMoves: ['tackle', 'bubble'],
-        eggSprite: 'sprites/eggs/water_egg.png',
-        incubationTime: 12,
-        isStarter: true,
-        isEventExclusive: false,
-      },
-      {
-        id: 'starter_grass',
-        name: 'Leafkit',
-        description: 'A gentle grass-type pet that loves nature.',
-        rarity: RARITY_TIERS.COMMON,
-        baseStats: {
-          HATCHLING: { health: 21, attack: 6, defense: 5, speed: 6, action: 10 },
-          JUVENILE: { health: 36, attack: 10, defense: 10, speed: 9, action: 15 },
-          ADULT: { health: 52, attack: 15, defense: 15, speed: 13, action: 20 },
-        },
-        appearance: {
-          spriteSheet: 'sprites/leafkit.png',
-          animations: {
-            idle: [0, 1, 2, 3],
-            happy: [4, 5, 6, 7],
-            sad: [8, 9],
-            sick: [10, 11],
-            sleeping: [12, 13],
-            eating: [14, 15],
-            playing: [16, 17, 18],
-          },
-          defaultColor: '#7CB342',
-          size: { width: 64, height: 64 },
-        },
-        traits: {
-          temperament: 'playful' as any,
-          habitat: 'forest' as any,
-          activityPreference: 'diurnal' as any,
-        },
-        learnableMoves: [
-          { moveId: 'vine_whip', learnStage: 'HATCHLING' as any, learnChance: 100 },
-          { moveId: 'leaf_storm', learnStage: 'JUVENILE' as any, learnChance: 50 },
-        ],
-        startingMoves: ['tackle', 'vine_whip'],
-        eggSprite: 'sprites/eggs/grass_egg.png',
-        incubationTime: 12,
-        isStarter: true,
-        isEventExclusive: false,
-      },
-    ];
+    try {
+      // Load all species from the data file
+      const allSpecies = getAllSpecies();
 
-    // Add to database
-    for (const species of starterSpecies) {
-      this.speciesDatabase.set(species.id, species);
+      for (const species of allSpecies) {
+        this.speciesDatabase.set(species.id, species);
+      }
+
+      console.log(`[EggSystem] Loaded ${this.speciesDatabase.size} species from data file`);
+    } catch (error) {
+      console.error('[EggSystem] CRITICAL: Failed to load species data:', error);
+      throw new Error(
+        `Failed to load species data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
   /**
-   * Load egg type data (mock implementation)
+   * Load egg type data from TypeScript file
    */
   private async loadEggTypes(): Promise<void> {
-    // Generic egg type
-    const genericEgg: EggType = {
-      id: 'generic_egg',
-      name: 'Mystery Egg',
-      description: 'A mysterious egg. What could be inside?',
-      sprite: 'sprites/eggs/generic_egg.png',
-      possibleSpecies: [
-        { speciesId: 'starter_fire', weight: 20 },
-        { speciesId: 'starter_water', weight: 20 },
-        { speciesId: 'starter_grass', weight: 20 },
-        // In a real implementation, there would be more species
-      ],
-      baseIncubationTime: 12,
-    };
+    try {
+      // Load all egg types from the data file
+      const allEggTypes = getAllEggTypes();
 
-    // Starter egg type (guaranteed starter)
-    const starterEgg: EggType = {
-      id: 'starter_egg',
-      name: 'Starter Egg',
-      description: 'An egg containing a starter pet.',
-      sprite: 'sprites/eggs/starter_egg.png',
-      possibleSpecies: [
-        { speciesId: 'starter_fire', weight: 33 },
-        { speciesId: 'starter_water', weight: 33 },
-        { speciesId: 'starter_grass', weight: 34 },
-      ],
-      rarityWeights: {
-        COMMON: 100,
-        UNCOMMON: 0,
-        RARE: 0,
-        EPIC: 0,
-        LEGENDARY: 0,
-      },
-      baseIncubationTime: 6,
-    };
+      for (const eggType of allEggTypes) {
+        this.eggTypeDatabase.set(eggType.id, eggType);
+      }
 
-    this.eggTypeDatabase.set(genericEgg.id, genericEgg);
-    this.eggTypeDatabase.set(starterEgg.id, starterEgg);
+      console.log(`[EggSystem] Loaded ${this.eggTypeDatabase.size} egg types from data file`);
+    } catch (error) {
+      console.error('[EggSystem] CRITICAL: Failed to load egg type data:', error);
+      throw new Error(
+        `Failed to load egg type data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
   }
 
   /**

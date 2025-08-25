@@ -59,7 +59,7 @@ export abstract class BaseSystem {
    * Initialize the system with required dependencies
    * @param options Initialization options
    */
-  public async initialize(options: SystemInitOptions): Promise<void> {
+  public async initialize(options: SystemInitOptions = {}): Promise<void> {
     if (this.initialized) {
       throw new Error(`System ${this.name} is already initialized`);
     }

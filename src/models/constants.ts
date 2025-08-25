@@ -44,6 +44,10 @@ export const GROWTH_STAGES = {
 
 export type GrowthStage = (typeof GROWTH_STAGES)[keyof typeof GROWTH_STAGES];
 
+// Move learn stages (alias of growth stages)
+export const LEARN_STAGES = GROWTH_STAGES;
+export type LearnStage = GrowthStage;
+
 // Growth stage requirements (in hours)
 export const STAGE_DURATIONS = {
   [GROWTH_STAGES.HATCHLING]: 24,
@@ -406,20 +410,54 @@ export type TextSize = 'small' | 'medium' | 'large';
 export type ColorBlindMode = 'off' | 'protanopia' | 'deuteranopia' | 'tritanopia';
 
 // Pet Temperaments
-export type PetTemperament = 'playful' | 'calm' | 'energetic' | 'lazy' | 'aggressive' | 'timid';
+export const TEMPERAMENT_TYPES = {
+  PLAYFUL: 'playful',
+  CALM: 'calm',
+  ENERGETIC: 'energetic',
+  LAZY: 'lazy',
+  AGGRESSIVE: 'aggressive',
+  TIMID: 'timid',
+  ADVENTUROUS: 'adventurous',
+  STOIC: 'stoic',
+  HYPERACTIVE: 'hyperactive',
+  PROUD: 'proud',
+} as const;
+export type PetTemperament =
+  (typeof TEMPERAMENT_TYPES)[keyof typeof TEMPERAMENT_TYPES];
 
 // Pet Habitats
-export type PetHabitat = 'forest' | 'mountains' | 'lake' | 'desert' | 'plains' | 'urban';
+export const HABITAT_TYPES = {
+  FOREST: 'forest',
+  MOUNTAIN: 'mountain',
+  LAKE: 'lake',
+  DESERT: 'desert',
+  PLAINS: 'plains',
+  URBAN: 'urban',
+  CAVE: 'cave',
+  STORM: 'storm',
+  VOLCANO: 'volcano',
+} as const;
+export type PetHabitat = (typeof HABITAT_TYPES)[keyof typeof HABITAT_TYPES];
 
 // Activity Preferences
-export type ActivityPreference = 'diurnal' | 'nocturnal' | 'crepuscular';
+export const ACTIVITY_PREFERENCE_TYPES = {
+  DIURNAL: 'diurnal',
+  NOCTURNAL: 'nocturnal',
+  CREPUSCULAR: 'crepuscular',
+  CATHEMERAL: 'cathemeral',
+} as const;
+export type ActivityPreference =
+  (typeof ACTIVITY_PREFERENCE_TYPES)[keyof typeof ACTIVITY_PREFERENCE_TYPES];
 
-// Pet Abilities
-export type PetAbilityEffect =
-  | 'resistance_to_sickness'
-  | 'faster_travel'
-  | 'better_rewards'
-  | 'quick_learner';
+// Pet Ability Effects
+export const EFFECT_TYPES = {
+  DAMAGE_REDUCTION: 'DAMAGE_REDUCTION',
+  STATUS_IMMUNITY: 'STATUS_IMMUNITY',
+  HEALTH_REGEN: 'HEALTH_REGEN',
+  CONTACT_STATUS: 'CONTACT_STATUS',
+  BATTLE_START_DEBUFF: 'BATTLE_START_DEBUFF',
+} as const;
+export type PetAbilityEffect = (typeof EFFECT_TYPES)[keyof typeof EFFECT_TYPES];
 
 // Death Causes
 export type DeathCause = 'neglect' | 'old_age';

@@ -327,7 +327,7 @@ describe('PetSystem', () => {
       const result = await petSystem.treatSickness(gameState, medicineItem);
 
       expect(result.success).toBe(true);
-      expect(pet.status.primary).toBe('HEALTHY' as any);
+      expect(pet.status.primary as string).toBe(STATUS_TYPES.HEALTHY);
       expect(pet.status.sicknessSeverity).toBeUndefined();
     });
 
@@ -351,7 +351,7 @@ describe('PetSystem', () => {
       const result = await petSystem.treatInjury(gameState, bandageItem);
 
       expect(result.success).toBe(true);
-      expect(pet.status.primary).toBe('HEALTHY' as any);
+      expect(pet.status.primary as string).toBe(STATUS_TYPES.HEALTHY);
       expect(pet.status.injurySeverity).toBeUndefined();
     });
   });

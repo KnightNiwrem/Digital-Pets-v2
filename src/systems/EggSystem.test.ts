@@ -7,13 +7,14 @@ import { EggSystem } from './EggSystem';
 import { ConfigSystem } from './ConfigSystem';
 import type { GameState } from '../models/GameState';
 import type { EggItem } from '../models/Item';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import { RARITY_TIERS } from '../models/constants';
 import { createMockGameState, createMockPet, createMockEgg, createMockEggItem } from '../testing';
 
 describe('EggSystem', () => {
   let eggSystem: EggSystem;
   let configSystem: ConfigSystem;
-  let mockGameUpdateWriter: any;
+  let mockGameUpdateWriter: GameUpdateWriter;
   let gameState: GameState;
   let tuningValues: any;
 

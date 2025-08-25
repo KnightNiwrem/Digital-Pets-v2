@@ -413,7 +413,7 @@ describe('ShopSystem', () => {
     it('should validate purchase without queuing when no writer', async () => {
       const newShopSystem = new ShopSystem(undefined as any);
       // Initialize without gameUpdateWriter
-      await newShopSystem.initialize({} as any);
+      await newShopSystem.initialize();
 
       newShopSystem.forceRotation(12345);
       const inventory = newShopSystem.getDailyInventory();

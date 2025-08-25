@@ -122,6 +122,7 @@ export interface TuningConfig {
     activityMishapChance: number;
     travelSpeedPenalty: number;
     happinessDecayPerHour: number;
+    recoveryRatePerHour: number;
   };
   sleep: {
     maxDurationHours: number;
