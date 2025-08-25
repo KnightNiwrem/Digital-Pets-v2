@@ -125,9 +125,12 @@ interface GameUpdate {
   type: UpdateType;
   timestamp: number;
   payload: any;
-  priority: number;
 }
 ```
+
+> **Note:** The update queue processes events strictly in FIFO order. Any future
+> introduction of prioritized processing will require an explicit design
+> approval before re-adding a priority field.
 
 ### 3. SaveSystem
 

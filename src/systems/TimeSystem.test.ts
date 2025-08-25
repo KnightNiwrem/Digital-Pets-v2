@@ -100,7 +100,6 @@ describe('TimeSystem', () => {
       const tickUpdate = enqueuedUpdates.find((u) => u.type === UPDATE_TYPES.GAME_TICK);
       expect(tickUpdate).toBeTruthy();
       expect(tickUpdate!.payload.action).toBe('tick');
-      expect(tickUpdate!.priority).toBe(1);
     });
 
     it('should pause and resume correctly', async () => {

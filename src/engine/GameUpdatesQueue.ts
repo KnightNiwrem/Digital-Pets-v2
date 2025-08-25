@@ -1,6 +1,9 @@
 /**
- * GameUpdatesQueue - FIFO queue for game updates with validation and priority support
- * Provides write-only access to systems and read-only access to GameEngine
+ * GameUpdatesQueue - FIFO queue for game updates with validation
+ * Provides write-only access to systems and read-only access to GameEngine.
+ *
+ * Note: Updates are processed strictly in the order received. Priority-based
+ * scheduling may be reintroduced only with an explicit design approval.
  */
 
 import type { GameUpdate, UpdateType } from '../models';
@@ -26,7 +29,7 @@ export interface GameUpdateReader {
 
 /**
  * GameUpdatesQueue implementation
- * Uses a simple array-based FIFO queue with priority support
+ * Uses a simple array-based FIFO queue
  */
 export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
   private queue: GameUpdate[] = [];
@@ -80,37 +83,16 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
       throw new Error('Invalid update payload: payload must be an object');
     }
 
-    // Validate priority
-    if (update.priority !== undefined && update.priority < 0) {
-      throw new Error('Update priority must be non-negative');
-    }
-
     // Generate unique ID and timestamp
     const completeUpdate: GameUpdate = {
       ...update,
       id: this.generateUpdateId(),
       timestamp: Date.now(),
-      priority: update.priority ?? 0,
       retryCount: update.retryCount ?? 0,
     };
 
-    // Insert based on priority (higher priority first)
-    if (completeUpdate.priority > 0) {
-      // Find insertion point for priority queue behavior
-      let insertIndex = 0;
-      while (insertIndex < this.queue.length) {
-        const currentUpdate = this.queue[insertIndex];
-        if (currentUpdate && currentUpdate.priority >= completeUpdate.priority) {
-          insertIndex++;
-        } else {
-          break;
-        }
-      }
-      this.queue.splice(insertIndex, 0, completeUpdate);
-    } else {
-      // Normal FIFO for priority 0
-      this.queue.push(completeUpdate);
-    }
+    // Simple FIFO insertion
+    this.queue.push(completeUpdate);
   }
 
   /**
@@ -193,14 +175,10 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
    */
   public getStatistics(): {
     size: number;
-    highPriorityCount: number;
-    normalPriorityCount: number;
     oldestUpdate: GameUpdate | null;
     averageAge: number;
   } {
     const now = Date.now();
-    const highPriorityCount = this.queue.filter((u) => u.priority > 0).length;
-    const normalPriorityCount = this.queue.filter((u) => u.priority === 0).length;
     const oldestUpdate = this.queue[0] ?? null;
 
     let totalAge = 0;
@@ -211,8 +189,6 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
 
     return {
       size: this.queue.length,
-      highPriorityCount,
-      normalPriorityCount,
       oldestUpdate,
       averageAge,
     };
@@ -255,10 +231,10 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
       return false;
     }
 
-    // Re-enqueue with incremented retry count and reduced priority
+    // Re-enqueue with incremented retry count
+    const { id, timestamp, ...rest } = update;
     this.enqueue({
-      ...update,
-      priority: Math.max(0, (update.priority ?? 0) - 1),
+      ...rest,
       retryCount: currentRetries + 1,
     });
 

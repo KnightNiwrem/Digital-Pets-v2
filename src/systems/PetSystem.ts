@@ -370,7 +370,6 @@ export class PetSystem extends BaseSystem {
         id: this.generateId(),
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {
           action: 'CONSUME_ITEM',
           data: { itemId: foodItem.id },
@@ -443,7 +442,6 @@ export class PetSystem extends BaseSystem {
         id: this.generateId(),
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {
           action: 'CONSUME_ITEM',
           data: { itemId: drinkItem.id },
@@ -534,7 +532,6 @@ export class PetSystem extends BaseSystem {
           id: this.generateId(),
           type: UPDATE_TYPES.USER_ACTION,
           timestamp: Date.now(),
-          priority: 0,
           payload: {
             action: 'USE_ITEM_DURABILITY',
             data: { itemId: toyItem.id },
@@ -685,7 +682,6 @@ export class PetSystem extends BaseSystem {
         id: this.generateId(),
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {
           action: 'CONSUME_ITEM',
           data: { itemId: medicineItem.id },
@@ -740,7 +736,6 @@ export class PetSystem extends BaseSystem {
         id: this.generateId(),
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 0,
         payload: {
           action: 'CONSUME_ITEM',
           data: { itemId: bandageItem.id },
@@ -918,7 +913,6 @@ export class PetSystem extends BaseSystem {
         id: this.generateId(),
         type: UPDATE_TYPES.STATE_TRANSITION,
         timestamp: Date.now(),
-        priority: 1,
         payload: {
           action: 'PET_DEATH',
           data: {
@@ -955,7 +949,6 @@ export class PetSystem extends BaseSystem {
         id: this.generateId(),
         type: UPDATE_TYPES.USER_ACTION,
         timestamp: Date.now(),
-        priority: 1,
         payload: {
           action: 'HATCH_EGG_FOR_REVIVAL',
           data: { eggId },

@@ -319,7 +319,6 @@ export interface GameUpdate {
   id: string;
   type: UpdateType;
   timestamp: number;
-  priority: number; // 0 = normal, higher = more urgent
 
   // Update payload
   payload: {
