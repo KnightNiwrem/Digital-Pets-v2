@@ -302,7 +302,7 @@ export class GameEngine {
   private createDefaultGameState(): GameState {
     const limits = this.configSystem.getLimits();
     const defaultSettings = this.configSystem.getDefaultSettings();
-    const startingSlots = limits.startingInventorySlots ?? 20;
+    const startingSlots = 20; // Default starting inventory slots
 
     return {
       version: '1.0.0',
