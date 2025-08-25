@@ -10,8 +10,8 @@ import type { Pet, PetCreationOptions } from '../models/Pet';
 import type { EggItem } from '../models/Item';
 import { UPDATE_TYPES, RARITY_TIERS } from '../models/constants';
 import type { RarityTier } from '../models/constants';
-import speciesData from '../data/species.json';
-import eggTypesData from '../data/eggTypes.json';
+import { SPECIES_DATA, getAllSpecies } from '../data/species';
+import { EGG_TYPES_DATA, getAllEggTypes } from '../data/eggTypes';
 
 /**
  * Incubation status for an egg
@@ -68,7 +68,7 @@ export class EggSystem extends BaseSystem {
       console.warn('[EggSystem] Tuning values not provided, some features may not work correctly');
     }
 
-    // Load species and egg type data from JSON files
+    // Load species and egg type data from TypeScript files
     await this.loadSpeciesData();
     await this.loadEggTypes();
   }
@@ -113,48 +113,14 @@ export class EggSystem extends BaseSystem {
   }
 
   /**
-   * Load species data from JSON file
+   * Load species data from TypeScript file
    */
   private async loadSpeciesData(): Promise<void> {
     try {
-      // Validate and add each species to the database
-      for (const speciesRaw of speciesData.species) {
-        // Convert raw JSON data to proper Species type with type casting
-        const species: Species = {
-          id: speciesRaw.id,
-          name: speciesRaw.name,
-          description: speciesRaw.description,
-          rarity: speciesRaw.rarity as RarityTier,
-          baseStats: speciesRaw.baseStats,
-          appearance: speciesRaw.appearance,
-          traits: {
-            temperament: speciesRaw.traits.temperament as any,
-            favoriteFood: speciesRaw.traits.favoriteFood,
-            favoriteToys: speciesRaw.traits.favoriteToys,
-            habitat: speciesRaw.traits.habitat as any,
-            activityPreference: speciesRaw.traits.activityPreference as any,
-          },
-          learnableMoves: speciesRaw.learnableMoves.map((move: any) => ({
-            moveId: move.moveId,
-            learnStage: move.learnStage as any,
-            learnChance: move.learnChance,
-          })),
-          startingMoves: speciesRaw.startingMoves,
-          careModifiers: speciesRaw.careModifiers,
-          abilities: speciesRaw.abilities?.map((ability: any) => ({
-            id: ability.id,
-            name: ability.name,
-            description: ability.description,
-            effect: ability.effect as any,
-            value: ability.value,
-          })),
-          eggSprite: speciesRaw.eggSprite,
-          incubationTime: speciesRaw.incubationTime,
-          isStarter: speciesRaw.isStarter,
-          isEventExclusive: speciesRaw.isEventExclusive,
-          unlockConditions: speciesRaw.unlockConditions,
-        };
+      // Load all species from the data file
+      const allSpecies = getAllSpecies();
 
+      for (const species of allSpecies) {
         this.speciesDatabase.set(species.id, species);
       }
 
@@ -168,23 +134,14 @@ export class EggSystem extends BaseSystem {
   }
 
   /**
-   * Load egg type data from JSON file
+   * Load egg type data from TypeScript file
    */
   private async loadEggTypes(): Promise<void> {
     try {
-      // Validate and add each egg type to the database
-      for (const eggTypeRaw of eggTypesData.eggTypes) {
-        // Convert raw JSON data to proper EggType
-        const eggType: EggType = {
-          id: eggTypeRaw.id,
-          name: eggTypeRaw.name,
-          description: eggTypeRaw.description,
-          sprite: eggTypeRaw.sprite,
-          possibleSpecies: eggTypeRaw.possibleSpecies,
-          rarityWeights: eggTypeRaw.rarityWeights,
-          baseIncubationTime: eggTypeRaw.baseIncubationTime,
-        };
+      // Load all egg types from the data file
+      const allEggTypes = getAllEggTypes();
 
+      for (const eggType of allEggTypes) {
         this.eggTypeDatabase.set(eggType.id, eggType);
       }
 
