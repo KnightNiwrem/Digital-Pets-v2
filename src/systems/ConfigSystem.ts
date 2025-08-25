@@ -13,6 +13,7 @@ import gameConfig from '../config/gameConfig.json';
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
 import type { GameState } from '../models';
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
+import type { TextSize, ColorBlindMode } from '../models/constants';
 
 // Configuration type definitions
 export interface CareDecayConfig {
@@ -183,8 +184,8 @@ export interface DefaultSettings {
   masterVolume: number;
   musicVolume: number;
   sfxVolume: number;
-  textSize: string;
-  colorBlindMode: string;
+  textSize: TextSize;
+  colorBlindMode: ColorBlindMode;
   highContrast: boolean;
   reducedMotion: boolean;
   showParticles: boolean;

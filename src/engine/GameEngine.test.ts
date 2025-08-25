@@ -1,6 +1,7 @@
 import { test, expect, describe, beforeEach, afterEach } from 'bun:test';
 import { GameEngine, createGameEngine } from './GameEngine';
 import { BaseSystem, type SystemInitOptions, type SystemError } from '../systems/BaseSystem';
+import { ConfigSystem } from '../systems/ConfigSystem';
 import { UPDATE_TYPES } from '../models/constants';
 import type { GameState, GameUpdate } from '../models';
 
@@ -395,6 +396,30 @@ describe('GameEngine', () => {
       const newState = engine.getGameState();
       expect(newState.saveData.saveCount).toBe(initialSaveCount + 1);
       expect(newState.saveData.lastSaveTime).toBeGreaterThan(initialSaveTime);
+    });
+
+    test('should use config system values for default game state', async () => {
+      await engine.initialize();
+      
+      const state = engine.getGameState();
+      const configSystem = engine.getSystem<ConfigSystem>('ConfigSystem')!;
+      
+      const limits = configSystem.getLimits();
+      const defaultSettings = configSystem.getDefaultSettings();
+
+      // Test that inventory settings come from config
+      expect(state.inventory.maxSlots).toBe(limits.maxInventorySlots);
+
+      // Test that volume settings come from config 
+      expect(state.meta.settings.masterVolume).toBe(defaultSettings.masterVolume);
+      expect(state.meta.settings.musicVolume).toBe(defaultSettings.musicVolume);
+      expect(state.meta.settings.sfxVolume).toBe(defaultSettings.sfxVolume);
+      expect(state.meta.settings.autoSaveInterval).toBe(defaultSettings.autoSaveInterval);
+      
+      // Test other config values
+      expect(state.meta.settings.textSize).toBe(defaultSettings.textSize);
+      expect(state.meta.settings.colorBlindMode).toBe(defaultSettings.colorBlindMode);
+      expect(state.meta.settings.autoSave).toBe(defaultSettings.autoSave);
     });
   });
 
