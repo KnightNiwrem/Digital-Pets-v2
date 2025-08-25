@@ -466,7 +466,7 @@ export const ITEMS_DATA: Record<string, Item> = {
     consumable: true,
     usableInBattle: true,
     effectiveness: 100,
-    curesStatus: 'poison',
+    curesStatus: 'paralysis',
   } as MedicineItem,
 
   full_heal: {
