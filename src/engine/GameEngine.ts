@@ -309,12 +309,12 @@ export class GameEngine {
       },
       world: {
         currentLocation: {
-          currentLocationId: 'city_square',
+          currentLocationId: 'main_city',
           traveling: false,
           inActivity: false,
-          visitedLocations: ['city_square'],
+          visitedLocations: ['main_city'],
           lastVisitTimes: {
-            city_square: Date.now(),
+            main_city: Date.now(),
           },
         },
         activeTimers: [],
@@ -442,7 +442,7 @@ export class GameEngine {
 
   /**
    * Initialize a system
-  */
+   */
   private async initializeSystem(name: string, system: BaseSystem): Promise<void> {
     // Get tuning values from ConfigSystem
     const tuningValues = this.configSystem.getTuningValues();
