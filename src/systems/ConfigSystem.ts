@@ -10,6 +10,9 @@
  */
 
 import gameConfig from '../config/gameConfig.json';
+import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
+import type { GameState } from '../models';
+import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 
 // Configuration type definitions
 export interface CareDecayConfig {
@@ -237,15 +240,58 @@ export class ConfigValidationError extends Error {
 /**
  * ConfigSystem class - manages all game configuration
  */
-export class ConfigSystem {
+export class ConfigSystem extends BaseSystem {
   private config: GameConfig;
   private cache: Map<string, any> = new Map();
   private readonly CACHE_TTL = 60000; // 1 minute cache TTL
   private cacheTimestamps: Map<string, number> = new Map();
 
-  constructor() {
+  constructor(gameUpdateWriter?: GameUpdateWriter) {
+    super('ConfigSystem', gameUpdateWriter);
     this.config = this.loadConfig();
     this.validateConfig();
+  }
+
+  /**
+   * System initialization
+   */
+  protected async onInitialize(_options: SystemInitOptions): Promise<void> {
+    // Config is loaded in the constructor; nothing additional to do here
+  }
+
+  /**
+   * System shutdown
+   */
+  protected async onShutdown(): Promise<void> {
+    this.clearCache();
+  }
+
+  /**
+   * System reset
+   */
+  protected async onReset(): Promise<void> {
+    this.reload();
+  }
+
+  /**
+   * System tick
+   */
+  protected async onTick(_deltaTime: number, _gameState: GameState): Promise<void> {
+    // No periodic processing required for configuration
+  }
+
+  /**
+   * System update
+   */
+  protected async onUpdate(_gameState: GameState, _prevState?: GameState): Promise<void> {
+    // ConfigSystem does not react to state updates
+  }
+
+  /**
+   * Handle system errors
+   */
+  protected onError(error: SystemError): void {
+    console.error(`[ConfigSystem] Error:`, error);
   }
 
   /**
@@ -602,9 +648,9 @@ export class ConfigSystem {
 // Export singleton instance
 let configSystemInstance: ConfigSystem | null = null;
 
-export function getConfigSystem(): ConfigSystem {
+export function getConfigSystem(gameUpdateWriter?: GameUpdateWriter): ConfigSystem {
   if (!configSystemInstance) {
-    configSystemInstance = new ConfigSystem();
+    configSystemInstance = new ConfigSystem(gameUpdateWriter);
   }
   return configSystemInstance;
 }
