@@ -564,6 +564,58 @@ export const ITEMS_DATA: Record<string, Item> = {
     cooldownMinutes: 10,
   } as EnergyBoosterItem,
 
+  // ========== MATERIAL ITEMS (stubs for repairs and refining) ==========
+  refined_wood: {
+    id: 'refined_wood',
+    name: 'Refined Wood',
+    description: 'Processed wood suitable for advanced crafting',
+    category: ITEM_CATEGORIES.MATERIAL,
+    sprite: 'sprites/items/refined_wood.png',
+    stackable: true,
+    maxStack: STACK_LIMITS.MATERIALS,
+    sellPrice: 8,
+    buyPrice: 16,
+    rarity: RARITY_TIERS.UNCOMMON,
+    consumable: false,
+    materialType: 'wood',
+    quality: 'fine',
+    craftingIngredient: true,
+  } as MaterialItem,
+
+  strong_string: {
+    id: 'strong_string',
+    name: 'Strong String',
+    description: 'Reinforced string used for sturdy tools',
+    category: ITEM_CATEGORIES.MATERIAL,
+    sprite: 'sprites/items/strong_string.png',
+    stackable: true,
+    maxStack: STACK_LIMITS.MATERIALS,
+    sellPrice: 6,
+    buyPrice: 12,
+    rarity: RARITY_TIERS.UNCOMMON,
+    consumable: false,
+    materialType: 'fabric',
+    quality: 'fine',
+    craftingIngredient: true,
+  } as MaterialItem,
+
+  iron_ingot: {
+    id: 'iron_ingot',
+    name: 'Iron Ingot',
+    description: 'Refined iron ready for crafting',
+    category: ITEM_CATEGORIES.MATERIAL,
+    sprite: 'sprites/items/iron_ingot.png',
+    stackable: true,
+    maxStack: STACK_LIMITS.MATERIALS,
+    sellPrice: 15,
+    buyPrice: 30,
+    rarity: RARITY_TIERS.UNCOMMON,
+    consumable: false,
+    materialType: 'ore',
+    quality: 'fine',
+    craftingIngredient: true,
+  } as MaterialItem,
+
   // ========== TOOL ITEMS ==========
   basic_fishing_rod: {
     id: 'basic_fishing_rod',
