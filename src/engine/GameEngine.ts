@@ -436,7 +436,6 @@ export class GameEngine {
       [UPDATE_TYPES.ACTIVITY_COMPLETE]: ['ActivitySystem', 'InventorySystem', 'PetSystem'],
       [UPDATE_TYPES.BATTLE_ACTION]: ['BattleSystem', 'PetSystem'],
       [UPDATE_TYPES.EVENT_TRIGGER]: ['EventSystem', 'ActivitySystem'],
-      [UPDATE_TYPES.SAVE_REQUEST]: ['SaveSystem'],
       [UPDATE_TYPES.STATE_TRANSITION]: ['GameEngine', 'PetSystem', 'EggSystem', 'LocationSystem'],
     };
   }

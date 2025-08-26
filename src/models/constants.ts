@@ -9,7 +9,6 @@ export const UPDATE_TYPES = {
   ACTIVITY_COMPLETE: 'ACTIVITY_COMPLETE', // Activity completion
   BATTLE_ACTION: 'BATTLE_ACTION', // Battle system updates
   EVENT_TRIGGER: 'EVENT_TRIGGER', // Calendar event triggers
-  SAVE_REQUEST: 'SAVE_REQUEST', // Save state request
   STATE_TRANSITION: 'STATE_TRANSITION', // Major state changes
   TIMER_COMPLETE: 'TIMER_COMPLETE', // Timer completion notification
 } as const;
