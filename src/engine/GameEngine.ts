@@ -6,7 +6,7 @@
 import { GameUpdatesQueue, type GameUpdateReader } from './GameUpdatesQueue';
 import { BaseSystem, isUpdateHandler, type SystemInitOptions } from '../systems/BaseSystem';
 import { ConfigSystem } from '../systems/ConfigSystem';
-import type { GameState, GameUpdate } from '../models';
+import type { GameState, GameUpdate, OfflineCalculation } from '../models';
 import { UPDATE_TYPES, GAME_TICK_INTERVAL } from '../models/constants';
 
 // Import systems
@@ -713,13 +713,53 @@ export class GameEngine {
    * Process offline time
    */
   private async processOfflineTime(): Promise<void> {
-    // This will be implemented when TimeSystem is available
     if (this.config.debugMode) {
       console.log('[GameEngine] Processing offline time...');
     }
 
+    const timeSystem = this.getSystem<TimeSystem>('TimeSystem');
+    if (!timeSystem) {
+      return;
+    }
+
+    const lastSave = this.gameState.saveData.lastSaveTime;
+    const offlineTicks = timeSystem.calculateOfflineTicks(lastSave);
+    const offlineTimeSeconds = Math.floor((Date.now() - lastSave) / 1000);
+
+    if (offlineTicks <= 0) {
+      return;
+    }
+
+    const offlineCalculation: OfflineCalculation = {
+      offlineTime: offlineTimeSeconds,
+      ticksToProcess: offlineTicks,
+      careDecay: { satiety: 0, hydration: 0, happiness: 0, life: 0 },
+      poopSpawned: 0,
+      sicknessTriggered: false,
+      completedActivities: [],
+      travelCompleted: false,
+      eggsHatched: [],
+      expiredEvents: [],
+      energyRecovered: 0,
+      petDied: false,
+    };
+
+    const petSystem = this.getSystem<PetSystem>('PetSystem');
+    if (petSystem) {
+      await petSystem.processOfflineCareDecay(offlineCalculation, this.gameState);
+    }
+
+    const eggSystem = this.getSystem<EggSystem>('EggSystem');
+    if (eggSystem) {
+      await eggSystem.processOfflineIncubation(offlineCalculation, this.gameState);
+    }
+    
     // After processing offline systems, save the game state immediately
     await this.saveGameState();
+
+    if (this.config.debugMode) {
+      console.log('[GameEngine] Offline processing complete:', offlineCalculation);
+    }
   }
 
   /**
