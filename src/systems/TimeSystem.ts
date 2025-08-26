@@ -5,17 +5,19 @@
 
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
-import type { GameState } from '../models';
-import { UPDATE_TYPES, GAME_TICK_INTERVAL } from '../models/constants';
+import type { GameState, Timer as GameStateTimer } from '../models';
+import { UPDATE_TYPES, GAME_TICK_INTERVAL, type TimerType, type UpdateType } from '../models/constants';
 
 /**
- * Timer configuration for registered timers
+ * Internal timer configuration used by TimeSystem
  */
-export interface Timer {
+export interface ScheduledTimer {
   id: string;
   duration: number; // in milliseconds
   startTime: number;
-  callback: () => void;
+  timerType: TimerType;
+  updateType: UpdateType;
+  payload: any;
   recurring?: boolean;
   paused?: boolean;
   pausedAt?: number;
@@ -39,7 +41,7 @@ export class TimeSystem extends BaseSystem {
   private tickCounter: number;
   private lastTickTime: number;
   private tickTimerId: NodeJS.Timeout | null;
-  private timers: Map<string, Timer>;
+  private timers: Map<string, ScheduledTimer>;
   private timerCheckInterval: NodeJS.Timeout | null;
   private maxOfflineTicks: number;
   private isPaused: boolean;
@@ -279,30 +281,38 @@ export class TimeSystem extends BaseSystem {
    * Register a new timer
    * @param id Unique identifier for the timer
    * @param duration Duration in milliseconds
-   * @param callback Function to call when timer completes
+   * @param timerType Domain timer type for persistence
+   * @param updateType GameUpdate type to enqueue when timer completes
+   * @param payload Payload for the completion update
    * @param recurring Whether the timer should repeat
    */
   public registerTimer(
     id: string,
     duration: number,
-    callback: () => void,
+    timerType: TimerType,
+    updateType: UpdateType,
+    payload: any,
     recurring: boolean = false,
   ): void {
     if (this.timers.has(id)) {
       console.warn(`[TimeSystem] Timer ${id} already exists, replacing...`);
     }
 
-    const timer: Timer = {
+    const timer: ScheduledTimer = {
       id,
       duration,
       startTime: Date.now(),
-      callback,
+      timerType,
+      updateType,
+      payload,
       recurring,
       paused: this.isPaused,
     };
 
     this.timers.set(id, timer);
-    console.log(`[TimeSystem] Registered timer ${id} for ${duration}ms (recurring: ${recurring})`);
+    console.log(
+      `[TimeSystem] Registered timer ${id} for ${duration}ms (recurring: ${recurring})`,
+    );
   }
 
   /**
@@ -344,7 +354,7 @@ export class TimeSystem extends BaseSystem {
   }
 
   /**
-   * Check all timers and trigger callbacks for completed ones
+   * Check all timers and enqueue updates for completed ones
    */
   private checkTimers(): void {
     const now = Date.now();
@@ -369,9 +379,14 @@ export class TimeSystem extends BaseSystem {
       console.log(`[TimeSystem] Timer ${id} completed`);
 
       try {
-        timer.callback();
+        if (this.gameUpdateWriter) {
+          this.gameUpdateWriter.enqueue({
+            type: timer.updateType,
+            payload: { ...timer.payload, timerId: id },
+          });
+        }
       } catch (error) {
-        console.error(`[TimeSystem] Error in timer ${id} callback:`, error);
+        console.error(`[TimeSystem] Error enqueueing timer ${id}:`, error);
       }
 
       if (timer.recurring) {
@@ -403,6 +418,81 @@ export class TimeSystem extends BaseSystem {
     });
 
     return activeTimers;
+  }
+
+  /**
+   * Export timers for persistence
+   */
+  public exportTimers(): GameStateTimer[] {
+    const result: GameStateTimer[] = [];
+    this.timers.forEach((timer) => {
+      result.push({
+        id: timer.id,
+        type: timer.timerType,
+        startTime: timer.startTime,
+        endTime: timer.startTime + timer.duration,
+        duration: timer.duration,
+        paused: timer.paused ?? false,
+        pausedAt: timer.pausedAt,
+        updateType: timer.updateType,
+        payload: timer.payload,
+        recurring: timer.recurring,
+      });
+    });
+    return result;
+  }
+
+  /**
+   * Load timers from saved state
+   */
+  public loadTimers(savedTimers: GameStateTimer[]): void {
+    const now = Date.now();
+    savedTimers.forEach((t) => {
+      const remaining = t.paused
+        ? t.duration
+        : Math.max(0, t.endTime - now);
+
+      if (remaining <= 0 && !t.paused) {
+        // Timer already expired while offline
+        try {
+          if (this.gameUpdateWriter) {
+            this.gameUpdateWriter.enqueue({
+              type: t.updateType,
+              payload: { ...t.payload, timerId: t.id, offline: true },
+            });
+          }
+        } catch (error) {
+          console.error(`[TimeSystem] Error enqueueing timer ${t.id}:`, error);
+        }
+
+        if (t.recurring) {
+          this.timers.set(t.id, {
+            id: t.id,
+            duration: t.duration,
+            startTime: now,
+            timerType: t.type,
+            updateType: t.updateType,
+            payload: t.payload,
+            recurring: t.recurring,
+            paused: false,
+          });
+        }
+        return;
+      }
+
+      this.timers.set(t.id, {
+        id: t.id,
+        duration: remaining,
+        startTime: now,
+        timerType: t.type,
+        updateType: t.updateType,
+        payload: t.payload,
+        recurring: t.recurring,
+        paused: t.paused,
+        pausedAt: t.paused ? now : undefined,
+        remainingTime: t.paused ? remaining : undefined,
+      });
+    });
   }
 
   /**

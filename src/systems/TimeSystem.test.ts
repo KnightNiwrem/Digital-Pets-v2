@@ -174,62 +174,75 @@ describe('TimeSystem', () => {
 
   describe('Timer Management', () => {
     it('should register and trigger timers', async () => {
-      let callbackCalled = false;
-      const callback = () => {
-        callbackCalled = true;
-      };
-
       timeSystem.start();
-      timeSystem.registerTimer('test-timer', 500, callback);
+      timeSystem.registerTimer(
+        'test-timer',
+        500,
+        'activity',
+        UPDATE_TYPES.ACTIVITY_COMPLETE,
+        { value: 1 },
+      );
 
       // Wait for timer to trigger
       await new Promise((resolve) => setTimeout(resolve, 600));
 
-      expect(callbackCalled).toBe(true);
+      const update = enqueuedUpdates.find(
+        (u) => u.type === UPDATE_TYPES.ACTIVITY_COMPLETE && u.payload.timerId === 'test-timer',
+      );
+      expect(update).toBeTruthy();
 
       timeSystem.stop();
     });
 
     it('should handle recurring timers', async () => {
-      let callCount = 0;
-      const callback = () => {
-        callCount++;
-      };
-
       timeSystem.start();
-      timeSystem.registerTimer('recurring-timer', 300, callback, true);
+      timeSystem.registerTimer(
+        'recurring-timer',
+        300,
+        'event',
+        UPDATE_TYPES.EVENT_TRIGGER,
+        { count: 0 },
+        true,
+      );
 
-      // Wait for multiple triggers - increased wait time to ensure at least 3 triggers
+      // Wait for multiple triggers - ensure at least 3
       await new Promise((resolve) => setTimeout(resolve, 1100));
 
-      expect(callCount).toBeGreaterThanOrEqual(3);
+      const updates = enqueuedUpdates.filter((u) => u.payload.timerId === 'recurring-timer');
+      expect(updates.length).toBeGreaterThanOrEqual(3);
 
       timeSystem.stop();
     });
 
-    it('should cancel timers', () => {
-      const callback = () => {
-        // Timer callback
-      };
-
+    it('should cancel timers', async () => {
       timeSystem.start();
-      timeSystem.registerTimer('cancel-timer', 1000, callback);
+      timeSystem.registerTimer(
+        'cancel-timer',
+        300,
+        'activity',
+        UPDATE_TYPES.ACTIVITY_COMPLETE,
+        {},
+      );
 
       const cancelled = timeSystem.cancelTimer('cancel-timer');
       expect(cancelled).toBe(true);
 
-      // Try to cancel non-existent timer
-      const notCancelled = timeSystem.cancelTimer('non-existent');
-      expect(notCancelled).toBe(false);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const update = enqueuedUpdates.find((u) => u.payload.timerId === 'cancel-timer');
+      expect(update).toBeUndefined();
 
       timeSystem.stop();
     });
 
     it('should get remaining time for timers', async () => {
-      const callback = () => {};
-
       timeSystem.start();
-      timeSystem.registerTimer('remaining-timer', 1000, callback);
+      timeSystem.registerTimer(
+        'remaining-timer',
+        1000,
+        'activity',
+        UPDATE_TYPES.ACTIVITY_COMPLETE,
+        {},
+      );
 
       // Check immediately
       const remaining1 = timeSystem.getTimerRemaining('remaining-timer');
@@ -239,8 +252,8 @@ describe('TimeSystem', () => {
       // Check after some time - allow for timing variations
       await new Promise((resolve) => setTimeout(resolve, 500));
       const remaining2 = timeSystem.getTimerRemaining('remaining-timer');
-      expect(remaining2).toBeLessThanOrEqual(510); // Allow 10ms tolerance for timing variations
-      expect(remaining2).toBeGreaterThan(390); // Allow 10ms tolerance for timing variations
+      expect(remaining2).toBeLessThanOrEqual(510);
+      expect(remaining2).toBeGreaterThan(390);
 
       // Check non-existent timer
       const noRemaining = timeSystem.getTimerRemaining('non-existent');
@@ -250,13 +263,14 @@ describe('TimeSystem', () => {
     });
 
     it('should pause and resume timers', async () => {
-      let callbackCalled = false;
-      const callback = () => {
-        callbackCalled = true;
-      };
-
       timeSystem.start();
-      timeSystem.registerTimer('pause-timer', 600, callback); // Increased from 500ms
+      timeSystem.registerTimer(
+        'pause-timer',
+        600,
+        'activity',
+        UPDATE_TYPES.ACTIVITY_COMPLETE,
+        {},
+      );
 
       // Pause after 200ms
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -264,22 +278,20 @@ describe('TimeSystem', () => {
 
       // Wait while paused
       await new Promise((resolve) => setTimeout(resolve, 500));
-      expect(callbackCalled).toBe(false);
+      expect(enqueuedUpdates.some((u) => u.payload.timerId === 'pause-timer')).toBe(false);
 
-      // Resume and wait for completion - increased wait time for better reliability
+      // Resume and wait for completion
       timeSystem.resume();
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Increased from 400ms
-      expect(callbackCalled).toBe(true);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(enqueuedUpdates.some((u) => u.payload.timerId === 'pause-timer')).toBe(true);
 
       timeSystem.stop();
     });
 
     it('should get active timers', () => {
-      const callback = () => {};
-
       timeSystem.start();
-      timeSystem.registerTimer('timer1', 1000, callback);
-      timeSystem.registerTimer('timer2', 2000, callback);
+      timeSystem.registerTimer('timer1', 1000, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
+      timeSystem.registerTimer('timer2', 2000, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
 
       const activeTimers = timeSystem.getActiveTimers();
       expect(activeTimers.length).toBe(2);
@@ -290,11 +302,9 @@ describe('TimeSystem', () => {
     });
 
     it('should clear all timers', () => {
-      const callback = () => {};
-
       timeSystem.start();
-      timeSystem.registerTimer('timer1', 1000, callback);
-      timeSystem.registerTimer('timer2', 2000, callback);
+      timeSystem.registerTimer('timer1', 1000, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
+      timeSystem.registerTimer('timer2', 2000, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
 
       timeSystem.clearAllTimers();
 
@@ -302,6 +312,25 @@ describe('TimeSystem', () => {
       expect(activeTimers.length).toBe(0);
 
       timeSystem.stop();
+    });
+  });
+
+  describe('Timer Persistence', () => {
+    it('should export and load timers', async () => {
+      timeSystem.start();
+      timeSystem.registerTimer('persist', 300, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
+      const saved = timeSystem.exportTimers();
+      expect(saved.length).toBe(1);
+
+      timeSystem.clearAllTimers();
+
+      // Wait past original duration
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      timeSystem.loadTimers(saved);
+
+      const update = enqueuedUpdates.find((u) => u.payload.timerId === 'persist');
+      expect(update).toBeTruthy();
     });
   });
 
@@ -328,7 +357,13 @@ describe('TimeSystem', () => {
       await timeSystem.initialize({});
       timeSystem.start();
 
-      timeSystem.registerTimer('shutdown-timer', 1000, () => {});
+      timeSystem.registerTimer(
+        'shutdown-timer',
+        1000,
+        'activity',
+        UPDATE_TYPES.ACTIVITY_COMPLETE,
+        {},
+      );
 
       await timeSystem.shutdown();
 
@@ -340,7 +375,7 @@ describe('TimeSystem', () => {
       await timeSystem.initialize({});
 
       timeSystem.setTickCounter(100);
-      timeSystem.registerTimer('reset-timer', 1000, () => {});
+      timeSystem.registerTimer('reset-timer', 1000, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
 
       await timeSystem.reset();
 
@@ -351,13 +386,13 @@ describe('TimeSystem', () => {
     it('should handle errors gracefully', async () => {
       await timeSystem.initialize({});
 
-      // Register a timer with a callback that throws
-      const errorCallback = () => {
-        throw new Error('Timer callback error');
-      };
+      // Writer that throws on enqueue
+      gameUpdateWriter.enqueue.mockImplementationOnce(() => {
+        throw new Error('Timer enqueue error');
+      });
 
       timeSystem.start();
-      timeSystem.registerTimer('error-timer', 100, errorCallback);
+      timeSystem.registerTimer('error-timer', 100, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
 
       // Wait for timer to trigger - should not crash
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -374,7 +409,7 @@ describe('TimeSystem', () => {
       await timeSystem.initialize({});
       timeSystem.start();
 
-      timeSystem.registerTimer('stats-timer', 1000, () => {});
+      timeSystem.registerTimer('stats-timer', 1000, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
 
       const stats = timeSystem.getStatistics();
 
@@ -414,14 +449,11 @@ describe('TimeSystem', () => {
     });
 
     it('should handle timer with same id', () => {
-      const callback1 = jest.fn();
-      const callback2 = jest.fn();
-
       timeSystem.start();
 
-      timeSystem.registerTimer('duplicate', 500, callback1);
+      timeSystem.registerTimer('duplicate', 500, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
       // Should replace the first timer
-      timeSystem.registerTimer('duplicate', 500, callback2);
+      timeSystem.registerTimer('duplicate', 500, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
 
       const activeTimers = timeSystem.getActiveTimers();
       expect(activeTimers.length).toBe(1);

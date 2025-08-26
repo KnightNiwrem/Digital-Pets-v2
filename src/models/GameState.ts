@@ -26,6 +26,9 @@ export interface Timer {
   endTime: number;
   duration: number; // In milliseconds
   paused: boolean;
+  updateType: UpdateType;
+  payload: any;
+  recurring?: boolean;
   pausedAt?: number;
 
   // Associated data
