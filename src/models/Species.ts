@@ -90,8 +90,8 @@ export interface Species {
 
   // Care requirements modifiers (multipliers)
   careModifiers?: {
-    hungerRate?: number; // Default 1.0
-    thirstRate?: number; // Default 1.0
+    satietyDecay?: number; // Default 1.0
+    hydrationDecay?: number; // Default 1.0
     happinessDecay?: number; // Default 1.0
     energyUsage?: number; // Default 1.0
   };
