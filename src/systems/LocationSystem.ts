@@ -459,20 +459,26 @@ export class LocationSystem extends BaseSystem {
 
     if (route.endTime <= now) {
       // Travel completed while offline
-      const destination = route.to;
+      const routeDef = Array.from(this.routes.values()).find(
+        (r) => r.id === route.routeId || `${r.from}_${r.to}` === route.routeId,
+      );
+      const destination = routeDef?.to;
+
       state.traveling = false;
-      state.currentLocationId = destination;
-      state.currentArea =
-        this.locations.get(destination)?.type === LOCATION_TYPES.CITY
-          ? CITY_AREAS.SQUARE
-          : undefined;
-      if (!state.visitedLocations.includes(destination)) {
-        state.visitedLocations.push(destination);
+      if (destination) {
+        state.currentLocationId = destination;
+        state.currentArea =
+          this.locations.get(destination)?.type === LOCATION_TYPES.CITY
+            ? CITY_AREAS.SQUARE
+            : undefined;
+        if (!state.visitedLocations.includes(destination)) {
+          state.visitedLocations.push(destination);
+        }
+        state.lastVisitTimes[destination] = now;
+        offlineCalc.newLocation = destination;
       }
-      state.lastVisitTimes[destination] = now;
       state.travelRoute = undefined;
       offlineCalc.travelCompleted = true;
-      offlineCalc.newLocation = destination;
     } else {
       // Update progress
       const elapsed = now - route.startTime;

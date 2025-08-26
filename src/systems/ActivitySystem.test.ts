@@ -7,6 +7,7 @@ import { ActivitySystem } from './ActivitySystem';
 import type { GameState } from '../models';
 import { ACTIVITY_TYPES, STATUS_TYPES, GROWTH_STAGES } from '../models/constants';
 import { createMockGameState, createMockPet } from '../testing/mocks';
+import type { OfflineCalculation } from '../models';
 
 describe('ActivitySystem', () => {
   let activitySystem: ActivitySystem;
@@ -285,7 +286,7 @@ describe('ActivitySystem', () => {
         data: { activityId },
       });
 
-      const offlineCalc = {
+      const offlineCalc: OfflineCalculation = {
         offlineTime: 600,
         ticksToProcess: 0,
         careDecay: { satiety: 0, hydration: 0, happiness: 0, life: 0 },

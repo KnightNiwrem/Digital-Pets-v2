@@ -3,6 +3,7 @@ import { LocationSystem } from './LocationSystem';
 import type { GameState } from '../models';
 import { LOCATION_TYPES, CITY_AREAS, GROWTH_STAGES } from '../models/constants';
 import { createMockGameState } from '../testing/mocks';
+import type { OfflineCalculation } from '../models';
 
 describe('LocationSystem', () => {
   let locationSystem: LocationSystem;
@@ -363,7 +364,7 @@ describe('LocationSystem', () => {
         },
       } as any;
 
-      const offlineCalc = {
+      const offlineCalc: OfflineCalculation = {
         offlineTime: 600,
         ticksToProcess: 0,
         careDecay: { satiety: 0, hydration: 0, happiness: 0, life: 0 },
