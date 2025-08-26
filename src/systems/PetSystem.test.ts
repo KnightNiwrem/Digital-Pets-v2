@@ -373,4 +373,27 @@ describe('PetSystem', () => {
       expect(summary).toContain('✨ Pet is very happy!');
     });
   });
+
+  describe('Sleep Energy Regeneration', () => {
+    it('should reduce regeneration rate when pet is sick', () => {
+      const pet = petSystem.createPet({
+        name: 'Sleeper',
+        species: 'cat',
+      });
+
+      // Use adult stage for known config values
+      pet.stage = GROWTH_STAGES.ADULT;
+
+      const baseRate = configSystem.get('tuning.energy.sleepRegenRatePerHour.ADULT');
+      const penalty = configSystem.get('tuning.sickness.energyRegenPenalty');
+
+      pet.status.primary = STATUS_TYPES.HEALTHY;
+      const healthyRate = petSystem.getSleepEnergyRegenRate(pet);
+      expect(healthyRate).toBe(baseRate);
+
+      pet.status.primary = STATUS_TYPES.SICK;
+      const sickRate = petSystem.getSleepEnergyRegenRate(pet);
+      expect(sickRate).toBeCloseTo(baseRate * penalty);
+    });
+  });
 });

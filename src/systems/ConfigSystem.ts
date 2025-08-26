@@ -119,6 +119,7 @@ export interface TuningConfig {
     activityRiskChance: number;
     lifeDecayPerHour: number;
     energyRegenPenalty: number;
+    activitySuccessPenalty: number;
   };
   injury: {
     battleLossChance: number;

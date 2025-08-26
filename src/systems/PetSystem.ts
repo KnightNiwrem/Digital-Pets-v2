@@ -239,6 +239,18 @@ export class PetSystem extends BaseSystem {
   }
 
   /**
+   * Get sleep energy regeneration rate for a pet, applying sickness penalty
+   */
+  public getSleepEnergyRegenRate(pet: Pet): number {
+    if (!this.tuning) return 0;
+    let rate = this.tuning.energy.sleepRegenRatePerHour[pet.stage] || 0;
+    if (pet.status.primary === STATUS_TYPES.SICK) {
+      rate *= this.tuning.sickness.energyRegenPenalty;
+    }
+    return rate;
+  }
+
+  /**
    * Calculate care values from hidden tick counters
    */
   public calculateCareValues(hiddenCounters: HiddenCounters): CareValues {

@@ -7,7 +7,8 @@ import { EventSystem } from './EventSystem';
 import type { EventDefinition, ActiveEvent, EventReward } from './EventSystem';
 import type { GameState } from '../models';
 import { createMockGameState } from '../testing/mocks';
-import { GROWTH_STAGES, EVENT_TYPES } from '../models/constants';
+import { GROWTH_STAGES, EVENT_TYPES, STATUS_TYPES } from '../models/constants';
+import { ConfigSystem } from './ConfigSystem';
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 
 describe('EventSystem', () => {
@@ -293,8 +294,9 @@ describe('EventSystem', () => {
       const mockDate = new Date();
       mockDate.setMonth(3); // April
       Date.now = () => mockDate.getTime();
-
-      eventSystem.initialize({});
+      const configSystem = new ConfigSystem();
+      const tuning = configSystem.getTuningValues();
+      eventSystem.initialize({ tuning });
       eventSystem['checkAllEvents']();
     });
 
@@ -325,11 +327,37 @@ describe('EventSystem', () => {
       const activeEvent = eventSystem['activeEvents'].get('spring_festival');
       if (activeEvent) {
         // Complete an activity
-        eventSystem['completeActivity']('spring_festival', 'flower_picking');
+        eventSystem['completeActivity']('spring_festival', 'flower_picking', mockGameState);
 
         // Check that update was queued
         expect(queuedUpdates.length).toBeGreaterThan(0);
       }
+    });
+
+    it('should apply sickness penalty to activity success', () => {
+      const activeEvent = eventSystem['activeEvents'].get('spring_festival');
+      if (!activeEvent || !mockGameState.pet) return;
+
+      // Reset progress
+      activeEvent.tokensEarned = 0;
+      activeEvent.activitiesCompleted = [];
+
+      const originalRandom = Math.random;
+      Math.random = () => 0.8; // 80
+
+      // Healthy pet succeeds at 90% rate
+      mockGameState.pet.status = { primary: STATUS_TYPES.HEALTHY };
+      eventSystem['completeActivity']('spring_festival', 'flower_picking', mockGameState);
+      expect(activeEvent.activitiesCompleted).toContain('flower_picking');
+
+      // Reset and try while sick - should fail (72% effective rate)
+      activeEvent.tokensEarned = 0;
+      activeEvent.activitiesCompleted = [];
+      mockGameState.pet.status = { primary: STATUS_TYPES.SICK };
+      eventSystem['completeActivity']('spring_festival', 'flower_picking', mockGameState);
+      expect(activeEvent.activitiesCompleted).not.toContain('flower_picking');
+
+      Math.random = originalRandom;
     });
   });
 

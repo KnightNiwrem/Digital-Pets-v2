@@ -63,7 +63,8 @@
       "poopMultiplier": 2,
       "activityRiskChance": 5,
       "lifeDecayPerHour": 2,
-      "energyRegenPenalty": 0.5
+      "energyRegenPenalty": 0.5,
+      "activitySuccessPenalty": 0.8
     },
     "injury": {
       "battleLossChance": 30,
