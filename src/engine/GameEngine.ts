@@ -6,7 +6,7 @@
 import { GameUpdatesQueue, type GameUpdateReader } from './GameUpdatesQueue';
 import { BaseSystem, isUpdateHandler, type SystemInitOptions } from '../systems/BaseSystem';
 import { ConfigSystem } from '../systems/ConfigSystem';
-import type { GameState, GameUpdate } from '../models';
+import type { GameState, GameUpdate, OfflineCalculation } from '../models';
 import { UPDATE_TYPES, GAME_TICK_INTERVAL } from '../models/constants';
 
 // Import systems
@@ -709,10 +709,57 @@ export class GameEngine {
    * Process offline time
    */
   private async processOfflineTime(): Promise<void> {
-    // This will be implemented when TimeSystem is available
     if (this.config.debugMode) {
       console.log('[GameEngine] Processing offline time...');
     }
+
+    // Get last save timestamp
+    const lastSave = this.gameState.saveData.lastSaveTime;
+    const timeSystem = this.systems.get('TimeSystem') as TimeSystem | undefined;
+
+    if (!timeSystem) {
+      return;
+    }
+
+    // Calculate how many ticks occurred while the game was offline
+    const offlineTicks = timeSystem.calculateOfflineTicks(lastSave);
+
+    if (offlineTicks <= 0) {
+      return;
+    }
+
+    // Let TimeSystem process the offline ticks to advance its counters
+    await timeSystem.processOfflineTicks(offlineTicks);
+
+    const offlineTimeSeconds = Math.floor((Date.now() - lastSave) / 1000);
+
+    const offlineCalc: OfflineCalculation = {
+      offlineTime: offlineTimeSeconds,
+      ticksToProcess: offlineTicks,
+      careDecay: { satiety: 0, hydration: 0, happiness: 0, life: 0 },
+      poopSpawned: 0,
+      sicknessTriggered: false,
+      completedActivities: [],
+      travelCompleted: false,
+      eggsHatched: [],
+      expiredEvents: [],
+      energyRecovered: 0,
+      petDied: false,
+    };
+
+    // Process offline effects for each system
+    const petSystem = this.systems.get('PetSystem') as PetSystem | undefined;
+    if (petSystem) {
+      await petSystem.processOfflineCareDecay(offlineCalc, this.gameState);
+    }
+
+    const eggSystem = this.systems.get('EggSystem') as EggSystem | undefined;
+    if (eggSystem) {
+      await eggSystem.processOfflineIncubation(offlineCalc, this.gameState);
+    }
+
+    // Save after applying offline progress
+    await this.saveGameState();
   }
 
   /**
