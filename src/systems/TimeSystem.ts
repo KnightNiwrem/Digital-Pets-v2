@@ -534,4 +534,3 @@ export class TimeSystem extends BaseSystem {
     };
   }
 }
-

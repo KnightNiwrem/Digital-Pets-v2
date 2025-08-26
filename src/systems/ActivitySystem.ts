@@ -960,4 +960,3 @@ export class ActivitySystem extends BaseSystem {
     };
   }
 }
-
