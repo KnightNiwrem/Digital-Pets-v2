@@ -249,7 +249,7 @@ export function createMockPet(options: MockPetOptions = {}): Pet {
       hydrationTicks: hydration * 15,
       happinessTicks: happiness * 30,
       lifeTicks: 100,
-      poopTicksLeft: 720, // Default to 12 hours (720 ticks)
+      poopTicks: 720, // Default to 12 hours (720 ticks)
     },
     status: { primary: STATUS_TYPES.IDLE },
     sicknesses: [], // Add empty sicknesses array

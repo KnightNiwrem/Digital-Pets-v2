@@ -188,7 +188,7 @@ export class PetSystem extends BaseSystem {
         hydrationTicks: (this.tuning?.careTickMultipliers.hydration || 15) * 100,
         happinessTicks: (this.tuning?.careTickMultipliers.happiness || 30) * 100,
         lifeTicks: this.tuning?.life.startingValue || 100,
-        poopTicksLeft: this.generatePoopInterval(), // Initialize with random interval
+        poopTicks: this.generatePoopInterval(), // Initialize with random interval
       },
 
       // Status
@@ -657,17 +657,17 @@ export class PetSystem extends BaseSystem {
     );
 
     // Decrement the counter
-    if (pet.hiddenCounters.poopTicksLeft > 0) {
-      pet.hiddenCounters.poopTicksLeft--;
+    if (pet.hiddenCounters.poopTicks > 0) {
+      pet.hiddenCounters.poopTicks--;
     }
 
     // If counter reaches 0 and pet is awake, spawn poop and reset counter
-    if (pet.hiddenCounters.poopTicksLeft <= 0) {
+    if (pet.hiddenCounters.poopTicks <= 0) {
       if (!isAsleep) {
         pet.poopCount++;
-        pet.hiddenCounters.poopTicksLeft = this.generatePoopInterval();
+        pet.hiddenCounters.poopTicks = this.generatePoopInterval();
         console.log(
-          `Poop spawned! Count: ${pet.poopCount}, Next in ${pet.hiddenCounters.poopTicksLeft} ticks`,
+          `Poop spawned! Count: ${pet.poopCount}, Next in ${pet.hiddenCounters.poopTicks} ticks`,
         );
       }
       // If asleep, counter stays at 0 and will spawn on next tick after waking
@@ -1473,12 +1473,12 @@ export class PetSystem extends BaseSystem {
     const wasAsleep = offlineCalc.energyRecovered > 0;
 
     // Process ticks
-    while (ticksToProcess > 0 && pet.hiddenCounters.poopTicksLeft > 0) {
-      pet.hiddenCounters.poopTicksLeft--;
+    while (ticksToProcess > 0 && pet.hiddenCounters.poopTicks > 0) {
+      pet.hiddenCounters.poopTicks--;
       ticksToProcess--;
 
       // If counter reaches 0
-      if (pet.hiddenCounters.poopTicksLeft <= 0) {
+      if (pet.hiddenCounters.poopTicks <= 0) {
         if (wasAsleep) {
           // If pet was sleeping, counter stays at 0
           // The poop will spawn on the next tick after waking
@@ -1486,13 +1486,13 @@ export class PetSystem extends BaseSystem {
         } else {
           // Pet was awake, spawn poop and reset counter
           poopSpawned++;
-          pet.hiddenCounters.poopTicksLeft = this.generatePoopInterval();
+          pet.hiddenCounters.poopTicks = this.generatePoopInterval();
         }
       }
     }
 
     // Handle any remaining ticks if pet was awake and counter was already 0
-    if (!wasAsleep && ticksToProcess > 0 && pet.hiddenCounters.poopTicksLeft <= 0) {
+    if (!wasAsleep && ticksToProcess > 0 && pet.hiddenCounters.poopTicks <= 0) {
       // Calculate how many full intervals passed
       const minTicks = this.tuning.poop.spawnRangeHours.min * 60;
       const maxTicks = this.tuning.poop.spawnRangeHours.max * 60;
@@ -1503,7 +1503,7 @@ export class PetSystem extends BaseSystem {
 
       // Set counter for remaining time
       const remainingTicks = ticksToProcess % avgInterval;
-      pet.hiddenCounters.poopTicksLeft = this.generatePoopInterval() - remainingTicks;
+      pet.hiddenCounters.poopTicks = this.generatePoopInterval() - remainingTicks;
     }
 
     // Apply spawned poops

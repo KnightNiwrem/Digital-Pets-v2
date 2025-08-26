@@ -426,13 +426,13 @@ describe('PetSystem', () => {
       });
 
       // Should have a valid poopTicksLeft value
-      expect(pet.hiddenCounters.poopTicksLeft).toBeGreaterThan(0);
+      expect(pet.hiddenCounters.poopTicks).toBeGreaterThan(0);
 
       // Should be within the configured range (6-24 hours in ticks)
       const minTicks = 6 * 60; // 6 hours
       const maxTicks = 24 * 60; // 24 hours
-      expect(pet.hiddenCounters.poopTicksLeft).toBeGreaterThanOrEqual(minTicks);
-      expect(pet.hiddenCounters.poopTicksLeft).toBeLessThanOrEqual(maxTicks);
+      expect(pet.hiddenCounters.poopTicks).toBeGreaterThanOrEqual(minTicks);
+      expect(pet.hiddenCounters.poopTicks).toBeLessThanOrEqual(maxTicks);
     });
 
     it('should decrement poopTicksLeft on each tick', async () => {
@@ -443,13 +443,13 @@ describe('PetSystem', () => {
       gameState.pet = pet;
 
       // Set a specific counter value
-      pet.hiddenCounters.poopTicksLeft = 100;
-      const initialTicks = pet.hiddenCounters.poopTicksLeft;
+      pet.hiddenCounters.poopTicks = 100;
+      const initialTicks = pet.hiddenCounters.poopTicks;
 
       // Process one tick
       await petSystem['checkPoopSpawn'](gameState);
 
-      expect(pet.hiddenCounters.poopTicksLeft).toBe(initialTicks - 1);
+      expect(pet.hiddenCounters.poopTicks).toBe(initialTicks - 1);
     });
 
     it('should spawn poop when counter reaches 0 while awake', async () => {
@@ -460,14 +460,14 @@ describe('PetSystem', () => {
       gameState.pet = pet;
 
       // Set counter to 1 so next tick will trigger spawn
-      pet.hiddenCounters.poopTicksLeft = 1;
+      pet.hiddenCounters.poopTicks = 1;
       pet.poopCount = 0;
 
       // Process tick (pet is awake by default)
       await petSystem['checkPoopSpawn'](gameState);
 
       expect(pet.poopCount).toBe(1);
-      expect(pet.hiddenCounters.poopTicksLeft).toBeGreaterThan(0); // Should reset to new interval
+      expect(pet.hiddenCounters.poopTicks).toBeGreaterThan(0); // Should reset to new interval
     });
 
     it('should NOT spawn poop during sleep', async () => {
@@ -490,14 +490,14 @@ describe('PetSystem', () => {
       ];
 
       // Set counter to 1
-      pet.hiddenCounters.poopTicksLeft = 1;
+      pet.hiddenCounters.poopTicks = 1;
       pet.poopCount = 0;
 
       // Process tick while sleeping
       await petSystem['checkPoopSpawn'](gameState);
 
       expect(pet.poopCount).toBe(0); // No poop spawned
-      expect(pet.hiddenCounters.poopTicksLeft).toBe(0); // Counter stays at 0
+      expect(pet.hiddenCounters.poopTicks).toBe(0); // Counter stays at 0
     });
 
     it('should spawn poop on first tick after waking', async () => {
@@ -519,7 +519,7 @@ describe('PetSystem', () => {
         },
       ];
 
-      pet.hiddenCounters.poopTicksLeft = 0;
+      pet.hiddenCounters.poopTicks = 0;
       pet.poopCount = 0;
 
       // Tick during sleep - no spawn
@@ -532,7 +532,7 @@ describe('PetSystem', () => {
       // First tick after waking - should spawn
       await petSystem['checkPoopSpawn'](gameState);
       expect(pet.poopCount).toBe(1);
-      expect(pet.hiddenCounters.poopTicksLeft).toBeGreaterThan(0);
+      expect(pet.hiddenCounters.poopTicks).toBeGreaterThan(0);
     });
 
     it('should handle offline poop spawning correctly', async () => {
@@ -543,7 +543,7 @@ describe('PetSystem', () => {
       gameState.pet = pet;
 
       // Set up initial state
-      pet.hiddenCounters.poopTicksLeft = 100;
+      pet.hiddenCounters.poopTicks = 100;
       pet.poopCount = 0;
 
       // Create offline calculation
@@ -582,7 +582,7 @@ describe('PetSystem', () => {
       gameState.pet = pet;
 
       // Set up initial state
-      pet.hiddenCounters.poopTicksLeft = 50;
+      pet.hiddenCounters.poopTicks = 50;
       pet.poopCount = 0;
 
       // Create offline calculation with sleep (energyRecovered > 0)
@@ -608,7 +608,7 @@ describe('PetSystem', () => {
       await petSystem['processOfflinePoopSpawning'](pet, offlineCalc);
 
       // Counter should decrement to 0 but no poop spawns during sleep
-      expect(pet.hiddenCounters.poopTicksLeft).toBe(0);
+      expect(pet.hiddenCounters.poopTicks).toBe(0);
       expect(pet.poopCount).toBe(0);
       expect(offlineCalc.poopSpawned).toBe(0);
     });
@@ -621,7 +621,7 @@ describe('PetSystem', () => {
       gameState.pet = pet;
 
       // Set up for multiple spawns (48 hours offline)
-      pet.hiddenCounters.poopTicksLeft = 100;
+      pet.hiddenCounters.poopTicks = 100;
       pet.poopCount = 0;
 
       const offlineCalc = {
@@ -658,7 +658,7 @@ describe('PetSystem', () => {
       });
 
       // Set specific value
-      pet.hiddenCounters.poopTicksLeft = 500;
+      pet.hiddenCounters.poopTicks = 500;
 
       // Simulate save/load by checking the value is part of hiddenCounters
       const savedCounters = { ...pet.hiddenCounters };
@@ -671,7 +671,7 @@ describe('PetSystem', () => {
 
       newPet.hiddenCounters = savedCounters;
 
-      expect(newPet.hiddenCounters.poopTicksLeft).toBe(500);
+      expect(newPet.hiddenCounters.poopTicks).toBe(500);
     });
   });
 
