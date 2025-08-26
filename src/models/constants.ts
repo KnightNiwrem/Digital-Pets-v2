@@ -11,6 +11,7 @@ export const UPDATE_TYPES = {
   EVENT_TRIGGER: 'EVENT_TRIGGER', // Calendar event triggers
   SAVE_REQUEST: 'SAVE_REQUEST', // Save state request
   STATE_TRANSITION: 'STATE_TRANSITION', // Major state changes
+  TIMER_COMPLETE: 'TIMER_COMPLETE', // Timer completion notification
 } as const;
 
 export type UpdateType = (typeof UPDATE_TYPES)[keyof typeof UPDATE_TYPES];

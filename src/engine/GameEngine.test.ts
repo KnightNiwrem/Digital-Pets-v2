@@ -397,22 +397,22 @@ describe('GameEngine', () => {
 
     test('should use config system values for default game state', async () => {
       await engine.initialize();
-      
+
       const state = engine.getGameState();
       const configSystem = engine.getSystem<ConfigSystem>('ConfigSystem')!;
-      
+
       const limits = configSystem.getLimits();
       const defaultSettings = configSystem.getDefaultSettings();
 
       // Test that inventory settings come from config
       expect(state.inventory.maxSlots).toBe(limits.maxInventorySlots);
 
-      // Test that volume settings come from config 
+      // Test that volume settings come from config
       expect(state.meta.settings.masterVolume).toBe(defaultSettings.masterVolume);
       expect(state.meta.settings.musicVolume).toBe(defaultSettings.musicVolume);
       expect(state.meta.settings.sfxVolume).toBe(defaultSettings.sfxVolume);
       expect(state.meta.settings.autoSaveInterval).toBe(defaultSettings.autoSaveInterval);
-      
+
       // Test other config values
       expect(state.meta.settings.textSize).toBe(defaultSettings.textSize);
       expect(state.meta.settings.colorBlindMode).toBe(defaultSettings.colorBlindMode);

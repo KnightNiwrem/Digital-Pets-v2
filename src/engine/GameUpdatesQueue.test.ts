@@ -81,33 +81,31 @@ describe('GameUpdatesQueue', () => {
     });
   });
 
-
   describe('Update Validation', () => {
     test('should validate update types', () => {
-    expect(() => {
-      queue.enqueue({
-        type: 'INVALID_TYPE' as any,
-        payload: {},
-      });
-    }).toThrow('Invalid update type');
+      expect(() => {
+        queue.enqueue({
+          type: 'INVALID_TYPE' as any,
+          payload: {},
+        });
+      }).toThrow('Invalid update type');
     });
 
     test('should validate payload is an object', () => {
-    expect(() => {
-      queue.enqueue({
-        type: UPDATE_TYPES.USER_ACTION,
-        payload: null as any,
-      });
-    }).toThrow('Invalid update payload');
+      expect(() => {
+        queue.enqueue({
+          type: UPDATE_TYPES.USER_ACTION,
+          payload: null as any,
+        });
+      }).toThrow('Invalid update payload');
 
-    expect(() => {
-      queue.enqueue({
-        type: UPDATE_TYPES.USER_ACTION,
-        payload: 'string' as any,
-      });
-    }).toThrow('Invalid update payload');
+      expect(() => {
+        queue.enqueue({
+          type: UPDATE_TYPES.USER_ACTION,
+          payload: 'string' as any,
+        });
+      }).toThrow('Invalid update payload');
     });
-
   });
 
   describe('Unique ID Generation', () => {
@@ -365,7 +363,6 @@ describe('GameUpdatesQueue', () => {
 
       expect(result).toBe(false);
     });
-
   });
 
   describe('Edge Cases', () => {

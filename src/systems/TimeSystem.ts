@@ -1,6 +1,9 @@
 /**
  * TimeSystem - Manages game time, ticks, and offline catch-up calculations
  * Generates game ticks every 60 seconds and manages timers for various game activities
+ *
+ * Important: TimeSystem itself cannot be paused as players cannot pause time.
+ * Timers communicate completion via GameUpdates queue, not direct callbacks.
  */
 
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
@@ -10,16 +13,27 @@ import { UPDATE_TYPES, GAME_TICK_INTERVAL } from '../models/constants';
 
 /**
  * Timer configuration for registered timers
+ * Timers act as a boomerang: GameEngine creates them via TimeSystem,
+ * and when complete, TimeSystem writes to GameUpdates queue for GameEngine to process
  */
 export interface Timer {
   id: string;
   duration: number; // in milliseconds
   startTime: number;
-  callback: () => void;
+  expiryTime: number; // Absolute expiry time for persistence
+  payload?: any; // Payload to include in completion update
   recurring?: boolean;
-  paused?: boolean;
-  pausedAt?: number;
-  remainingTime?: number; // for paused timers
+}
+
+/**
+ * Persisted timer data for save/load
+ */
+export interface PersistedTimer {
+  id: string;
+  duration: number;
+  expiryTime: number;
+  payload?: any;
+  recurring?: boolean;
 }
 
 /**
@@ -42,7 +56,6 @@ export class TimeSystem extends BaseSystem {
   private timers: Map<string, Timer>;
   private timerCheckInterval: NodeJS.Timeout | null;
   private maxOfflineTicks: number;
-  private isPaused: boolean;
 
   constructor(gameUpdateWriter: GameUpdateWriter, config?: TimeSystemConfig) {
     super('TimeSystem', gameUpdateWriter);
@@ -53,7 +66,6 @@ export class TimeSystem extends BaseSystem {
     this.tickTimerId = null;
     this.timers = new Map();
     this.timerCheckInterval = null;
-    this.isPaused = false;
   }
 
   /**
@@ -67,6 +79,7 @@ export class TimeSystem extends BaseSystem {
 
   /**
    * Start the tick timer
+   * Note: TimeSystem cannot be paused - time always moves forward
    */
   public start(): void {
     if (this.tickTimerId) {
@@ -74,21 +87,16 @@ export class TimeSystem extends BaseSystem {
       return;
     }
 
-    this.isPaused = false;
     this.lastTickTime = Date.now();
 
     // Start the main tick timer
     this.tickTimerId = setInterval(() => {
-      if (!this.isPaused) {
-        this.processTick();
-      }
+      this.processTick();
     }, this.tickInterval);
 
     // Start timer check interval (check every 100ms for better accuracy)
     this.timerCheckInterval = setInterval(() => {
-      if (!this.isPaused) {
-        this.checkTimers();
-      }
+      this.checkTimers();
     }, 100);
 
     console.log('[TimeSystem] Started with tick interval:', this.tickInterval / 1000, 'seconds');
@@ -108,49 +116,7 @@ export class TimeSystem extends BaseSystem {
       this.timerCheckInterval = null;
     }
 
-    this.isPaused = true;
     console.log('[TimeSystem] Stopped');
-  }
-
-  /**
-   * Pause the time system
-   */
-  public pause(): void {
-    this.isPaused = true;
-
-    // Pause all active timers
-    const now = Date.now();
-    this.timers.forEach((timer) => {
-      if (!timer.paused) {
-        timer.paused = true;
-        timer.pausedAt = now;
-        timer.remainingTime = timer.duration - (now - timer.startTime);
-      }
-    });
-
-    console.log('[TimeSystem] Paused');
-  }
-
-  /**
-   * Resume the time system
-   */
-  public resume(): void {
-    this.isPaused = false;
-    this.lastTickTime = Date.now();
-
-    // Resume all paused timers
-    const now = Date.now();
-    this.timers.forEach((timer) => {
-      if (timer.paused && timer.remainingTime !== undefined) {
-        timer.paused = false;
-        timer.startTime = now;
-        timer.duration = timer.remainingTime;
-        timer.remainingTime = undefined;
-        timer.pausedAt = undefined;
-      }
-    });
-
-    console.log('[TimeSystem] Resumed');
   }
 
   /**
@@ -276,29 +242,30 @@ export class TimeSystem extends BaseSystem {
   }
 
   /**
-   * Register a new timer
+   * Register a new timer that will emit a TIMER_COMPLETE update when finished
    * @param id Unique identifier for the timer
    * @param duration Duration in milliseconds
-   * @param callback Function to call when timer completes
+   * @param payload Optional payload to include in completion update
    * @param recurring Whether the timer should repeat
    */
   public registerTimer(
     id: string,
     duration: number,
-    callback: () => void,
+    payload?: any,
     recurring: boolean = false,
   ): void {
     if (this.timers.has(id)) {
       console.warn(`[TimeSystem] Timer ${id} already exists, replacing...`);
     }
 
+    const now = Date.now();
     const timer: Timer = {
       id,
       duration,
-      startTime: Date.now(),
-      callback,
+      startTime: now,
+      expiryTime: now + duration,
+      payload,
       recurring,
-      paused: this.isPaused,
     };
 
     this.timers.set(id, timer);
@@ -332,31 +299,20 @@ export class TimeSystem extends BaseSystem {
       return null;
     }
 
-    if (timer.paused && timer.remainingTime !== undefined) {
-      return timer.remainingTime;
-    }
-
     const now = Date.now();
-    const elapsed = now - timer.startTime;
-    const remaining = Math.max(0, timer.duration - elapsed);
-
+    const remaining = Math.max(0, timer.expiryTime - now);
     return remaining;
   }
 
   /**
-   * Check all timers and trigger callbacks for completed ones
+   * Check all timers and emit TIMER_COMPLETE updates for completed ones
    */
   private checkTimers(): void {
     const now = Date.now();
     const completedTimers: string[] = [];
 
     this.timers.forEach((timer) => {
-      if (timer.paused) {
-        return;
-      }
-
-      const elapsed = now - timer.startTime;
-      if (elapsed >= timer.duration) {
+      if (now >= timer.expiryTime) {
         completedTimers.push(timer.id);
       }
     });
@@ -368,15 +324,25 @@ export class TimeSystem extends BaseSystem {
 
       console.log(`[TimeSystem] Timer ${id} completed`);
 
-      try {
-        timer.callback();
-      } catch (error) {
-        console.error(`[TimeSystem] Error in timer ${id} callback:`, error);
+      // Queue a TIMER_COMPLETE update instead of calling callback directly
+      if (this.gameUpdateWriter) {
+        this.gameUpdateWriter.enqueue({
+          type: UPDATE_TYPES.TIMER_COMPLETE,
+          payload: {
+            action: 'timer_complete',
+            data: {
+              timerId: timer.id,
+              timestamp: now,
+              payload: timer.payload, // Include original payload from timer creation
+            },
+          },
+        });
       }
 
       if (timer.recurring) {
         // Reset the timer for next iteration
         timer.startTime = now;
+        timer.expiryTime = now + timer.duration;
       } else {
         // Remove one-time timer
         this.timers.delete(id);
@@ -388,8 +354,8 @@ export class TimeSystem extends BaseSystem {
    * Get all active timers
    * @returns Array of timer information
    */
-  public getActiveTimers(): Array<{ id: string; remaining: number; paused: boolean }> {
-    const activeTimers: Array<{ id: string; remaining: number; paused: boolean }> = [];
+  public getActiveTimers(): Array<{ id: string; remaining: number }> {
+    const activeTimers: Array<{ id: string; remaining: number }> = [];
 
     this.timers.forEach((timer) => {
       const remaining = this.getTimerRemaining(timer.id);
@@ -397,12 +363,74 @@ export class TimeSystem extends BaseSystem {
         activeTimers.push({
           id: timer.id,
           remaining,
-          paused: timer.paused ?? false,
         });
       }
     });
 
     return activeTimers;
+  }
+
+  /**
+   * Save timers for persistence
+   * @returns Array of timer data that can be persisted
+   */
+  public saveTimers(): PersistedTimer[] {
+    const persistedTimers: PersistedTimer[] = [];
+
+    this.timers.forEach((timer) => {
+      persistedTimers.push({
+        id: timer.id,
+        duration: timer.duration,
+        expiryTime: timer.expiryTime,
+        payload: timer.payload,
+        recurring: timer.recurring,
+      });
+    });
+
+    return persistedTimers;
+  }
+
+  /**
+   * Restore timers from saved data
+   * @param timers Array of persisted timer data
+   */
+  public restoreTimers(timers: PersistedTimer[]): void {
+    const now = Date.now();
+
+    timers.forEach((persistedTimer) => {
+      // Check if timer has already expired
+      if (now >= persistedTimer.expiryTime) {
+        // Emit completion update for expired timers
+        if (this.gameUpdateWriter) {
+          this.gameUpdateWriter.enqueue({
+            type: UPDATE_TYPES.TIMER_COMPLETE,
+            payload: {
+              action: 'timer_complete',
+              data: {
+                timerId: persistedTimer.id,
+                timestamp: persistedTimer.expiryTime,
+                payload: persistedTimer.payload,
+                wasOffline: true,
+              },
+            },
+          });
+        }
+      } else {
+        // Restore active timer
+        const timer: Timer = {
+          id: persistedTimer.id,
+          duration: persistedTimer.duration,
+          startTime: persistedTimer.expiryTime - persistedTimer.duration,
+          expiryTime: persistedTimer.expiryTime,
+          payload: persistedTimer.payload,
+          recurring: persistedTimer.recurring,
+        };
+        this.timers.set(timer.id, timer);
+        console.log(
+          `[TimeSystem] Restored timer ${timer.id}, expires in ${timer.expiryTime - now}ms`,
+        );
+      }
+    });
   }
 
   /**
@@ -494,7 +522,6 @@ export class TimeSystem extends BaseSystem {
     tickCount: number;
     uptime: number;
     activeTimers: number;
-    isPaused: boolean;
     tickInterval: number;
   } {
     const uptime = Date.now() - (this.lastTickTime - this.tickCounter * this.tickInterval);
@@ -503,7 +530,6 @@ export class TimeSystem extends BaseSystem {
       tickCount: this.tickCounter,
       uptime,
       activeTimers: this.timers.size,
-      isPaused: this.isPaused,
       tickInterval: this.tickInterval,
     };
   }
