@@ -18,6 +18,7 @@ import type { Item, FoodItem, DrinkItem, ToyItem } from '../models/Item';
 import { UPDATE_TYPES, GROWTH_STAGES, STATUS_TYPES, BATTLE_CONSTANTS } from '../models/constants';
 import type { GrowthStage, RarityTier, DeathCause, StatType } from '../models/constants';
 import { STARTER_MOVES } from '../data/moves';
+import { getSpeciesById } from '../data/species';
 
 /**
  * Care action types
@@ -231,10 +232,17 @@ export class PetSystem extends BaseSystem {
   /**
    * Get starter moves for a species
    */
-  private getStarterMoves(_species: string): string[] {
-    // Look up species-specific starter moves, or use default
-    // For now, using a default set
-    // TODO: In future, use _species to look up specific starter moves
+  private getStarterMoves(speciesId: string): string[] {
+    // Look up species-specific starter moves from species data
+    const species = getSpeciesById(speciesId);
+
+    if (species && species.startingMoves) {
+      // Return a copy of the species-specific starter moves
+      return [...species.startingMoves];
+    }
+
+    // Fallback to default starter moves if species not found or has no starting moves
+    console.warn(`[PetSystem] No starter moves found for species '${speciesId}', using defaults`);
     return STARTER_MOVES.default ? [...STARTER_MOVES.default] : ['tackle', 'growl'];
   }
 

@@ -56,6 +56,54 @@ describe('PetSystem', () => {
       expect(pet.moves.length).toBeGreaterThan(0);
     });
 
+    it('should use species-specific starter moves when available', () => {
+      // Test with a known starter species that has specific moves
+      const firePet = petSystem.createPet({
+        name: 'Flame',
+        species: 'starter_fire',
+        fromEgg: false,
+        isStarter: true,
+      });
+
+      // According to species.ts, starter_fire should have 'tackle' and 'ember'
+      expect(firePet.moves).toEqual(['tackle', 'ember']);
+
+      // Test with another starter species
+      const waterPet = petSystem.createPet({
+        name: 'Splash',
+        species: 'starter_water',
+        fromEgg: false,
+        isStarter: true,
+      });
+
+      // According to species.ts, starter_water should have 'tackle' and 'bubble'
+      expect(waterPet.moves).toEqual(['tackle', 'bubble']);
+
+      // Test with grass starter
+      const grassPet = petSystem.createPet({
+        name: 'Leafy',
+        species: 'starter_grass',
+        fromEgg: false,
+        isStarter: true,
+      });
+
+      // According to species.ts, starter_grass should have 'tackle' and 'vine_whip'
+      expect(grassPet.moves).toEqual(['tackle', 'vine_whip']);
+    });
+
+    it('should fallback to default moves for unknown species', () => {
+      // Test with an unknown species
+      const unknownPet = petSystem.createPet({
+        name: 'Mystery',
+        species: 'unknown_species',
+        fromEgg: false,
+        isStarter: false,
+      });
+
+      // Should fallback to default moves: 'tackle' and 'growl'
+      expect(unknownPet.moves).toEqual(['tackle', 'growl']);
+    });
+
     it('should initialize care values at maximum', () => {
       const pet = petSystem.createPet({
         name: 'Max',
