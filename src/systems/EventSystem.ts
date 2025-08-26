@@ -7,7 +7,7 @@ import { BaseSystem } from './BaseSystem';
 import type { SystemInitOptions, SystemError } from './BaseSystem';
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { GameState } from '../models';
-import { UPDATE_TYPES, EVENT_TYPES } from '../models/constants';
+import { UPDATE_TYPES, EVENT_TYPES, STATUS_TYPES } from '../models/constants';
 import type { EventType } from '../models/constants';
 
 /**
@@ -933,7 +933,7 @@ export class EventSystem extends BaseSystem {
   /**
    * Complete an event activity
    */
-  private completeActivity(eventId: string, activityId: string): void {
+  private completeActivity(eventId: string, activityId: string, gameState?: GameState): void {
     const activeEvent = this.activeEvents.get(eventId);
     const eventDef = this.eventDefinitions.get(eventId);
 
@@ -947,8 +947,15 @@ export class EventSystem extends BaseSystem {
       return;
     }
 
-    // Roll for success
-    const success = Math.random() * 100 < activity.successRate;
+    // Roll for success with sickness penalty
+    let successRate = activity.successRate;
+    if (
+      gameState?.pet?.status?.primary === STATUS_TYPES.SICK &&
+      this.tuning?.sickness.activitySuccessPenalty !== undefined
+    ) {
+      successRate *= this.tuning.sickness.activitySuccessPenalty;
+    }
+    const success = Math.random() * 100 < successRate;
 
     if (success) {
       // Award tokens

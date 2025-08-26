@@ -463,6 +463,7 @@ describe('ConfigSystem', () => {
       expect(sickness.activityRiskChance).toBe(5);
       expect(sickness.lifeDecayPerHour).toBe(2);
       expect(sickness.energyRegenPenalty).toBe(0.5);
+      expect(sickness.activitySuccessPenalty).toBe(0.8);
     });
 
     it('should have injury configuration', () => {
