@@ -102,30 +102,6 @@ describe('TimeSystem', () => {
       expect(tickUpdate!.payload.action).toBe('tick');
     });
 
-    it('should pause and resume correctly', async () => {
-      await timeSystem.initialize({});
-
-      timeSystem.start();
-
-      // Wait for a tick
-      await new Promise((resolve) => setTimeout(resolve, 1100));
-      const ticksBeforePause = timeSystem.getCurrentTick();
-
-      timeSystem.pause();
-
-      // Wait while paused
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      expect(timeSystem.getCurrentTick()).toBe(ticksBeforePause);
-
-      timeSystem.resume();
-
-      // Wait for another tick after resume
-      await new Promise((resolve) => setTimeout(resolve, 1100));
-      expect(timeSystem.getCurrentTick()).toBeGreaterThan(ticksBeforePause);
-
-      timeSystem.stop();
-    });
-
     it('should set tick counter correctly', () => {
       timeSystem.setTickCounter(100);
       expect(timeSystem.getCurrentTick()).toBe(100);
@@ -173,47 +149,48 @@ describe('TimeSystem', () => {
   });
 
   describe('Timer Management', () => {
-    it('should register and trigger timers', async () => {
-      let callbackCalled = false;
-      const callback = () => {
-        callbackCalled = true;
-      };
+    it('should register and emit TIMER_COMPLETE updates', async () => {
+      await timeSystem.initialize({});
 
       timeSystem.start();
-      timeSystem.registerTimer('test-timer', 500, callback);
+      const payload = { action: 'test-action', data: 'test-data' };
+      timeSystem.registerTimer('test-timer', 500, payload);
 
       // Wait for timer to trigger
       await new Promise((resolve) => setTimeout(resolve, 600));
 
-      expect(callbackCalled).toBe(true);
+      // Check for TIMER_COMPLETE update
+      const timerUpdate = enqueuedUpdates.find((u) => u.type === UPDATE_TYPES.TIMER_COMPLETE);
+      expect(timerUpdate).toBeTruthy();
+      expect(timerUpdate!.payload.data.timerId).toBe('test-timer');
+      expect(timerUpdate!.payload.data.payload).toEqual(payload);
 
       timeSystem.stop();
     });
 
     it('should handle recurring timers', async () => {
-      let callCount = 0;
-      const callback = () => {
-        callCount++;
-      };
+      await timeSystem.initialize({});
 
       timeSystem.start();
-      timeSystem.registerTimer('recurring-timer', 300, callback, true);
+      const payload = { type: 'recurring-test' };
+      timeSystem.registerTimer('recurring-timer', 300, payload, true);
 
-      // Wait for multiple triggers - increased wait time to ensure at least 3 triggers
+      // Wait for multiple triggers
       await new Promise((resolve) => setTimeout(resolve, 1100));
 
-      expect(callCount).toBeGreaterThanOrEqual(3);
+      // Count TIMER_COMPLETE updates for this timer
+      const recurringUpdates = enqueuedUpdates.filter(
+        (u) =>
+          u.type === UPDATE_TYPES.TIMER_COMPLETE && u.payload.data.timerId === 'recurring-timer',
+      );
+      expect(recurringUpdates.length).toBeGreaterThanOrEqual(3);
 
       timeSystem.stop();
     });
 
     it('should cancel timers', () => {
-      const callback = () => {
-        // Timer callback
-      };
-
       timeSystem.start();
-      timeSystem.registerTimer('cancel-timer', 1000, callback);
+      timeSystem.registerTimer('cancel-timer', 1000);
 
       const cancelled = timeSystem.cancelTimer('cancel-timer');
       expect(cancelled).toBe(true);
@@ -226,10 +203,8 @@ describe('TimeSystem', () => {
     });
 
     it('should get remaining time for timers', async () => {
-      const callback = () => {};
-
       timeSystem.start();
-      timeSystem.registerTimer('remaining-timer', 1000, callback);
+      timeSystem.registerTimer('remaining-timer', 1000);
 
       // Check immediately
       const remaining1 = timeSystem.getTimerRemaining('remaining-timer');
@@ -249,37 +224,71 @@ describe('TimeSystem', () => {
       timeSystem.stop();
     });
 
-    it('should pause and resume timers', async () => {
-      let callbackCalled = false;
-      const callback = () => {
-        callbackCalled = true;
+    it('should persist and restore timers', async () => {
+      await timeSystem.initialize({});
+
+      // Register some timers
+      timeSystem.registerTimer('timer1', 5000, { type: 'action1' });
+      timeSystem.registerTimer('timer2', 10000, { type: 'action2' });
+
+      // Save timers
+      const savedTimers = timeSystem.saveTimers();
+      expect(savedTimers.length).toBe(2);
+      expect(savedTimers[0]?.id).toBe('timer1');
+      expect(savedTimers[1]?.id).toBe('timer2');
+
+      // Clear and restore
+      timeSystem.clearAllTimers();
+      expect(timeSystem.getActiveTimers().length).toBe(0);
+
+      // Restore timers
+      timeSystem.restoreTimers(savedTimers);
+      const activeTimers = timeSystem.getActiveTimers();
+      expect(activeTimers.length).toBe(2);
+
+      timeSystem.stop();
+    });
+
+    it('should handle expired timers during restore', async () => {
+      await timeSystem.initialize({});
+
+      const now = Date.now();
+      const expiredTimer = {
+        id: 'expired-timer',
+        duration: 1000,
+        expiryTime: now - 1000, // Already expired
+        payload: { type: 'expired-action' },
       };
 
-      timeSystem.start();
-      timeSystem.registerTimer('pause-timer', 600, callback); // Increased from 500ms
+      const activeTimer = {
+        id: 'active-timer',
+        duration: 5000,
+        expiryTime: now + 5000, // Still active
+        payload: { type: 'active-action' },
+      };
 
-      // Pause after 200ms
-      await new Promise((resolve) => setTimeout(resolve, 200));
-      timeSystem.pause();
+      // Restore timers
+      timeSystem.restoreTimers([expiredTimer, activeTimer]);
 
-      // Wait while paused
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      expect(callbackCalled).toBe(false);
+      // Check that expired timer emitted completion update
+      const expiredUpdate = enqueuedUpdates.find(
+        (u) => u.type === UPDATE_TYPES.TIMER_COMPLETE && u.payload.data.timerId === 'expired-timer',
+      );
+      expect(expiredUpdate).toBeTruthy();
+      expect(expiredUpdate!.payload.data.wasOffline).toBe(true);
 
-      // Resume and wait for completion - increased wait time for better reliability
-      timeSystem.resume();
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Increased from 400ms
-      expect(callbackCalled).toBe(true);
+      // Check that active timer was restored
+      const activeTimers = timeSystem.getActiveTimers();
+      expect(activeTimers.length).toBe(1);
+      expect(activeTimers[0]?.id).toBe('active-timer');
 
       timeSystem.stop();
     });
 
     it('should get active timers', () => {
-      const callback = () => {};
-
       timeSystem.start();
-      timeSystem.registerTimer('timer1', 1000, callback);
-      timeSystem.registerTimer('timer2', 2000, callback);
+      timeSystem.registerTimer('timer1', 1000);
+      timeSystem.registerTimer('timer2', 2000);
 
       const activeTimers = timeSystem.getActiveTimers();
       expect(activeTimers.length).toBe(2);
@@ -290,11 +299,9 @@ describe('TimeSystem', () => {
     });
 
     it('should clear all timers', () => {
-      const callback = () => {};
-
       timeSystem.start();
-      timeSystem.registerTimer('timer1', 1000, callback);
-      timeSystem.registerTimer('timer2', 2000, callback);
+      timeSystem.registerTimer('timer1', 1000);
+      timeSystem.registerTimer('timer2', 2000);
 
       timeSystem.clearAllTimers();
 
@@ -328,7 +335,7 @@ describe('TimeSystem', () => {
       await timeSystem.initialize({});
       timeSystem.start();
 
-      timeSystem.registerTimer('shutdown-timer', 1000, () => {});
+      timeSystem.registerTimer('shutdown-timer', 1000);
 
       await timeSystem.shutdown();
 
@@ -340,7 +347,7 @@ describe('TimeSystem', () => {
       await timeSystem.initialize({});
 
       timeSystem.setTickCounter(100);
-      timeSystem.registerTimer('reset-timer', 1000, () => {});
+      timeSystem.registerTimer('reset-timer', 1000);
 
       await timeSystem.reset();
 
@@ -348,22 +355,21 @@ describe('TimeSystem', () => {
       expect(timeSystem.getActiveTimers().length).toBe(0);
     });
 
-    it('should handle errors gracefully', async () => {
+    it('should handle timer completion without errors', async () => {
       await timeSystem.initialize({});
 
-      // Register a timer with a callback that throws
-      const errorCallback = () => {
-        throw new Error('Timer callback error');
-      };
-
       timeSystem.start();
-      timeSystem.registerTimer('error-timer', 100, errorCallback);
+      timeSystem.registerTimer('test-timer', 100, { test: 'data' });
 
-      // Wait for timer to trigger - should not crash
+      // Wait for timer to trigger
       await new Promise((resolve) => setTimeout(resolve, 200));
 
       // System should still be running
       expect(timeSystem.isActive()).toBe(true);
+
+      // Check that timer completion was queued
+      const timerUpdate = enqueuedUpdates.find((u) => u.type === UPDATE_TYPES.TIMER_COMPLETE);
+      expect(timerUpdate).toBeTruthy();
 
       timeSystem.stop();
     });
@@ -374,12 +380,11 @@ describe('TimeSystem', () => {
       await timeSystem.initialize({});
       timeSystem.start();
 
-      timeSystem.registerTimer('stats-timer', 1000, () => {});
+      timeSystem.registerTimer('stats-timer', 1000);
 
       const stats = timeSystem.getStatistics();
 
       expect(stats.activeTimers).toBe(1);
-      expect(stats.isPaused).toBe(false);
       expect(stats.tickInterval).toBe(1000); // 1 second in milliseconds
 
       timeSystem.stop();
@@ -414,14 +419,11 @@ describe('TimeSystem', () => {
     });
 
     it('should handle timer with same id', () => {
-      const callback1 = jest.fn();
-      const callback2 = jest.fn();
-
       timeSystem.start();
 
-      timeSystem.registerTimer('duplicate', 500, callback1);
+      timeSystem.registerTimer('duplicate', 500, { payload: 1 });
       // Should replace the first timer
-      timeSystem.registerTimer('duplicate', 500, callback2);
+      timeSystem.registerTimer('duplicate', 500, { payload: 2 });
 
       const activeTimers = timeSystem.getActiveTimers();
       expect(activeTimers.length).toBe(1);
