@@ -772,16 +772,44 @@ export class ActivitySystem extends BaseSystem {
     }
 
     // Check for injuries that block activities
-    if (pet.status.primary === STATUS_TYPES.INJURED) {
+    if (pet.injuries && pet.injuries.length > 0) {
       const blockedActivities: ActivityType[] = [
         ACTIVITY_TYPES.TRAINING,
         ACTIVITY_TYPES.ARENA_PRACTICE,
       ];
+
       if (blockedActivities.includes(type)) {
-        return {
-          valid: false,
-          error: 'Cannot perform this activity while injured',
-        };
+        // Get the most severe injury
+        const maxSeverity = Math.max(...pet.injuries.map((i) => i.severity));
+
+        // Training is blocked for any injury
+        if (type === ACTIVITY_TYPES.TRAINING) {
+          return {
+            valid: false,
+            error: 'Cannot train while injured',
+          };
+        }
+
+        // Arena practice is blocked for moderate or severe injuries
+        if (type === ACTIVITY_TYPES.ARENA_PRACTICE && maxSeverity > 25) {
+          return {
+            valid: false,
+            error: 'Cannot practice in arena with moderate or severe injuries',
+          };
+        }
+      }
+
+      // Mining is blocked for moderate or severe injuries
+      if (type === ACTIVITY_TYPES.MINING) {
+        const maxSeverity = Math.max(...pet.injuries.map((i) => i.severity));
+        const hasFracture = pet.injuries.some((i: any) => i.type === 'FRACTURE');
+
+        if (maxSeverity > 25 || hasFracture) {
+          return {
+            valid: false,
+            error: 'Cannot mine with moderate injuries or fractures',
+          };
+        }
       }
     }
 

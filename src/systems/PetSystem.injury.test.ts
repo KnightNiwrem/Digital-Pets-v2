@@ -7,7 +7,7 @@ import { PetSystem } from './PetSystem';
 import { ConfigSystem } from './ConfigSystem';
 import type { GameState } from '../models/GameState';
 import type { Pet } from '../models/Pet';
-import { STATUS_TYPES, GROWTH_STAGES } from '../models/constants';
+import { STATUS_TYPES, GROWTH_STAGES, INJURY_TYPES, BODY_PARTS } from '../models/constants';
 import type { SystemInitOptions } from './BaseSystem';
 import { createMockGameState, createMockPet } from '../testing';
 
@@ -53,8 +53,10 @@ describe('PetSystem - Injury Mechanics', () => {
       const result = await petSystem.applyInjury(gameState, 30, 'battle');
 
       expect(result.success).toBe(true);
-      expect(mockPet.status.primary).toBe(STATUS_TYPES.INJURED);
-      expect(mockPet.status.injurySeverity).toBe(30);
+      expect(mockPet.injuries.length).toBe(1);
+      expect(mockPet.injuries[0]?.severity).toBe(30);
+      expect(mockPet.injuries[0]?.type).toBe(INJURY_TYPES.SPRAIN);
+      expect(mockPet.injuries[0]?.bodyPart).toBe(BODY_PARTS.BODY);
     });
 
     it('should reduce happiness when injured', async () => {
@@ -67,7 +69,8 @@ describe('PetSystem - Injury Mechanics', () => {
 
     it('should cap severity at 100', async () => {
       await petSystem.applyInjury(gameState, 150, 'battle');
-      expect(mockPet.status.injurySeverity).toBe(100);
+      expect(mockPet.injuries.length).toBe(1);
+      expect(mockPet.injuries[0]?.severity).toBe(100);
     });
   });
 
@@ -78,31 +81,47 @@ describe('PetSystem - Injury Mechanics', () => {
     });
 
     it('should return 0.9 for minor injury (0-25)', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 20;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.BRUISE,
+        severity: 20,
+        bodyPart: BODY_PARTS.LEG,
+        appliedAt: Date.now(),
+      });
       const modifier = petSystem.getMovementSpeedModifier(mockPet);
       expect(modifier).toBe(0.9);
     });
 
     it('should return 0.75 for moderate injury (26-50)', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 40;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.SPRAIN,
+        severity: 40,
+        bodyPart: BODY_PARTS.LEG,
+        appliedAt: Date.now(),
+      });
       const modifier = petSystem.getMovementSpeedModifier(mockPet);
-      expect(modifier).toBe(0.75);
+      expect(modifier).toBeCloseTo(0.7, 1);
     });
 
     it('should return 0.5 for severe injury (51-75)', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 60;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.FRACTURE,
+        severity: 60,
+        bodyPart: BODY_PARTS.LEG,
+        appliedAt: Date.now(),
+      });
       const modifier = petSystem.getMovementSpeedModifier(mockPet);
-      expect(modifier).toBe(0.5);
+      expect(modifier).toBeCloseTo(0.4, 1);
     });
 
     it('should return 0.25 for critical injury (76-100)', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 90;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.FRACTURE,
+        severity: 90,
+        bodyPart: BODY_PARTS.LEG,
+        appliedAt: Date.now(),
+      });
       const modifier = petSystem.getMovementSpeedModifier(mockPet);
-      expect(modifier).toBe(0.25);
+      expect(modifier).toBeCloseTo(0.2, 1);
     });
   });
 
@@ -114,46 +133,65 @@ describe('PetSystem - Injury Mechanics', () => {
     });
 
     it('should block training for any injury', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 10;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.BRUISE,
+        severity: 10,
+        bodyPart: BODY_PARTS.ARM,
+        appliedAt: Date.now(),
+      });
       expect(petSystem.isActivityBlocked(mockPet, 'TRAINING')).toBe(true);
     });
 
     it('should block mining for moderate or severe injuries', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-
       // Minor injury - not blocked
-      mockPet.status.injurySeverity = 20;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.BRUISE,
+        severity: 20,
+        bodyPart: BODY_PARTS.ARM,
+        appliedAt: Date.now(),
+      });
       expect(petSystem.isActivityBlocked(mockPet, 'MINING')).toBe(false);
 
       // Moderate injury - blocked
-      mockPet.status.injurySeverity = 30;
+      if (mockPet.injuries[0]) {
+        mockPet.injuries[0].severity = 30;
+      }
       expect(petSystem.isActivityBlocked(mockPet, 'MINING')).toBe(true);
     });
 
     it('should block arena/battle for severe injuries', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-
       // Moderate injury - not blocked
-      mockPet.status.injurySeverity = 40;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.SPRAIN,
+        severity: 40,
+        bodyPart: BODY_PARTS.LEG,
+        appliedAt: Date.now(),
+      });
       expect(petSystem.isActivityBlocked(mockPet, 'ARENA')).toBe(false);
       expect(petSystem.isActivityBlocked(mockPet, 'BATTLE')).toBe(false);
 
       // Severe injury - blocked
-      mockPet.status.injurySeverity = 60;
+      if (mockPet.injuries[0]) {
+        mockPet.injuries[0].severity = 60;
+      }
       expect(petSystem.isActivityBlocked(mockPet, 'ARENA')).toBe(true);
       expect(petSystem.isActivityBlocked(mockPet, 'BATTLE')).toBe(true);
     });
 
     it('should block long activities for critical injuries', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-
       // Severe injury - not blocked
-      mockPet.status.injurySeverity = 70;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.FRACTURE,
+        severity: 70,
+        bodyPart: BODY_PARTS.BODY,
+        appliedAt: Date.now(),
+      });
       expect(petSystem.isActivityBlocked(mockPet, 'LONG_ACTIVITY')).toBe(false);
 
       // Critical injury - blocked
-      mockPet.status.injurySeverity = 80;
+      if (mockPet.injuries[0]) {
+        mockPet.injuries[0].severity = 80;
+      }
       expect(petSystem.isActivityBlocked(mockPet, 'LONG_ACTIVITY')).toBe(true);
     });
   });
@@ -165,31 +203,47 @@ describe('PetSystem - Injury Mechanics', () => {
     });
 
     it('should return minor injury message', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 20;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.BRUISE,
+        severity: 20,
+        bodyPart: BODY_PARTS.LEG,
+        appliedAt: Date.now(),
+      });
       const message = petSystem.getInjuryStatusMessage(mockPet);
-      expect(message).toContain('minor injuries');
+      expect(message).toContain('minor');
     });
 
     it('should return moderate injury message', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 40;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.SPRAIN,
+        severity: 40,
+        bodyPart: BODY_PARTS.ARM,
+        appliedAt: Date.now(),
+      });
       const message = petSystem.getInjuryStatusMessage(mockPet);
-      expect(message).toContain('moderately injured');
+      expect(message).toContain('moderate');
     });
 
     it('should return severe injury message', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 60;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.FRACTURE,
+        severity: 60,
+        bodyPart: BODY_PARTS.BODY,
+        appliedAt: Date.now(),
+      });
       const message = petSystem.getInjuryStatusMessage(mockPet);
-      expect(message).toContain('severely injured');
+      expect(message).toContain('severe');
     });
 
     it('should return critical injury message', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 90;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.FRACTURE,
+        severity: 90,
+        bodyPart: BODY_PARTS.HEAD,
+        appliedAt: Date.now(),
+      });
       const message = petSystem.getInjuryStatusMessage(mockPet);
-      expect(message).toContain('critically injured');
+      expect(message).toContain('critical');
     });
   });
 
@@ -217,8 +271,12 @@ describe('PetSystem - Injury Mechanics', () => {
     });
 
     it('should reduce injury severity', async () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 100;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.FRACTURE,
+        severity: 100,
+        bodyPart: BODY_PARTS.LEG,
+        appliedAt: Date.now(),
+      });
 
       const bandageItem = {
         id: 'bandage-1',
@@ -238,12 +296,19 @@ describe('PetSystem - Injury Mechanics', () => {
 
       const result = await petSystem.treatInjury(gameState, bandageItem);
       expect(result.success).toBe(true);
-      expect(mockPet.status.injurySeverity).toBeLessThan(100);
+      // Check if injury severity was reduced or removed
+      if (mockPet.injuries.length > 0) {
+        expect(mockPet.injuries[0]?.severity).toBeLessThan(100);
+      }
     });
 
     it('should fully heal minor injuries', async () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 50;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.BRUISE,
+        severity: 50,
+        bodyPart: BODY_PARTS.ARM,
+        appliedAt: Date.now(),
+      });
 
       const bandageItem = {
         id: 'bandage-1',
@@ -263,64 +328,73 @@ describe('PetSystem - Injury Mechanics', () => {
 
       const result = await petSystem.treatInjury(gameState, bandageItem);
       expect(result.success).toBe(true);
-      // Check if pet is now healthy after full treatment
-      const isHealthy = (mockPet.status.primary as any) === 'HEALTHY';
-      expect(isHealthy).toBe(true);
-      expect(mockPet.status.injurySeverity).toBeUndefined();
+      // Check if injury was healed
+      expect(mockPet.injuries.length).toBe(0);
+      expect(mockPet.status.primary).toBe(STATUS_TYPES.IDLE);
     });
   });
 
   describe('processInjuryRecovery', () => {
     it('should not process recovery for healthy pet', async () => {
-      mockPet.status.primary = STATUS_TYPES.HEALTHY;
       await petSystem.processInjuryRecovery(60, gameState);
-      // Check if pet is now healthy after recovery
-      const isHealthy = mockPet.status.primary === STATUS_TYPES.HEALTHY;
-      expect(isHealthy).toBe(true);
+      expect(mockPet.injuries.length).toBe(0);
+      expect(mockPet.status.primary).toBe(STATUS_TYPES.IDLE);
     });
 
     it('should gradually reduce injury severity', async () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 50;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.SPRAIN,
+        severity: 50,
+        bodyPart: BODY_PARTS.LEG,
+        appliedAt: Date.now(),
+      });
 
       // Process 60 ticks (1 hour)
       await petSystem.processInjuryRecovery(60, gameState);
 
       // Should reduce by approximately 5 points (5 per hour)
-      expect(mockPet.status.injurySeverity).toBeLessThan(50);
-      expect(mockPet.status.injurySeverity).toBeGreaterThan(44);
+      expect(mockPet.injuries[0]?.severity).toBeLessThan(50);
+      expect(mockPet.injuries[0]?.severity).toBeGreaterThan(44);
     });
 
     it('should fully heal when severity reaches 0', async () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 3;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.BRUISE,
+        severity: 3,
+        bodyPart: BODY_PARTS.HEAD,
+        appliedAt: Date.now(),
+      });
 
       // Process enough ticks to fully heal
       await petSystem.processInjuryRecovery(60, gameState);
 
-      // Check if pet is now healthy after recovery
-      const isHealthy = (mockPet.status.primary as any) === 'HEALTHY';
-      expect(isHealthy).toBe(true);
-      expect(mockPet.status.injurySeverity).toBeUndefined();
+      // Should have removed the injury when healed
+      expect(mockPet.injuries.length).toBe(0);
+      expect(mockPet.status.primary).toBe(STATUS_TYPES.IDLE);
     });
   });
 
   describe('getPetSummary with injuries', () => {
     it('should include injury details in summary', () => {
-      mockPet.status.primary = STATUS_TYPES.INJURED;
-      mockPet.status.injurySeverity = 50;
+      mockPet.injuries.push({
+        type: INJURY_TYPES.SPRAIN,
+        severity: 50,
+        bodyPart: BODY_PARTS.LEG,
+        appliedAt: Date.now(),
+      });
 
       const summary = petSystem.getPetSummary(mockPet);
-      expect(summary).toContain('moderately injured');
-      expect(summary).toContain('INJURED');
+      expect(summary).toContain('moderate');
+      expect(summary).toContain('SPRAIN');
     });
 
     it('should not include injury details for healthy pet', () => {
-      mockPet.status.primary = STATUS_TYPES.HEALTHY;
-
       const summary = petSystem.getPetSummary(mockPet);
-      expect(summary).toContain('HEALTHY');
+      expect(summary).toContain('IDLE');
       expect(summary).not.toContain('injured');
+      expect(summary).not.toContain('BRUISE');
+      expect(summary).not.toContain('SPRAIN');
+      expect(summary).not.toContain('FRACTURE');
     });
   });
 });

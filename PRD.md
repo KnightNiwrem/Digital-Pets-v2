@@ -93,16 +93,30 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Cleaning Poop is instant.
   - Hygiene items can reduce the Poop count by a set amount or reset it to zero.
 
-8. Sickness and Injury
+8. Pet State, Sickness and Injury
 
-- Sickness:
+- Pet State:
+  - Contains exclusive states only: IDLE, SLEEPING, TRAVELING, EXPLORING, BATTLING, IN_ACTIVITY, DEAD.
+  - Only one state can be active at a time.
+  - State transitions are managed by the game systems based on user actions and timers.
+- Sickness (Array of condition objects):
+  - Pets can have multiple concurrent sicknesses, each tracked as an object.
+  - Sickness object properties:
+    - type: identifies the sickness (e.g., 'common_cold', 'food_poisoning', 'poop_sickness')
+    - severity: 0-100, determines impact on pet
+    - duration: remaining ticks or timestamp for auto-recovery
   - Causes: high Poop count, exposure from activities, small passive chance over time.
   - Effects: reduced activity success, reduced sleep Energy regeneration, small Life decrease over time.
-  - Treatment: Medicine item removes or reduces sickness after a short use time; severe cases may require multiple treatments or rest.
-- Injury:
+  - Treatment: Different medicine items may target specific sickness types; some medicines cure all types.
+- Injuries (Array of condition objects):
+  - Pets can have multiple concurrent injuries, each tracked as an object.
+  - Injury object properties:
+    - type: identifies the injury (e.g., 'bruise', 'sprain', 'fracture')
+    - severity: 0-100, determines movement penalty and activity restrictions
+    - bodyPart: affected area (e.g., 'leg', 'wing', 'body')
   - Causes: battle losses or heavy hits, rare mishaps in activities.
-  - Effects: slower travel, blocks specific activities such as Training, may slightly reduce Happiness and Life until treated.
-  - Treatment: Bandage item plus rest; some injuries require both.
+  - Effects: slower travel speed based on severity and body part, blocks specific activities such as Training, may slightly reduce Happiness and Life until treated.
+  - Treatment: Different bandages may be more effective for certain injury types; rest provides passive recovery.
 
 9. Energy and Sleep
 
@@ -110,6 +124,9 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 - Regeneration:
   - Sleeping enables passive Energy regeneration; no passive Energy regeneration while awake.
   - Energy boosters restore a chunk of Energy instantly and may use a short cooldown to prevent spam (tunable).
+- Sleep state detection:
+  - Sleep is determined by checking the pet's current state (state === SLEEPING), not by looking for active timers.
+  - This ensures consistent sleep detection across all systems.
 - Sleep end rules:
   - The pet automatically wakes when Energy is fully recovered or after eight hours of sleep, whichever occurs first.
   - Forcing the pet to wake early halves the Energy recovered during that sleep session and decreases Happiness.

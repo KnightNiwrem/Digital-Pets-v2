@@ -13,9 +13,18 @@ import type {
   HiddenCounters,
   CareValues,
   BattleStats,
+  Sickness,
 } from '../models/Pet';
 import type { Item, FoodItem, DrinkItem, ToyItem } from '../models/Item';
-import { UPDATE_TYPES, GROWTH_STAGES, STATUS_TYPES, BATTLE_CONSTANTS } from '../models/constants';
+import {
+  UPDATE_TYPES,
+  GROWTH_STAGES,
+  STATUS_TYPES,
+  BATTLE_CONSTANTS,
+  SICKNESS_TYPES,
+  INJURY_TYPES,
+  BODY_PARTS,
+} from '../models/constants';
 import type { GrowthStage, RarityTier, DeathCause, StatType } from '../models/constants';
 import { STARTER_MOVES } from '../data/moves';
 import { getSpeciesById } from '../data/species';
@@ -184,8 +193,10 @@ export class PetSystem extends BaseSystem {
 
       // Status
       status: {
-        primary: STATUS_TYPES.HEALTHY,
+        primary: STATUS_TYPES.IDLE,
       },
+      sicknesses: [], // Start with no sicknesses
+      injuries: [], // Start with no injuries
       poopCount: 0,
 
       // Battle moves
@@ -250,8 +261,14 @@ export class PetSystem extends BaseSystem {
   public getSleepEnergyRegenRate(pet: Pet): number {
     if (!this.tuning) return 0;
     let rate = this.tuning.energy.sleepRegenRatePerHour[pet.stage] || 0;
-    if (pet.status.primary === STATUS_TYPES.SICK) {
-      rate *= this.tuning.sickness.energyRegenPenalty;
+
+    // Apply penalty if pet has any sickness
+    if (pet.sicknesses.length > 0) {
+      // Use the most severe sickness for penalty calculation
+      const maxSeverity = Math.max(...pet.sicknesses.map((s) => s.severity));
+      const penaltyMultiplier =
+        1 - (maxSeverity / 100) * (1 - this.tuning.sickness.energyRegenPenalty);
+      rate *= penaltyMultiplier;
     }
     return rate;
   }
@@ -329,11 +346,15 @@ export class PetSystem extends BaseSystem {
       );
     }
 
-    // Check if pet is sick and apply life decay
-    if (pet.status.primary === STATUS_TYPES.SICK && this.tuning) {
+    // Check if pet has sicknesses and apply life decay
+    if (pet.sicknesses.length > 0 && this.tuning) {
+      // Life decay based on total sickness severity
+      const totalSeverity = pet.sicknesses.reduce((sum, s) => sum + s.severity, 0);
+      const decayMultiplier = Math.min(1, totalSeverity / 100);
       pet.hiddenCounters.lifeTicks = Math.max(
         0,
-        pet.hiddenCounters.lifeTicks - (this.tuning.sickness.lifeDecayPerHour * ticks) / 60,
+        pet.hiddenCounters.lifeTicks -
+          (this.tuning.sickness.lifeDecayPerHour * decayMultiplier * ticks) / 60,
       );
     }
   }
@@ -663,9 +684,6 @@ export class PetSystem extends BaseSystem {
 
     const pet = gameState.pet;
 
-    // Skip if already sick
-    if (pet.status.primary === STATUS_TYPES.SICK) return;
-
     // Calculate sickness chance
     let sicknessChance = this.tuning.sickness.baseChancePerHour / 60; // Per tick chance
 
@@ -676,10 +694,25 @@ export class PetSystem extends BaseSystem {
 
     // Roll for sickness
     if (Math.random() * 100 < sicknessChance) {
-      pet.status.primary = STATUS_TYPES.SICK;
-      pet.status.sicknessSeverity = 20 + Math.random() * 30; // 20-50 severity
+      // Determine sickness type
+      const sicknessType =
+        pet.poopCount >= this.tuning.poop.sicknessThreshold
+          ? SICKNESS_TYPES.POOP_SICKNESS
+          : SICKNESS_TYPES.COMMON_COLD;
 
-      console.log(`${pet.name} got sick! Severity: ${pet.status.sicknessSeverity}`);
+      // Check if pet already has this sickness
+      const existingSickness = pet.sicknesses.find((s) => s.type === sicknessType);
+
+      if (!existingSickness) {
+        const newSickness: Sickness = {
+          type: sicknessType,
+          severity: 20 + Math.random() * 30, // 20-50 severity
+          appliedAt: Date.now(),
+        };
+
+        pet.sicknesses.push(newSickness);
+        console.log(`${pet.name} got ${sicknessType}! Severity: ${newSickness.severity}`);
+      }
     }
   }
 
@@ -693,7 +726,7 @@ export class PetSystem extends BaseSystem {
 
     const pet = gameState.pet;
 
-    if (pet.status.primary !== STATUS_TYPES.SICK) {
+    if (pet.sicknesses.length === 0) {
       return { success: false, message: `${pet.name} is not sick` };
     }
 
@@ -701,15 +734,16 @@ export class PetSystem extends BaseSystem {
       return { success: false, message: 'Configuration not loaded' };
     }
 
-    // Reduce sickness severity
+    // Medicine treats all sicknesses
     const effectiveness = this.tuning.items.medicineEffectiveness;
-    pet.status.sicknessSeverity = Math.max(0, (pet.status.sicknessSeverity || 0) - effectiveness);
 
-    // Cure if severity is 0
-    if (pet.status.sicknessSeverity <= 0) {
-      pet.status.primary = STATUS_TYPES.HEALTHY;
-      pet.status.sicknessSeverity = undefined;
-    }
+    // Reduce severity of all sicknesses
+    pet.sicknesses = pet.sicknesses
+      .map((sickness) => ({
+        ...sickness,
+        severity: Math.max(0, sickness.severity - effectiveness),
+      }))
+      .filter((sickness) => sickness.severity > 0); // Remove cured sicknesses
 
     // Queue update to consume medicine
     if (this.gameUpdateWriter) {
@@ -730,7 +764,7 @@ export class PetSystem extends BaseSystem {
     return {
       success: true,
       message:
-        pet.status.primary === STATUS_TYPES.HEALTHY
+        pet.sicknesses.length === 0
           ? `${pet.name} has been cured!`
           : `${pet.name}'s condition improved!`,
       itemConsumed: true,
@@ -747,7 +781,7 @@ export class PetSystem extends BaseSystem {
 
     const pet = gameState.pet;
 
-    if (pet.status.primary !== STATUS_TYPES.INJURED) {
+    if (pet.injuries.length === 0) {
       return { success: false, message: `${pet.name} is not injured` };
     }
 
@@ -755,15 +789,16 @@ export class PetSystem extends BaseSystem {
       return { success: false, message: 'Configuration not loaded' };
     }
 
-    // Reduce injury severity
+    // Bandage treats all injuries
     const effectiveness = this.tuning.items.bandageEffectiveness;
-    pet.status.injurySeverity = Math.max(0, (pet.status.injurySeverity || 0) - effectiveness);
 
-    // Heal if severity is 0
-    if (pet.status.injurySeverity <= 0) {
-      pet.status.primary = STATUS_TYPES.HEALTHY;
-      pet.status.injurySeverity = undefined;
-    }
+    // Reduce severity of all injuries
+    pet.injuries = pet.injuries
+      .map((injury) => ({
+        ...injury,
+        severity: Math.max(0, injury.severity - effectiveness),
+      }))
+      .filter((injury) => injury.severity > 0); // Remove healed injuries
 
     // Queue update to consume bandage
     if (this.gameUpdateWriter) {
@@ -784,7 +819,7 @@ export class PetSystem extends BaseSystem {
     return {
       success: true,
       message:
-        pet.status.primary === STATUS_TYPES.HEALTHY
+        pet.injuries.length === 0
           ? `${pet.name}'s injury has been healed!`
           : `${pet.name}'s injury is healing!`,
       itemConsumed: true,
@@ -1039,9 +1074,16 @@ export class PetSystem extends BaseSystem {
     }
 
     // Update sickness if triggered
-    if (offlineCalculation.sicknessTriggered && pet.status.primary === STATUS_TYPES.HEALTHY) {
-      pet.status.primary = STATUS_TYPES.SICK;
-      pet.status.sicknessSeverity = 30; // Medium severity for offline sickness
+    if (offlineCalculation.sicknessTriggered) {
+      // Add a common cold from offline time
+      const existingSickness = pet.sicknesses.find((s) => s.type === SICKNESS_TYPES.COMMON_COLD);
+      if (!existingSickness) {
+        pet.sicknesses.push({
+          type: SICKNESS_TYPES.COMMON_COLD,
+          severity: 30, // Medium severity for offline sickness
+          appliedAt: Date.now(),
+        });
+      }
     }
 
     // Update care values from counters
@@ -1067,9 +1109,33 @@ export class PetSystem extends BaseSystem {
 
     const pet = gameState.pet;
 
-    // Set injured status
-    pet.status.primary = STATUS_TYPES.INJURED;
-    pet.status.injurySeverity = Math.min(100, severity);
+    // Add injury based on source
+    const injuryType =
+      severity > 50
+        ? INJURY_TYPES.FRACTURE
+        : severity > 25
+          ? INJURY_TYPES.SPRAIN
+          : INJURY_TYPES.BRUISE;
+
+    const bodyPart = source === 'battle' ? BODY_PARTS.BODY : BODY_PARTS.LEG;
+
+    // Check if similar injury exists
+    const existingInjury = pet.injuries.find(
+      (i) => i.type === injuryType && i.bodyPart === bodyPart,
+    );
+
+    if (existingInjury) {
+      // Increase severity of existing injury
+      existingInjury.severity = Math.min(100, existingInjury.severity + severity / 2);
+    } else {
+      // Add new injury
+      pet.injuries.push({
+        type: injuryType,
+        severity: Math.min(100, severity),
+        bodyPart,
+        appliedAt: Date.now(),
+      });
+    }
 
     // Reduce happiness from injury
     if (this.tuning) {
@@ -1095,26 +1161,37 @@ export class PetSystem extends BaseSystem {
    * Returns a multiplier (1.0 = normal speed, 0.5 = half speed)
    */
   public getMovementSpeedModifier(pet: Pet): number {
-    if (pet.status.primary !== STATUS_TYPES.INJURED) {
+    if (pet.injuries.length === 0) {
       return 1.0;
     }
 
-    const severity = pet.status.injurySeverity || 0;
+    // Calculate speed penalty based on leg injuries
+    const legInjuries = pet.injuries.filter((i) => i.bodyPart === BODY_PARTS.LEG);
+    const otherInjuries = pet.injuries.filter((i) => i.bodyPart !== BODY_PARTS.LEG);
 
-    // Injury slows movement based on severity
-    // Severity 0-25: 90% speed
-    // Severity 26-50: 75% speed
-    // Severity 51-75: 50% speed
-    // Severity 76-100: 25% speed
-    if (severity <= 25) {
-      return 0.9;
-    } else if (severity <= 50) {
-      return 0.75;
-    } else if (severity <= 75) {
-      return 0.5;
-    } else {
-      return 0.25;
+    let speedModifier = 1.0;
+
+    // Leg injuries have more impact on movement
+    if (legInjuries.length > 0) {
+      const maxLegSeverity = Math.max(...legInjuries.map((i) => i.severity));
+      if (maxLegSeverity <= 25) {
+        speedModifier *= 0.9;
+      } else if (maxLegSeverity <= 50) {
+        speedModifier *= 0.7;
+      } else if (maxLegSeverity <= 75) {
+        speedModifier *= 0.4;
+      } else {
+        speedModifier *= 0.2;
+      }
     }
+
+    // Other injuries have less impact
+    if (otherInjuries.length > 0) {
+      const maxOtherSeverity = Math.max(...otherInjuries.map((i) => i.severity));
+      speedModifier *= 1 - maxOtherSeverity / 200; // Max 50% penalty from non-leg injuries
+    }
+
+    return Math.max(0.1, speedModifier); // Never go below 10% speed
   }
 
   /**
@@ -1122,29 +1199,31 @@ export class PetSystem extends BaseSystem {
    * Returns true if the activity is blocked
    */
   public isActivityBlocked(pet: Pet, activityType: string): boolean {
-    if (pet.status.primary !== STATUS_TYPES.INJURED) {
+    if (pet.injuries.length === 0) {
       return false;
     }
 
-    const severity = pet.status.injurySeverity || 0;
+    // Get the most severe injury
+    const maxSeverity = Math.max(...pet.injuries.map((i) => i.severity));
+    const hasFracture = pet.injuries.some((i) => i.type === INJURY_TYPES.FRACTURE);
 
     // Training is blocked for any injury
     if (activityType === 'TRAINING') {
       return true;
     }
 
-    // Mining is blocked for moderate or severe injuries
-    if (activityType === 'MINING' && severity > 25) {
+    // Mining is blocked for moderate or severe injuries, or any fracture
+    if (activityType === 'MINING' && (maxSeverity > 25 || hasFracture)) {
       return true;
     }
 
     // Arena/Battle activities are blocked for severe injuries
-    if ((activityType === 'ARENA' || activityType === 'BATTLE') && severity > 50) {
+    if ((activityType === 'ARENA' || activityType === 'BATTLE') && maxSeverity > 50) {
       return true;
     }
 
     // Long duration activities blocked for severe injuries
-    if (activityType === 'LONG_ACTIVITY' && severity > 75) {
+    if (activityType === 'LONG_ACTIVITY' && maxSeverity > 75) {
       return true;
     }
 
@@ -1155,21 +1234,41 @@ export class PetSystem extends BaseSystem {
    * Get injury status message
    */
   public getInjuryStatusMessage(pet: Pet): string | null {
-    if (pet.status.primary !== STATUS_TYPES.INJURED) {
+    if (pet.injuries.length === 0) {
       return null;
     }
 
-    const severity = pet.status.injurySeverity || 0;
+    // Build a message based on all injuries
+    const messages: string[] = [];
 
-    if (severity <= 25) {
-      return `${pet.name} has minor injuries (movement slightly reduced)`;
-    } else if (severity <= 50) {
-      return `${pet.name} is moderately injured (movement reduced, cannot train or mine)`;
-    } else if (severity <= 75) {
-      return `${pet.name} is severely injured (movement greatly reduced, many activities blocked)`;
-    } else {
-      return `${pet.name} is critically injured (movement minimal, most activities blocked)`;
+    for (const injury of pet.injuries) {
+      let severityText = '';
+      if (injury.severity <= 25) {
+        severityText = 'minor';
+      } else if (injury.severity <= 50) {
+        severityText = 'moderate';
+      } else if (injury.severity <= 75) {
+        severityText = 'severe';
+      } else {
+        severityText = 'critical';
+      }
+
+      messages.push(`${severityText} ${injury.type} on ${injury.bodyPart}`);
     }
+
+    const speedModifier = this.getMovementSpeedModifier(pet);
+    let movementText = '';
+    if (speedModifier >= 0.9) {
+      movementText = 'movement slightly reduced';
+    } else if (speedModifier >= 0.7) {
+      movementText = 'movement reduced';
+    } else if (speedModifier >= 0.4) {
+      movementText = 'movement greatly reduced';
+    } else {
+      movementText = 'movement minimal';
+    }
+
+    return `${pet.name} has ${messages.join(', ')} (${movementText})`;
   }
 
   /**
@@ -1180,7 +1279,7 @@ export class PetSystem extends BaseSystem {
 
     const pet = gameState.pet;
 
-    if (pet.status.primary !== STATUS_TYPES.INJURED) return;
+    if (pet.injuries.length === 0) return;
 
     if (!this.tuning) return;
 
@@ -1188,13 +1287,17 @@ export class PetSystem extends BaseSystem {
     const recoveryRate = this.tuning.injury?.recoveryRatePerHour || 5;
     const recoveryAmount = (recoveryRate * ticks) / 60;
 
-    pet.status.injurySeverity = Math.max(0, (pet.status.injurySeverity || 0) - recoveryAmount);
+    // Apply recovery to all injuries
+    pet.injuries = pet.injuries
+      .map((injury) => ({
+        ...injury,
+        severity: Math.max(0, injury.severity - recoveryAmount),
+      }))
+      .filter((injury) => injury.severity > 0); // Remove healed injuries
 
-    // Fully recovered
-    if (pet.status.injurySeverity <= 0) {
-      pet.status.primary = STATUS_TYPES.HEALTHY;
-      pet.status.injurySeverity = undefined;
-      console.log(`${pet.name} has fully recovered from injuries!`);
+    // Check if fully recovered
+    if (pet.injuries.length === 0) {
+      console.log(`${pet.name} has fully recovered from all injuries!`);
     }
   }
 
@@ -1213,11 +1316,19 @@ export class PetSystem extends BaseSystem {
     status += `Status: ${pet.status.primary}\n`;
 
     // Add injury details if injured
-    if (pet.status.primary === STATUS_TYPES.INJURED) {
+    if (pet.injuries.length > 0) {
       const injuryMsg = this.getInjuryStatusMessage(pet);
       if (injuryMsg) {
         status += `${injuryMsg}\n`;
       }
+    }
+
+    // Add sickness details if sick
+    if (pet.sicknesses.length > 0) {
+      const sicknesses = pet.sicknesses
+        .map((s) => `${s.type} (severity: ${s.severity.toFixed(0)})`)
+        .join(', ');
+      status += `Sicknesses: ${sicknesses}\n`;
     }
 
     status += `Poop: ${pet.poopCount}\n`;

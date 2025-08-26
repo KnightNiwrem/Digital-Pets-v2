@@ -52,7 +52,9 @@ describe('PetSystem', () => {
       expect(pet.energy).toBe(50);
       expect(pet.maxEnergy).toBe(50);
       expect(pet.poopCount).toBe(0);
-      expect(pet.status.primary).toBe(STATUS_TYPES.HEALTHY);
+      expect(pet.status.primary).toBe(STATUS_TYPES.IDLE);
+      expect(pet.sicknesses).toEqual([]);
+      expect(pet.injuries).toEqual([]);
       expect(pet.moves.length).toBeGreaterThan(0);
     });
 
@@ -365,8 +367,12 @@ describe('PetSystem', () => {
       });
       gameState.pet = pet;
 
-      pet.status.primary = STATUS_TYPES.SICK;
-      pet.status.sicknessSeverity = 50;
+      // Add sickness to the pet
+      pet.sicknesses.push({
+        type: 'COMMON_COLD' as any,
+        severity: 50,
+        appliedAt: Date.now(),
+      });
 
       const medicineItem = {
         id: 'medicine-1',
@@ -378,8 +384,8 @@ describe('PetSystem', () => {
       const result = await petSystem.treatSickness(gameState, medicineItem);
 
       expect(result.success).toBe(true);
-      expect(pet.status.primary as string).toBe(STATUS_TYPES.HEALTHY);
-      expect(pet.status.sicknessSeverity).toBeUndefined();
+      expect(pet.sicknesses.length).toBe(0);
+      expect(pet.status.primary).toBe(STATUS_TYPES.IDLE);
     });
 
     it('should treat injury with bandage', async () => {
@@ -389,8 +395,13 @@ describe('PetSystem', () => {
       });
       gameState.pet = pet;
 
-      pet.status.primary = STATUS_TYPES.INJURED;
-      pet.status.injurySeverity = 60;
+      // Add injury to the pet
+      pet.injuries.push({
+        type: 'BRUISE' as any,
+        severity: 60,
+        bodyPart: 'BODY' as any,
+        appliedAt: Date.now(),
+      });
 
       const bandageItem = {
         id: 'bandage-1',
@@ -402,8 +413,8 @@ describe('PetSystem', () => {
       const result = await petSystem.treatInjury(gameState, bandageItem);
 
       expect(result.success).toBe(true);
-      expect(pet.status.primary as string).toBe(STATUS_TYPES.HEALTHY);
-      expect(pet.status.injurySeverity).toBeUndefined();
+      expect(pet.injuries.length).toBe(0);
+      expect(pet.status.primary).toBe(STATUS_TYPES.IDLE);
     });
   });
 
@@ -695,11 +706,17 @@ describe('PetSystem', () => {
       const baseRate = configSystem.get('tuning.energy.sleepRegenRatePerHour.ADULT');
       const penalty = configSystem.get('tuning.sickness.energyRegenPenalty');
 
-      pet.status.primary = STATUS_TYPES.HEALTHY;
+      // Healthy pet (no sicknesses)
       const healthyRate = petSystem.getSleepEnergyRegenRate(pet);
       expect(healthyRate).toBe(baseRate);
 
-      pet.status.primary = STATUS_TYPES.SICK;
+      // Add sickness
+      pet.sicknesses.push({
+        type: 'COMMON_COLD' as any,
+        severity: 100, // Max severity for maximum penalty
+        appliedAt: Date.now(),
+      });
+
       const sickRate = petSystem.getSleepEnergyRegenRate(pet);
       expect(sickRate).toBeCloseTo(baseRate * penalty);
     });

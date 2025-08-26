@@ -8,6 +8,9 @@ import type {
   StatusType,
   BattleStatusEffect,
   DeathCause,
+  SicknessType,
+  InjuryType,
+  BodyPart,
 } from './constants';
 
 /**
@@ -46,13 +49,31 @@ export interface HiddenCounters {
 }
 
 /**
- * Pet status conditions
+ * Sickness condition object
+ */
+export interface Sickness {
+  type: SicknessType;
+  severity: number; // 0-100
+  duration?: number; // Remaining ticks or timestamp for auto-recovery
+  appliedAt: number; // When the sickness was applied
+}
+
+/**
+ * Injury condition object
+ */
+export interface Injury {
+  type: InjuryType;
+  severity: number; // 0-100
+  bodyPart: BodyPart;
+  appliedAt: number; // When the injury was applied
+}
+
+/**
+ * Pet status (exclusive state only)
  */
 export interface PetStatus {
-  primary: StatusType; // Main status (HEALTHY, SICK, INJURED, etc.)
-  battleEffect?: BattleStatusEffect; // Active battle status effect
-  sicknessSeverity?: number; // 0-100, how severe the sickness is
-  injurySeverity?: number; // 0-100, how severe the injury is
+  primary: StatusType; // Exclusive state (IDLE, SLEEPING, TRAVELING, etc.)
+  battleEffect?: BattleStatusEffect; // Active battle status effect (for battles only)
 }
 
 /**
@@ -81,6 +102,8 @@ export interface Pet {
 
   // Status and conditions
   status: PetStatus;
+  sicknesses: Sickness[]; // Array of active sicknesses
+  injuries: Injury[]; // Array of active injuries
   poopCount: number;
 
   // Battle moves (up to 4)

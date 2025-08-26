@@ -71,7 +71,7 @@ describe('ActivitySystem', () => {
     gameState = createMockGameState();
     gameState.pet = createMockPet();
     gameState.pet.energy = 100;
-    gameState.pet.status.primary = STATUS_TYPES.HEALTHY;
+    gameState.pet.status.primary = STATUS_TYPES.IDLE;
   });
 
   afterEach(() => {
@@ -197,7 +197,13 @@ describe('ActivitySystem', () => {
     });
 
     it('should fail to start training while injured', async () => {
-      gameState.pet!.status.primary = STATUS_TYPES.INJURED;
+      // Add injury to the pet using the new architecture
+      gameState.pet!.injuries.push({
+        type: 'BRUISE' as any,
+        severity: 50,
+        bodyPart: 'BODY' as any,
+        appliedAt: Date.now(),
+      });
 
       const result = await activitySystem.startActivity(
         ACTIVITY_TYPES.TRAINING,
@@ -208,7 +214,7 @@ describe('ActivitySystem', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Cannot perform this activity while injured');
+      expect(result.error).toBe('Cannot train while injured');
     });
 
     it('should fail to start concurrent restricted activities', async () => {

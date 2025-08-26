@@ -155,19 +155,50 @@ export const TRAVEL_TIERS = {
 
 export type TravelDistance = 'instant' | 'short' | 'medium' | 'long';
 
-// Pet Status Types
+// Pet Status Types (exclusive states only)
 export const STATUS_TYPES = {
-  HEALTHY: 'HEALTHY',
-  SICK: 'SICK',
-  INJURED: 'INJURED',
+  IDLE: 'IDLE', // Default state when not doing anything
   SLEEPING: 'SLEEPING',
   TRAVELING: 'TRAVELING',
-  IN_ACTIVITY: 'IN_ACTIVITY',
+  EXPLORING: 'EXPLORING', // Doing activities like fishing, foraging, mining
+  TRAINING: 'TRAINING',
   IN_BATTLE: 'IN_BATTLE',
   DEAD: 'DEAD',
 } as const;
 
 export type StatusType = (typeof STATUS_TYPES)[keyof typeof STATUS_TYPES];
+
+// Sickness Types
+export const SICKNESS_TYPES = {
+  COMMON_COLD: 'COMMON_COLD',
+  FOOD_POISONING: 'FOOD_POISONING',
+  POOP_SICKNESS: 'POOP_SICKNESS',
+  EXHAUSTION: 'EXHAUSTION',
+} as const;
+
+export type SicknessType = (typeof SICKNESS_TYPES)[keyof typeof SICKNESS_TYPES];
+
+// Injury Types
+export const INJURY_TYPES = {
+  BRUISE: 'BRUISE',
+  SPRAIN: 'SPRAIN',
+  FRACTURE: 'FRACTURE',
+  CUT: 'CUT',
+} as const;
+
+export type InjuryType = (typeof INJURY_TYPES)[keyof typeof INJURY_TYPES];
+
+// Body Parts for injuries
+export const BODY_PARTS = {
+  HEAD: 'HEAD',
+  BODY: 'BODY',
+  LEG: 'LEG',
+  ARM: 'ARM',
+  WING: 'WING',
+  TAIL: 'TAIL',
+} as const;
+
+export type BodyPart = (typeof BODY_PARTS)[keyof typeof BODY_PARTS];
 
 // Battle Move Priority Levels
 export const MOVE_PRIORITY = {

@@ -7,7 +7,7 @@ import { BaseSystem } from './BaseSystem';
 import type { SystemInitOptions, SystemError } from './BaseSystem';
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { GameState } from '../models';
-import { UPDATE_TYPES, EVENT_TYPES, STATUS_TYPES } from '../models/constants';
+import { UPDATE_TYPES, EVENT_TYPES } from '../models/constants';
 import type { EventType } from '../models/constants';
 
 /**
@@ -950,10 +950,15 @@ export class EventSystem extends BaseSystem {
     // Roll for success with sickness penalty
     let successRate = activity.successRate;
     if (
-      gameState?.pet?.status?.primary === STATUS_TYPES.SICK &&
+      gameState?.pet?.sicknesses &&
+      gameState.pet.sicknesses.length > 0 &&
       this.tuning?.sickness.activitySuccessPenalty !== undefined
     ) {
-      successRate *= this.tuning.sickness.activitySuccessPenalty;
+      // Apply penalty based on the most severe sickness
+      const maxSeverity = Math.max(...gameState.pet.sicknesses.map((s) => s.severity));
+      const penaltyMultiplier =
+        1 - (maxSeverity / 100) * (1 - this.tuning.sickness.activitySuccessPenalty);
+      successRate *= penaltyMultiplier;
     }
     const success = Math.random() * 100 < successRate;
 
