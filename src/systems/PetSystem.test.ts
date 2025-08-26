@@ -126,7 +126,7 @@ describe('PetSystem', () => {
         hydrationTicks: 750, // 50 hydration (750/15)
         happinessTicks: 900, // 30 happiness (900/30)
         lifeTicks: 80,
-        poopTicksLeft: 360, // Not used in care calculations but required by interface
+        poopTicks: 360, // Not used in care calculations but required by interface
       };
 
       const careValues = petSystem.calculateCareValues(hiddenCounters);
@@ -141,7 +141,7 @@ describe('PetSystem', () => {
         hydrationTicks: -50,
         happinessTicks: -200,
         lifeTicks: 50,
-        poopTicksLeft: 360,
+        poopTicks: 360,
       };
 
       const lowValues = petSystem.calculateCareValues(negativeCounters);
@@ -154,7 +154,7 @@ describe('PetSystem', () => {
         hydrationTicks: 3000,
         happinessTicks: 6000,
         lifeTicks: 100,
-        poopTicksLeft: 360,
+        poopTicks: 360,
       };
 
       const highValues = petSystem.calculateCareValues(highCounters);
@@ -419,13 +419,13 @@ describe('PetSystem', () => {
   });
 
   describe('Poop Scheduling', () => {
-    it('should initialize poopTicksLeft when creating a pet', () => {
+    it('should initialize poopTicks when creating a pet', () => {
       const pet = petSystem.createPet({
         name: 'Poop Schedule Test',
         species: 'test',
       });
 
-      // Should have a valid poopTicksLeft value
+      // Should have a valid poopTicks value
       expect(pet.hiddenCounters.poopTicks).toBeGreaterThan(0);
 
       // Should be within the configured range (6-24 hours in ticks)
@@ -435,7 +435,7 @@ describe('PetSystem', () => {
       expect(pet.hiddenCounters.poopTicks).toBeLessThanOrEqual(maxTicks);
     });
 
-    it('should decrement poopTicksLeft on each tick', async () => {
+    it('should decrement poopTicks on each tick', async () => {
       const pet = petSystem.createPet({
         name: 'Tick Test',
         species: 'test',
@@ -651,7 +651,7 @@ describe('PetSystem', () => {
       expect(offlineCalc.poopSpawned).toBe(pet.poopCount);
     });
 
-    it('should maintain poopTicksLeft value persistently', () => {
+    it('should maintain poopTicks value persistently', () => {
       const pet = petSystem.createPet({
         name: 'Persistence Test',
         species: 'test',

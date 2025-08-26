@@ -6,7 +6,7 @@ import { BaseSystem } from './BaseSystem';
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { SystemInitOptions, SystemError } from './BaseSystem';
 import type { GameState, GameUpdate, OfflineCalculation } from '../models/GameState';
-import type { Egg, EggType, Species, StarterSpecies } from '../models/Species';
+import type { Egg, EggType, Species } from '../models/Species';
 import type { Pet, PetCreationOptions } from '../models/Pet';
 import type { EggItem } from '../models/Item';
 import { UPDATE_TYPES, RARITY_TIERS } from '../models/constants';
@@ -41,7 +41,7 @@ export interface HatchResult {
  */
 export interface StarterOptions {
   available: boolean;
-  species: StarterSpecies[];
+  species: Species[]; // Just use the full Species type
   reason?: string;
 }
 
@@ -428,22 +428,12 @@ export class EggSystem extends BaseSystem {
       };
     }
 
-    // Get starter species
-    const starters: StarterSpecies[] = [];
+    // Get starter species - just filter the actual Species objects
+    const starters: Species[] = [];
     for (const speciesId of this.STARTER_SPECIES_IDS) {
       const species = this.speciesDatabase.get(speciesId);
       if (species && species.isStarter) {
-        starters.push({
-          speciesId: species.id,
-          name: species.name,
-          description: species.description,
-          sprite: species.appearance.spriteSheet,
-          traits: [
-            species.traits.temperament,
-            species.traits.habitat,
-            species.traits.activityPreference,
-          ],
-        });
+        starters.push(species);
       }
     }
 

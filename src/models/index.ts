@@ -23,7 +23,6 @@ export type {
   SpeciesAppearance,
   SpeciesTraits,
   Species,
-  StarterSpecies,
   SpeciesCollectionEntry,
   EggType,
   Egg,

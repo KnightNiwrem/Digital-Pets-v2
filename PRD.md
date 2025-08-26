@@ -76,14 +76,14 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - The displayed care value is computed from its ticks using a fixed multiplier per value. Example: if one unit of Hydration represents ten ticks (ten minutes), then the displayed Hydration equals the hidden hydration ticks divided by ten, rounded up.
   - Restoring care adds ticks directly to the hidden counter. Example: restoring ten Hydration adds one hundred hydration ticks.
   - Use similar multipliers for Satiety and Happiness to keep calculations simple, consistent, and performant.
-  - Additional hidden counter `poopTicksLeft` tracks ticks remaining until next poop spawns.
+  - Additional hidden counter `poopTicks` tracks ticks remaining until next poop spawns.
 
 7. Poop and Hygiene
 
 - Poop spawn:
   - Spawns infrequently while the pet is awake: between six and twenty‑four hours per occurrence, randomized within that window.
-  - Uses a hidden `poopTicksLeft` counter that decrements each tick (minute) to track when the next poop will spawn.
-  - When `poopTicksLeft` reaches 0, a poop spawns and the counter is reset to a new random value within the spawn range.
+  - Uses a hidden `poopTicks` counter that decrements each tick (minute) to track when the next poop will spawn.
+  - When `poopTicks` reaches 0, a poop spawns and the counter is reset to a new random value within the spawn range.
   - During sleep, the counter continues to decrement but poop does not spawn until the pet wakes (the counter stays at 0 until the next tick after waking).
   - This counter is persisted across saves to maintain consistent scheduling.
   - There is no cap on total Poop.
@@ -225,7 +225,7 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
   - Multipliers define how many ticks equal one displayed unit for each care value; examples can use ten ticks per Hydration unit to represent ten minutes.
 - Offline catch‑up:
   - On resume, compute elapsed time and mathematically flatten all ticks into a single step update for ongoing sleep, travel, activities, care decay, Poop spawns, sickness checks, and egg incubation. For example, if offline time is 10 minutes, then simply compute (10 \* 60 / 15 = 40 ticks) and decrease hidden tick counters for care value by 40.
-  - For poop spawning: decrement `poopTicksLeft` by offline ticks, spawn appropriate number of poops based on how many times the counter would have reached 0, and reset counter appropriately.
+  - For poop spawning: decrement `poopTicks` by offline ticks, spawn appropriate number of poops based on how many times the counter would have reached 0, and reset counter appropriately.
 
 16. Items, Inventory, Currency, and Shops
 
@@ -306,7 +306,7 @@ Scope: Single‑player, client‑only browser game with no server interaction; f
 - Pet:
   - Species, Rarity, Stage, battle stats (Health, Attack, Defense, Speed, Action), Energy, visible care values (Satiety, Hydration, Happiness), hidden Life, statuses (Sick, Injured), known moves up to four.
 - Hidden care counters:
-  - satiety ticks, hydration ticks, happiness ticks, poopTicksLeft; multipliers to convert ticks to displayed units.
+  - satiety ticks, hydration ticks, happiness ticks, poopTicks; multipliers to convert ticks to displayed units.
 - Inventory:
   - Items with quantities; non‑stackable flags for specific items such as durability items; Tools; Currency.
 - World:

@@ -116,17 +116,6 @@ export interface Species {
 }
 
 /**
- * Starter species selection data
- */
-export interface StarterSpecies {
-  speciesId: string;
-  name: string;
-  description: string;
-  sprite: string;
-  traits: string[]; // Simple trait descriptions for UI
-}
-
-/**
  * Species collection entry for tracking discovered species
  */
 export interface SpeciesCollectionEntry {
