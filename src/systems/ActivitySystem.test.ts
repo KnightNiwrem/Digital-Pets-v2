@@ -7,6 +7,7 @@ import { ActivitySystem } from './ActivitySystem';
 import type { GameState } from '../models';
 import { ACTIVITY_TYPES, STATUS_TYPES, GROWTH_STAGES } from '../models/constants';
 import { createMockGameState, createMockPet } from '../testing/mocks';
+import type { OfflineCalculation } from '../models';
 
 describe('ActivitySystem', () => {
   let activitySystem: ActivitySystem;
@@ -256,6 +257,55 @@ describe('ActivitySystem', () => {
       expect(activity?.rewards).toBeDefined();
       expect(activity?.rewards?.length).toBeGreaterThanOrEqual(2);
       expect(activity?.rewards?.length).toBeLessThanOrEqual(4);
+    });
+  });
+
+  describe('Offline Activity Processing', () => {
+    it('should complete activity that finished while offline', async () => {
+      const now = Date.now();
+      const result = await activitySystem.startActivity(
+        ACTIVITY_TYPES.FISHING,
+        'short',
+        gameState,
+        'lake',
+      );
+      const activityId = result.activityId!;
+      const activity = activitySystem.getActivity(activityId)!;
+
+      // Simulate timer that finished during offline
+      activity.startTime = now - 10 * 60 * 1000;
+      activity.duration = 2 * 60 * 1000;
+      const timerId = activity.timerId!;
+      gameState.world.activeTimers.push({
+        id: timerId,
+        type: 'activity',
+        startTime: activity.startTime,
+        endTime: activity.startTime + activity.duration,
+        duration: activity.duration,
+        paused: false,
+        data: { activityId },
+      });
+
+      const offlineCalc: OfflineCalculation = {
+        offlineTime: 600,
+        ticksToProcess: 0,
+        careDecay: { satiety: 0, hydration: 0, happiness: 0, life: 0 },
+        poopSpawned: 0,
+        sicknessTriggered: false,
+        completedActivities: [],
+        travelCompleted: false,
+        eggsHatched: [],
+        expiredEvents: [],
+        energyRecovered: 0,
+        petDied: false,
+      };
+
+      await activitySystem.processOfflineActivities(offlineCalc, gameState);
+
+      expect(offlineCalc.completedActivities.length).toBe(1);
+      expect(offlineCalc.completedActivities[0]?.activityId).toBe(activityId);
+      expect(activitySystem.getActivity(activityId)).toBeNull();
+      expect(gameState.world.activeTimers.find((t) => t.id === timerId)).toBeUndefined();
     });
   });
 

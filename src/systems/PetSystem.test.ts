@@ -673,6 +673,43 @@ describe('PetSystem', () => {
 
       expect(newPet.hiddenCounters.poopTicks).toBe(500);
     });
+
+    it('should recover energy from offline sleep', async () => {
+      const pet = petSystem.createPet({ name: 'Sleeper', species: 'test' });
+      pet.energy = 0;
+      gameState.pet = pet;
+
+      const now = Date.now();
+      gameState.world.activeTimers.push({
+        id: 'sleep-1',
+        type: 'sleep',
+        startTime: now - 2 * 60 * 60 * 1000,
+        endTime: now - 60 * 60 * 1000,
+        duration: 60 * 60 * 1000,
+        paused: false,
+      });
+
+      const offlineCalc = {
+        offlineTime: 7200,
+        ticksToProcess: 0,
+        careDecay: { satiety: 0, hydration: 0, happiness: 0, life: 0 },
+        poopSpawned: 0,
+        sicknessTriggered: false,
+        completedActivities: [],
+        travelCompleted: false,
+        eggsHatched: [],
+        expiredEvents: [],
+        energyRecovered: 0,
+        petDied: false,
+      };
+
+      const rate = petSystem.getSleepEnergyRegenRate(pet);
+      await petSystem.processOfflineSleep(offlineCalc, gameState);
+
+      expect(offlineCalc.energyRecovered).toBeCloseTo(rate, 5);
+      expect(pet.energy).toBeCloseTo(rate, 5);
+      expect(gameState.world.activeTimers.length).toBe(0);
+    });
   });
 
   describe('Pet Summary', () => {

@@ -3,6 +3,7 @@ import { LocationSystem } from './LocationSystem';
 import type { GameState } from '../models';
 import { LOCATION_TYPES, CITY_AREAS, GROWTH_STAGES } from '../models/constants';
 import { createMockGameState } from '../testing/mocks';
+import type { OfflineCalculation } from '../models';
 
 describe('LocationSystem', () => {
   let locationSystem: LocationSystem;
@@ -337,6 +338,52 @@ describe('LocationSystem', () => {
       expect(progress).toBeGreaterThan(0.4);
       expect(progress).toBeLessThan(0.6);
       expect(locationSystem.isTraveling()).toBe(true); // Still traveling
+    });
+  });
+
+  describe('Offline Travel Processing', () => {
+    it('should complete travel that finished while offline', async () => {
+      const now = Date.now();
+      gameState.world.currentLocation = {
+        currentLocationId: 'main_city',
+        currentArea: CITY_AREAS.SQUARE,
+        traveling: true,
+        inActivity: false,
+        visitedLocations: ['main_city'],
+        lastVisitTimes: { main_city: now - 1000 },
+        travelRoute: {
+          routeId: 'main_city_forest',
+          from: 'main_city',
+          to: 'forest',
+          distance: 'short',
+          duration: 3,
+          energyCost: 10,
+          progress: 0,
+          startTime: now - 10 * 60 * 1000,
+          endTime: now - 5 * 60 * 1000,
+        },
+      } as any;
+
+      const offlineCalc: OfflineCalculation = {
+        offlineTime: 600,
+        ticksToProcess: 0,
+        careDecay: { satiety: 0, hydration: 0, happiness: 0, life: 0 },
+        poopSpawned: 0,
+        sicknessTriggered: false,
+        completedActivities: [],
+        travelCompleted: false,
+        eggsHatched: [],
+        expiredEvents: [],
+        energyRecovered: 0,
+        petDied: false,
+      };
+
+      await locationSystem.processOfflineTravel(offlineCalc, gameState);
+
+      expect(offlineCalc.travelCompleted).toBe(true);
+      expect(offlineCalc.newLocation).toBe('forest');
+      expect(gameState.world.currentLocation.currentLocationId).toBe('forest');
+      expect(gameState.world.currentLocation.traveling).toBe(false);
     });
   });
 
