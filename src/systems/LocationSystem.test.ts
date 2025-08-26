@@ -340,6 +340,52 @@ describe('LocationSystem', () => {
     });
   });
 
+  describe('Offline Travel Processing', () => {
+    it('should complete travel that finished while offline', async () => {
+      const now = Date.now();
+      gameState.world.currentLocation = {
+        currentLocationId: 'main_city',
+        currentArea: CITY_AREAS.SQUARE,
+        traveling: true,
+        inActivity: false,
+        visitedLocations: ['main_city'],
+        lastVisitTimes: { main_city: now - 1000 },
+        travelRoute: {
+          routeId: 'main_city_forest',
+          from: 'main_city',
+          to: 'forest',
+          distance: 'short',
+          duration: 3,
+          energyCost: 10,
+          progress: 0,
+          startTime: now - 10 * 60 * 1000,
+          endTime: now - 5 * 60 * 1000,
+        },
+      } as any;
+
+      const offlineCalc = {
+        offlineTime: 600,
+        ticksToProcess: 0,
+        careDecay: { satiety: 0, hydration: 0, happiness: 0, life: 0 },
+        poopSpawned: 0,
+        sicknessTriggered: false,
+        completedActivities: [],
+        travelCompleted: false,
+        eggsHatched: [],
+        expiredEvents: [],
+        energyRecovered: 0,
+        petDied: false,
+      };
+
+      await locationSystem.processOfflineTravel(offlineCalc, gameState);
+
+      expect(offlineCalc.travelCompleted).toBe(true);
+      expect(offlineCalc.newLocation).toBe('forest');
+      expect(gameState.world.currentLocation.currentLocationId).toBe('forest');
+      expect(gameState.world.currentLocation.traveling).toBe(false);
+    });
+  });
+
   describe('Reset and Shutdown', () => {
     it('should reset to default state', async () => {
       // Modify state

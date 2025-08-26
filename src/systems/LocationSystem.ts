@@ -1,6 +1,6 @@
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
-import type { GameState, GameUpdate } from '../models';
+import type { GameState, GameUpdate, OfflineCalculation } from '../models';
 import type {
   Location,
   CityLocation,
@@ -439,6 +439,48 @@ export class LocationSystem extends BaseSystem {
     this.currentLocationState.traveling = false;
     this.currentLocationState.travelRoute = undefined;
     this.travelTimer = null;
+  }
+
+  /**
+   * Process travel progress that occurred while offline
+   */
+  public async processOfflineTravel(
+    offlineCalc: OfflineCalculation,
+    gameState: GameState,
+  ): Promise<void> {
+    const state = gameState.world.currentLocation;
+    if (!state.traveling || !state.travelRoute || state.travelRoute.paused) {
+      this.currentLocationState = state;
+      return;
+    }
+
+    const route = state.travelRoute;
+    const now = Date.now();
+
+    if (route.endTime <= now) {
+      // Travel completed while offline
+      const destination = route.to;
+      state.traveling = false;
+      state.currentLocationId = destination;
+      state.currentArea =
+        this.locations.get(destination)?.type === LOCATION_TYPES.CITY
+          ? CITY_AREAS.SQUARE
+          : undefined;
+      if (!state.visitedLocations.includes(destination)) {
+        state.visitedLocations.push(destination);
+      }
+      state.lastVisitTimes[destination] = now;
+      state.travelRoute = undefined;
+      offlineCalc.travelCompleted = true;
+      offlineCalc.newLocation = destination;
+    } else {
+      // Update progress
+      const elapsed = now - route.startTime;
+      const total = route.endTime - route.startTime;
+      route.progress = Math.min(1, elapsed / total);
+    }
+
+    this.currentLocationState = state;
   }
 
   moveToArea(area: CityArea): boolean {

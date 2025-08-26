@@ -274,6 +274,50 @@ export class PetSystem extends BaseSystem {
   }
 
   /**
+   * Process offline sleep timers and recover energy
+   */
+  public async processOfflineSleep(
+    offlineCalc: OfflineCalculation,
+    gameState: GameState,
+  ): Promise<void> {
+    if (!gameState.pet) return;
+
+    const sleepTimer = gameState.world.activeTimers.find(
+      (t) => t.type === 'sleep' && !t.paused,
+    );
+    if (!sleepTimer) {
+      return;
+    }
+
+    const now = Date.now();
+    const lastSave = now - offlineCalc.offlineTime * 1000;
+    const effectiveEnd = Math.min(now, sleepTimer.endTime);
+    const sleepStart = Math.max(lastSave, sleepTimer.startTime);
+    const sleptMs = Math.max(0, effectiveEnd - sleepStart);
+
+    if (sleptMs > 0) {
+      const rate = this.getSleepEnergyRegenRate(gameState.pet);
+      const energyRecovered = Math.min(
+        gameState.pet.maxEnergy - gameState.pet.energy,
+        (rate * sleptMs) / 3600000,
+      );
+      if (energyRecovered > 0) {
+        gameState.pet.energy = Math.min(
+          gameState.pet.maxEnergy,
+          gameState.pet.energy + energyRecovered,
+        );
+        offlineCalc.energyRecovered += energyRecovered;
+      }
+    }
+
+    if (sleepTimer.endTime <= now || gameState.pet.energy >= gameState.pet.maxEnergy) {
+      gameState.world.activeTimers = gameState.world.activeTimers.filter(
+        (t) => t.id !== sleepTimer.id,
+      );
+    }
+  }
+
+  /**
    * Calculate care values from hidden tick counters
    */
   public calculateCareValues(hiddenCounters: HiddenCounters): CareValues {

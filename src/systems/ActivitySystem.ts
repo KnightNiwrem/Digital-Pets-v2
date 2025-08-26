@@ -5,7 +5,7 @@
 
 import { BaseSystem, type SystemInitOptions, type SystemError } from './BaseSystem';
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
-import type { GameState, Pet } from '../models';
+import type { GameState, Pet, OfflineCalculation } from '../models';
 import {
   UPDATE_TYPES,
   ACTIVITY_TYPES,
@@ -417,6 +417,37 @@ export class ActivitySystem extends BaseSystem {
     console.log(
       `[ActivitySystem] Activity ${activityId} completed - Success: ${outcome.success}, Rewards: ${outcome.rewards.length}`,
     );
+  }
+
+  /**
+   * Process activities that may have completed while offline
+   */
+  public async processOfflineActivities(
+    offlineCalc: OfflineCalculation,
+    gameState: GameState,
+  ): Promise<void> {
+    const now = Date.now();
+    const timers = [...gameState.world.activeTimers];
+
+    for (const timer of timers) {
+      if (timer.type !== 'activity' || timer.paused) continue;
+      if (timer.endTime > now) continue;
+
+      const activityId = timer.data?.activityId;
+      if (activityId) {
+        const activity = this.activeActivities.get(activityId);
+        if (activity) {
+          const outcome = this.processActivityOutcome(activity, gameState);
+          offlineCalc.completedActivities.push({ activityId, rewards: outcome.rewards });
+          this.activeActivities.delete(activityId);
+        }
+      }
+
+      const index = gameState.world.activeTimers.indexOf(timer);
+      if (index !== -1) {
+        gameState.world.activeTimers.splice(index, 1);
+      }
+    }
   }
 
   /**

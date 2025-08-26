@@ -749,7 +749,18 @@ export class GameEngine {
     // Process offline effects for each system
     const petSystem = this.systems.get('PetSystem') as PetSystem | undefined;
     if (petSystem) {
+      await petSystem.processOfflineSleep(offlineCalc, this.gameState);
       await petSystem.processOfflineCareDecay(offlineCalc, this.gameState);
+    }
+
+    const locationSystem = this.systems.get('LocationSystem') as LocationSystem | undefined;
+    if (locationSystem) {
+      await locationSystem.processOfflineTravel(offlineCalc, this.gameState);
+    }
+
+    const activitySystem = this.systems.get('ActivitySystem') as ActivitySystem | undefined;
+    if (activitySystem) {
+      await activitySystem.processOfflineActivities(offlineCalc, this.gameState);
     }
 
     const eggSystem = this.systems.get('EggSystem') as EggSystem | undefined;
