@@ -640,14 +640,4 @@ export class ConfigSystem extends BaseSystem {
   }
 }
 
-// Export singleton instance
-let configSystemInstance: ConfigSystem | null = null;
-
-export function getConfigSystem(gameUpdateWriter?: GameUpdateWriter): ConfigSystem {
-  if (!configSystemInstance) {
-    configSystemInstance = new ConfigSystem(gameUpdateWriter);
-  }
-  return configSystemInstance;
-}
-
 export default ConfigSystem;

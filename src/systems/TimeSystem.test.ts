@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, jest } from 'bun:test';
-import { TimeSystem, createTimeSystem } from './TimeSystem';
+import { TimeSystem } from './TimeSystem';
 import { UPDATE_TYPES } from '../models/constants';
 
 describe('TimeSystem', () => {
@@ -23,7 +23,7 @@ describe('TimeSystem', () => {
     };
 
     // Create TimeSystem with shorter tick interval for testing
-    timeSystem = createTimeSystem(gameUpdateWriter, { tickInterval: 1 }); // 1 second for testing
+    timeSystem = new TimeSystem(gameUpdateWriter, { tickInterval: 1 }); // 1 second for testing
   });
 
   afterEach(() => {

@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { ConfigSystem, getConfigSystem } from './ConfigSystem';
+import { ConfigSystem } from './ConfigSystem';
 
 describe('ConfigSystem', () => {
   let configSystem: ConfigSystem;
@@ -390,15 +390,6 @@ describe('ConfigSystem', () => {
       expect(incubation.RARE).toBeGreaterThan(0);
       expect(incubation.EPIC).toBeGreaterThan(0);
       expect(incubation.LEGENDARY).toBeGreaterThan(0);
-    });
-  });
-
-  describe('singleton pattern', () => {
-    it('should return the same instance from getConfigSystem()', () => {
-      const instance1 = getConfigSystem();
-      const instance2 = getConfigSystem();
-
-      expect(instance1).toBe(instance2);
     });
   });
 

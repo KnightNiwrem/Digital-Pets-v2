@@ -535,12 +535,3 @@ export class TimeSystem extends BaseSystem {
   }
 }
 
-/**
- * Factory function to create a new TimeSystem
- */
-export function createTimeSystem(
-  gameUpdateWriter: GameUpdateWriter,
-  config?: TimeSystemConfig,
-): TimeSystem {
-  return new TimeSystem(gameUpdateWriter, config);
-}

@@ -961,9 +961,3 @@ export class ActivitySystem extends BaseSystem {
   }
 }
 
-/**
- * Factory function to create a new ActivitySystem
- */
-export function createActivitySystem(gameUpdateWriter: GameUpdateWriter): ActivitySystem {
-  return new ActivitySystem(gameUpdateWriter);
-}

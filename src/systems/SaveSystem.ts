@@ -926,7 +926,3 @@ export class SaveSystem extends BaseSystem {
   }
 }
 
-/**
- * Export singleton instance
- */
-export const saveSystem = new SaveSystem();
