@@ -63,7 +63,7 @@ export interface GrowthCheckResult {
 export class PetSystem extends BaseSystem {
   private petCache: Pet | null = null;
   private lastDecayTick = 0;
-  private poopSpawnTimer = 0;
+  private nextPoopTick = 0;
 
   constructor(gameUpdateWriter: GameUpdateWriter) {
     super('PetSystem', gameUpdateWriter);
@@ -76,7 +76,10 @@ export class PetSystem extends BaseSystem {
     // Tuning values are now provided via the base class
     if (!this.tuning) {
       console.warn('[PetSystem] Tuning values not provided, some features may not work correctly');
+      return;
     }
+
+    this.scheduleNextPoop();
   }
 
   /**
@@ -85,7 +88,7 @@ export class PetSystem extends BaseSystem {
   protected async onShutdown(): Promise<void> {
     this.petCache = null;
     this.lastDecayTick = 0;
-    this.poopSpawnTimer = 0;
+    this.nextPoopTick = 0;
   }
 
   /**
@@ -94,7 +97,7 @@ export class PetSystem extends BaseSystem {
   protected async onReset(): Promise<void> {
     this.petCache = null;
     this.lastDecayTick = 0;
-    this.poopSpawnTimer = 0;
+    this.scheduleNextPoop();
   }
 
   /**
@@ -600,22 +603,29 @@ export class PetSystem extends BaseSystem {
     const pet = gameState.pet;
 
     // Only spawn poop when awake
-    // TODO: Check if pet is sleeping when sleep system is implemented
+    if (pet.status.primary === STATUS_TYPES.SLEEPING) {
+      return;
+    }
 
-    // Increment spawn timer
-    this.poopSpawnTimer++;
+    this.nextPoopTick--;
 
-    // Calculate spawn interval (in ticks/minutes)
-    const minTicks = this.tuning.poop.spawnRangeHours.min * 60;
-    const maxTicks = this.tuning.poop.spawnRangeHours.max * 60;
-    const spawnInterval = minTicks + Math.random() * (maxTicks - minTicks);
-
-    if (this.poopSpawnTimer >= spawnInterval) {
+    if (this.nextPoopTick <= 0) {
       pet.poopCount++;
-      this.poopSpawnTimer = 0;
+      this.scheduleNextPoop();
 
       console.log(`Poop spawned! Count: ${pet.poopCount}`);
     }
+  }
+
+  private scheduleNextPoop(): void {
+    if (!this.tuning) {
+      this.nextPoopTick = 0;
+      return;
+    }
+
+    const minTicks = this.tuning.poop.spawnRangeHours.min * 60;
+    const maxTicks = this.tuning.poop.spawnRangeHours.max * 60;
+    this.nextPoopTick = Math.floor(minTicks + Math.random() * (maxTicks - minTicks));
   }
 
   /**

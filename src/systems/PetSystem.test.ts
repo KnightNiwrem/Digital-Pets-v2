@@ -254,6 +254,40 @@ describe('PetSystem', () => {
     });
   });
 
+  describe('Poop spawning', () => {
+    it('should spawn poop when timer reaches zero', async () => {
+      const pet = petSystem.createPet({
+        name: 'Pooper',
+        species: 'dog',
+      });
+      gameState.pet = pet;
+
+      // Force spawn next tick
+      (petSystem as any).nextPoopTick = 1;
+
+      await petSystem.tick(1, gameState);
+
+      expect(pet.poopCount).toBe(1);
+      expect((petSystem as any).nextPoopTick).toBeGreaterThan(0);
+    });
+
+    it('should not spawn poop while pet is sleeping', async () => {
+      const pet = petSystem.createPet({
+        name: 'Sleepy',
+        species: 'dog',
+      });
+      gameState.pet = pet;
+      pet.status.primary = STATUS_TYPES.SLEEPING;
+
+      (petSystem as any).nextPoopTick = 1;
+
+      await petSystem.tick(1, gameState);
+
+      expect(pet.poopCount).toBe(0);
+      expect((petSystem as any).nextPoopTick).toBe(1);
+    });
+  });
+
   describe('Growth Stages', () => {
     it('should check growth stage eligibility', () => {
       const pet = petSystem.createPet({
