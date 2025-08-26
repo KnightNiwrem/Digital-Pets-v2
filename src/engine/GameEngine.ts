@@ -127,7 +127,11 @@ export class GameEngine {
       await this.loadGameState();
 
       // Process any offline time
-      await this.processOfflineTime();
+      try {
+        await this.processOfflineTime();
+      } catch (error) {
+        console.error('[GameEngine] Failed to process offline time:', error);
+      }
 
       if (this.config.autoStart) {
         await this.start();
@@ -749,6 +753,9 @@ export class GameEngine {
     if (eggSystem) {
       await eggSystem.processOfflineIncubation(offlineCalculation, this.gameState);
     }
+    
+    // After processing offline systems, save the game state immediately
+    await this.saveGameState();
 
     if (this.config.debugMode) {
       console.log('[GameEngine] Offline processing complete:', offlineCalculation);
