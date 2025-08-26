@@ -332,6 +332,27 @@ describe('TimeSystem', () => {
       const update = enqueuedUpdates.find((u) => u.payload.timerId === 'persist');
       expect(update).toBeTruthy();
     });
+
+    it('should load paused timers with remaining time', async () => {
+      timeSystem.start();
+      timeSystem.registerTimer('paused-load', 600, 'activity', UPDATE_TYPES.ACTIVITY_COMPLETE, {});
+
+      // Pause after some time to capture remaining duration
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      timeSystem.pause();
+
+      const saved = timeSystem.exportTimers();
+      timeSystem.clearAllTimers();
+
+      timeSystem.loadTimers(saved);
+      timeSystem.resume();
+
+      // Should complete after remaining ~400ms rather than full 600ms
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(
+        enqueuedUpdates.some((u) => u.payload.timerId === 'paused-load'),
+      ).toBe(true);
+    });
   });
 
   describe('Real-Time Clock', () => {

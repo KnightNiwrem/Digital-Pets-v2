@@ -448,9 +448,10 @@ export class TimeSystem extends BaseSystem {
   public loadTimers(savedTimers: GameStateTimer[]): void {
     const now = Date.now();
     savedTimers.forEach((t) => {
-      const remaining = t.paused
-        ? t.duration
-        : Math.max(0, t.endTime - now);
+      const elapsed = t.paused
+        ? (t.pausedAt ?? t.startTime) - t.startTime
+        : now - t.startTime;
+      let remaining = Math.max(0, t.duration - elapsed);
 
       if (remaining <= 0 && !t.paused) {
         // Timer already expired while offline
@@ -466,9 +467,11 @@ export class TimeSystem extends BaseSystem {
         }
 
         if (t.recurring) {
+          const overTime = elapsed % t.duration;
+          remaining = t.duration - overTime;
           this.timers.set(t.id, {
             id: t.id,
-            duration: t.duration,
+            duration: remaining,
             startTime: now,
             timerType: t.type,
             updateType: t.updateType,
@@ -480,18 +483,31 @@ export class TimeSystem extends BaseSystem {
         return;
       }
 
-      this.timers.set(t.id, {
-        id: t.id,
-        duration: remaining,
-        startTime: now,
-        timerType: t.type,
-        updateType: t.updateType,
-        payload: t.payload,
-        recurring: t.recurring,
-        paused: t.paused,
-        pausedAt: t.paused ? now : undefined,
-        remainingTime: t.paused ? remaining : undefined,
-      });
+      if (t.paused) {
+        this.timers.set(t.id, {
+          id: t.id,
+          duration: t.duration,
+          startTime: t.startTime,
+          timerType: t.type,
+          updateType: t.updateType,
+          payload: t.payload,
+          recurring: t.recurring,
+          paused: true,
+          pausedAt: t.pausedAt,
+          remainingTime: remaining,
+        });
+      } else {
+        this.timers.set(t.id, {
+          id: t.id,
+          duration: remaining,
+          startTime: now,
+          timerType: t.type,
+          updateType: t.updateType,
+          payload: t.payload,
+          recurring: t.recurring,
+          paused: false,
+        });
+      }
     });
   }
 
