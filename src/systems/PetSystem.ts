@@ -64,7 +64,6 @@ export interface GrowthCheckResult {
 export class PetSystem extends BaseSystem {
   private petCache: Pet | null = null;
   private lastDecayTick = 0;
-  private poopSpawnTimer = 0;
 
   constructor(gameUpdateWriter: GameUpdateWriter) {
     super('PetSystem', gameUpdateWriter);
@@ -86,7 +85,6 @@ export class PetSystem extends BaseSystem {
   protected async onShutdown(): Promise<void> {
     this.petCache = null;
     this.lastDecayTick = 0;
-    this.poopSpawnTimer = 0;
   }
 
   /**
@@ -95,7 +93,6 @@ export class PetSystem extends BaseSystem {
   protected async onReset(): Promise<void> {
     this.petCache = null;
     this.lastDecayTick = 0;
-    this.poopSpawnTimer = 0;
   }
 
   /**
@@ -182,6 +179,7 @@ export class PetSystem extends BaseSystem {
         hydrationTicks: (this.tuning?.careTickMultipliers.hydration || 15) * 100,
         happinessTicks: (this.tuning?.careTickMultipliers.happiness || 30) * 100,
         lifeTicks: this.tuning?.life.startingValue || 100,
+        poopTicksLeft: this.generatePoopInterval(), // Initialize with random interval
       },
 
       // Status
@@ -610,6 +608,19 @@ export class PetSystem extends BaseSystem {
   }
 
   /**
+   * Generate a random poop spawn interval
+   */
+  private generatePoopInterval(): number {
+    if (!this.tuning) {
+      // Default to 12 hours if tuning not available
+      return 12 * 60;
+    }
+    const minTicks = this.tuning.poop.spawnRangeHours.min * 60;
+    const maxTicks = this.tuning.poop.spawnRangeHours.max * 60;
+    return Math.floor(minTicks + Math.random() * (maxTicks - minTicks));
+  }
+
+  /**
    * Check and spawn poop
    */
   private async checkPoopSpawn(gameState: GameState): Promise<void> {
@@ -619,22 +630,26 @@ export class PetSystem extends BaseSystem {
 
     const pet = gameState.pet;
 
-    // Only spawn poop when awake
-    // TODO: Check if pet is sleeping when sleep system is implemented
+    // Check if pet is sleeping (check for active sleep timer)
+    const isAsleep = gameState.world.activeTimers.some(
+      (timer) => timer.type === 'sleep' && !timer.paused,
+    );
 
-    // Increment spawn timer
-    this.poopSpawnTimer++;
+    // Decrement the counter
+    if (pet.hiddenCounters.poopTicksLeft > 0) {
+      pet.hiddenCounters.poopTicksLeft--;
+    }
 
-    // Calculate spawn interval (in ticks/minutes)
-    const minTicks = this.tuning.poop.spawnRangeHours.min * 60;
-    const maxTicks = this.tuning.poop.spawnRangeHours.max * 60;
-    const spawnInterval = minTicks + Math.random() * (maxTicks - minTicks);
-
-    if (this.poopSpawnTimer >= spawnInterval) {
-      pet.poopCount++;
-      this.poopSpawnTimer = 0;
-
-      console.log(`Poop spawned! Count: ${pet.poopCount}`);
+    // If counter reaches 0 and pet is awake, spawn poop and reset counter
+    if (pet.hiddenCounters.poopTicksLeft <= 0) {
+      if (!isAsleep) {
+        pet.poopCount++;
+        pet.hiddenCounters.poopTicksLeft = this.generatePoopInterval();
+        console.log(
+          `Poop spawned! Count: ${pet.poopCount}, Next in ${pet.hiddenCounters.poopTicksLeft} ticks`,
+        );
+      }
+      // If asleep, counter stays at 0 and will spawn on next tick after waking
     }
   }
 
@@ -1018,9 +1033,9 @@ export class PetSystem extends BaseSystem {
       );
     }
 
-    // Update poop count
-    if (offlineCalculation.poopSpawned) {
-      pet.poopCount += offlineCalculation.poopSpawned;
+    // Process poop spawning during offline time
+    if (offlineCalculation.ticksToProcess > 0) {
+      await this.processOfflinePoopSpawning(pet, offlineCalculation);
     }
 
     // Update sickness if triggered
@@ -1329,6 +1344,63 @@ export class PetSystem extends BaseSystem {
    */
   public canLearnMoreMoves(pet: Pet): boolean {
     return pet.moves.length < BATTLE_CONSTANTS.MAX_MOVES;
+  }
+
+  /**
+   * Process offline poop spawning
+   */
+  private async processOfflinePoopSpawning(
+    pet: Pet,
+    offlineCalc: OfflineCalculation,
+  ): Promise<void> {
+    if (!this.tuning) return;
+
+    let ticksToProcess = offlineCalc.ticksToProcess;
+    let poopSpawned = 0;
+
+    // Check if pet was sleeping (check energy recovery)
+    const wasAsleep = offlineCalc.energyRecovered > 0;
+
+    // Process ticks
+    while (ticksToProcess > 0 && pet.hiddenCounters.poopTicksLeft > 0) {
+      pet.hiddenCounters.poopTicksLeft--;
+      ticksToProcess--;
+
+      // If counter reaches 0
+      if (pet.hiddenCounters.poopTicksLeft <= 0) {
+        if (wasAsleep) {
+          // If pet was sleeping, counter stays at 0
+          // The poop will spawn on the next tick after waking
+          break;
+        } else {
+          // Pet was awake, spawn poop and reset counter
+          poopSpawned++;
+          pet.hiddenCounters.poopTicksLeft = this.generatePoopInterval();
+        }
+      }
+    }
+
+    // Handle any remaining ticks if pet was awake and counter was already 0
+    if (!wasAsleep && ticksToProcess > 0 && pet.hiddenCounters.poopTicksLeft <= 0) {
+      // Calculate how many full intervals passed
+      const minTicks = this.tuning.poop.spawnRangeHours.min * 60;
+      const maxTicks = this.tuning.poop.spawnRangeHours.max * 60;
+      const avgInterval = (minTicks + maxTicks) / 2;
+
+      const additionalPoops = Math.floor(ticksToProcess / avgInterval);
+      poopSpawned += additionalPoops;
+
+      // Set counter for remaining time
+      const remainingTicks = ticksToProcess % avgInterval;
+      pet.hiddenCounters.poopTicksLeft = this.generatePoopInterval() - remainingTicks;
+    }
+
+    // Apply spawned poops
+    if (poopSpawned > 0) {
+      pet.poopCount += poopSpawned;
+      offlineCalc.poopSpawned = poopSpawned;
+      console.log(`Offline: ${poopSpawned} poop(s) spawned. Total: ${pet.poopCount}`);
+    }
   }
 
   /**

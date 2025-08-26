@@ -124,6 +124,7 @@ describe('PetSystem', () => {
         hydrationTicks: 750, // 50 hydration (750/15)
         happinessTicks: 900, // 30 happiness (900/30)
         lifeTicks: 80,
+        poopTicksLeft: 360, // Not used in care calculations but required by interface
       };
 
       const careValues = petSystem.calculateCareValues(hiddenCounters);
@@ -138,6 +139,7 @@ describe('PetSystem', () => {
         hydrationTicks: -50,
         happinessTicks: -200,
         lifeTicks: 50,
+        poopTicksLeft: 360,
       };
 
       const lowValues = petSystem.calculateCareValues(negativeCounters);
@@ -150,6 +152,7 @@ describe('PetSystem', () => {
         hydrationTicks: 3000,
         happinessTicks: 6000,
         lifeTicks: 100,
+        poopTicksLeft: 360,
       };
 
       const highValues = petSystem.calculateCareValues(highCounters);
@@ -401,6 +404,263 @@ describe('PetSystem', () => {
       expect(result.success).toBe(true);
       expect(pet.status.primary as string).toBe(STATUS_TYPES.HEALTHY);
       expect(pet.status.injurySeverity).toBeUndefined();
+    });
+  });
+
+  describe('Poop Scheduling', () => {
+    it('should initialize poopTicksLeft when creating a pet', () => {
+      const pet = petSystem.createPet({
+        name: 'Poop Schedule Test',
+        species: 'test',
+      });
+
+      // Should have a valid poopTicksLeft value
+      expect(pet.hiddenCounters.poopTicksLeft).toBeGreaterThan(0);
+
+      // Should be within the configured range (6-24 hours in ticks)
+      const minTicks = 6 * 60; // 6 hours
+      const maxTicks = 24 * 60; // 24 hours
+      expect(pet.hiddenCounters.poopTicksLeft).toBeGreaterThanOrEqual(minTicks);
+      expect(pet.hiddenCounters.poopTicksLeft).toBeLessThanOrEqual(maxTicks);
+    });
+
+    it('should decrement poopTicksLeft on each tick', async () => {
+      const pet = petSystem.createPet({
+        name: 'Tick Test',
+        species: 'test',
+      });
+      gameState.pet = pet;
+
+      // Set a specific counter value
+      pet.hiddenCounters.poopTicksLeft = 100;
+      const initialTicks = pet.hiddenCounters.poopTicksLeft;
+
+      // Process one tick
+      await petSystem['checkPoopSpawn'](gameState);
+
+      expect(pet.hiddenCounters.poopTicksLeft).toBe(initialTicks - 1);
+    });
+
+    it('should spawn poop when counter reaches 0 while awake', async () => {
+      const pet = petSystem.createPet({
+        name: 'Spawn Test',
+        species: 'test',
+      });
+      gameState.pet = pet;
+
+      // Set counter to 1 so next tick will trigger spawn
+      pet.hiddenCounters.poopTicksLeft = 1;
+      pet.poopCount = 0;
+
+      // Process tick (pet is awake by default)
+      await petSystem['checkPoopSpawn'](gameState);
+
+      expect(pet.poopCount).toBe(1);
+      expect(pet.hiddenCounters.poopTicksLeft).toBeGreaterThan(0); // Should reset to new interval
+    });
+
+    it('should NOT spawn poop during sleep', async () => {
+      const pet = petSystem.createPet({
+        name: 'Sleep Test',
+        species: 'test',
+      });
+      gameState.pet = pet;
+
+      // Add a sleep timer to simulate sleeping
+      gameState.world.activeTimers = [
+        {
+          id: 'sleep-1',
+          type: 'sleep',
+          startTime: Date.now(),
+          endTime: Date.now() + 3600000,
+          duration: 3600000,
+          paused: false,
+        },
+      ];
+
+      // Set counter to 1
+      pet.hiddenCounters.poopTicksLeft = 1;
+      pet.poopCount = 0;
+
+      // Process tick while sleeping
+      await petSystem['checkPoopSpawn'](gameState);
+
+      expect(pet.poopCount).toBe(0); // No poop spawned
+      expect(pet.hiddenCounters.poopTicksLeft).toBe(0); // Counter stays at 0
+    });
+
+    it('should spawn poop on first tick after waking', async () => {
+      const pet = petSystem.createPet({
+        name: 'Wake Test',
+        species: 'test',
+      });
+      gameState.pet = pet;
+
+      // First, simulate sleep with counter at 0
+      gameState.world.activeTimers = [
+        {
+          id: 'sleep-1',
+          type: 'sleep',
+          startTime: Date.now(),
+          endTime: Date.now() + 3600000,
+          duration: 3600000,
+          paused: false,
+        },
+      ];
+
+      pet.hiddenCounters.poopTicksLeft = 0;
+      pet.poopCount = 0;
+
+      // Tick during sleep - no spawn
+      await petSystem['checkPoopSpawn'](gameState);
+      expect(pet.poopCount).toBe(0);
+
+      // Remove sleep timer (wake up)
+      gameState.world.activeTimers = [];
+
+      // First tick after waking - should spawn
+      await petSystem['checkPoopSpawn'](gameState);
+      expect(pet.poopCount).toBe(1);
+      expect(pet.hiddenCounters.poopTicksLeft).toBeGreaterThan(0);
+    });
+
+    it('should handle offline poop spawning correctly', async () => {
+      const pet = petSystem.createPet({
+        name: 'Offline Test',
+        species: 'test',
+      });
+      gameState.pet = pet;
+
+      // Set up initial state
+      pet.hiddenCounters.poopTicksLeft = 100;
+      pet.poopCount = 0;
+
+      // Create offline calculation
+      const offlineCalc = {
+        offlineTime: 7200, // 2 hours
+        ticksToProcess: 120, // 120 minutes
+        careDecay: {
+          satiety: 0,
+          hydration: 0,
+          happiness: 0,
+          life: 0,
+        },
+        poopSpawned: 0,
+        sicknessTriggered: false,
+        completedActivities: [],
+        travelCompleted: false,
+        eggsHatched: [],
+        expiredEvents: [],
+        energyRecovered: 0, // Not sleeping
+        petDied: false,
+      };
+
+      await petSystem['processOfflinePoopSpawning'](pet, offlineCalc);
+
+      // Should have decremented by 120 ticks and potentially spawned poop
+      // Since counter was 100, it should reach 0 and spawn 1 poop
+      expect(pet.poopCount).toBeGreaterThanOrEqual(1);
+      expect(offlineCalc.poopSpawned).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should NOT spawn poop during offline sleep', async () => {
+      const pet = petSystem.createPet({
+        name: 'Offline Sleep Test',
+        species: 'test',
+      });
+      gameState.pet = pet;
+
+      // Set up initial state
+      pet.hiddenCounters.poopTicksLeft = 50;
+      pet.poopCount = 0;
+
+      // Create offline calculation with sleep (energyRecovered > 0)
+      const offlineCalc = {
+        offlineTime: 7200,
+        ticksToProcess: 120,
+        careDecay: {
+          satiety: 0,
+          hydration: 0,
+          happiness: 0,
+          life: 0,
+        },
+        poopSpawned: 0,
+        sicknessTriggered: false,
+        completedActivities: [],
+        travelCompleted: false,
+        eggsHatched: [],
+        expiredEvents: [],
+        energyRecovered: 50, // Was sleeping
+        petDied: false,
+      };
+
+      await petSystem['processOfflinePoopSpawning'](pet, offlineCalc);
+
+      // Counter should decrement to 0 but no poop spawns during sleep
+      expect(pet.hiddenCounters.poopTicksLeft).toBe(0);
+      expect(pet.poopCount).toBe(0);
+      expect(offlineCalc.poopSpawned).toBe(0);
+    });
+
+    it('should handle multiple poop spawns during long offline period', async () => {
+      const pet = petSystem.createPet({
+        name: 'Long Offline Test',
+        species: 'test',
+      });
+      gameState.pet = pet;
+
+      // Set up for multiple spawns (48 hours offline)
+      pet.hiddenCounters.poopTicksLeft = 100;
+      pet.poopCount = 0;
+
+      const offlineCalc = {
+        offlineTime: 172800, // 48 hours
+        ticksToProcess: 2880, // 2880 minutes
+        careDecay: {
+          satiety: 0,
+          hydration: 0,
+          happiness: 0,
+          life: 0,
+        },
+        poopSpawned: 0,
+        sicknessTriggered: false,
+        completedActivities: [],
+        travelCompleted: false,
+        eggsHatched: [],
+        expiredEvents: [],
+        energyRecovered: 0, // Not sleeping
+        petDied: false,
+      };
+
+      await petSystem['processOfflinePoopSpawning'](pet, offlineCalc);
+
+      // With average interval of 15 hours (900 ticks), should spawn ~3 poops in 48 hours
+      expect(pet.poopCount).toBeGreaterThanOrEqual(2);
+      expect(pet.poopCount).toBeLessThanOrEqual(8); // Max possible with 6-hour intervals
+      expect(offlineCalc.poopSpawned).toBe(pet.poopCount);
+    });
+
+    it('should maintain poopTicksLeft value persistently', () => {
+      const pet = petSystem.createPet({
+        name: 'Persistence Test',
+        species: 'test',
+      });
+
+      // Set specific value
+      pet.hiddenCounters.poopTicksLeft = 500;
+
+      // Simulate save/load by checking the value is part of hiddenCounters
+      const savedCounters = { ...pet.hiddenCounters };
+
+      // Create new pet and restore counters
+      const newPet = petSystem.createPet({
+        name: 'Restored Pet',
+        species: 'test',
+      });
+
+      newPet.hiddenCounters = savedCounters;
+
+      expect(newPet.hiddenCounters.poopTicksLeft).toBe(500);
     });
   });
 

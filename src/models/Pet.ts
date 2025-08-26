@@ -42,6 +42,7 @@ export interface HiddenCounters {
   hydrationTicks: number;
   happinessTicks: number;
   lifeTicks: number; // Hidden wellness value
+  poopTicksLeft: number; // Ticks until next poop spawns
 }
 
 /**
