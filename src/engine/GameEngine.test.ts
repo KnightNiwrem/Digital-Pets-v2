@@ -154,6 +154,12 @@ describe('GameEngine', () => {
       expect(autoStartEngine.getStatus().running).toBe(true);
       await autoStartEngine.stop();
     });
+
+    test('should save game state after processing offline time', async () => {
+      await engine.initialize();
+      const state = engine.getGameState();
+      expect(state.saveData.saveCount).toBeGreaterThan(0);
+    });
   });
 
   describe('System Management', () => {
