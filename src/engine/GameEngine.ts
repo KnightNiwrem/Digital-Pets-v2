@@ -20,6 +20,7 @@ import { ActivitySystem } from '../systems/ActivitySystem';
 import { BattleSystem } from '../systems/BattleSystem';
 import { EventSystem } from '../systems/EventSystem';
 import { ShopSystem } from '../systems/ShopSystem';
+import { UISystem } from '../systems/UISystem';
 
 /**
  * Engine configuration options
@@ -72,7 +73,7 @@ export class GameEngine {
   private tickCount = 0;
   private updateCount = 0;
   private lastTickTime = 0;
-  private tickTimer: NodeJS.Timeout | null = null;
+  private tickTimer: ReturnType<typeof setInterval> | null = null;
 
   // Configuration
   private readonly config: Required<EngineConfig>;
@@ -522,7 +523,10 @@ export class GameEngine {
     this.registerSystem('ShopSystem', shopSystem);
     await this.initializeSystem('ShopSystem', shopSystem);
 
-    // Note: UISystem will be implemented in the UI phase
+    // 11. UISystem (depends on ConfigSystem)
+    const uiSystem = new UISystem(this.updatesQueue.createWriter('UISystem'));
+    this.registerSystem('UISystem', uiSystem);
+    await this.initializeSystem('UISystem', uiSystem);
 
     if (this.config.debugMode) {
       console.log('[GameEngine] All systems initialized');
@@ -683,25 +687,89 @@ export class GameEngine {
    * Load saved game state
    */
   private async loadGameState(): Promise<void> {
-    // This will be implemented when SaveSystem is available
-    if (this.config.debugMode) {
-      console.log('[GameEngine] Loading game state...');
+    const saveSystem = this.systems.get('SaveSystem') as SaveSystem | undefined;
+    const uiSystem = this.systems.get('UISystem') as UISystem | undefined;
+
+    if (!saveSystem) {
+      console.warn('[GameEngine] SaveSystem not available, using default state');
+      return;
     }
-    // For now, use default state
+
+    try {
+      if (this.config.debugMode) {
+        console.log('[GameEngine] Loading game state...');
+      }
+
+      const loadedState = await saveSystem.load();
+
+      if (loadedState) {
+        this.gameState = loadedState;
+
+        if (this.config.debugMode) {
+          console.log('[GameEngine] Game state loaded successfully');
+        }
+
+        // Render the loaded state to UI
+        if (uiSystem && uiSystem.isInitialized()) {
+          uiSystem.renderState(this.gameState, true); // Force render on load
+        }
+      } else {
+        if (this.config.debugMode) {
+          console.log('[GameEngine] No save found, using default state');
+        }
+      }
+    } catch (error) {
+      console.error('[GameEngine] Failed to load game state:', error);
+      // Use default state on load failure
+    }
   }
 
   /**
    * Save current game state
+   * Implements pessimistic saving - UI is only updated after successful save
    */
   private async saveGameState(): Promise<void> {
-    // This will be implemented when SaveSystem is available
-    if (this.config.debugMode && this.tickCount % 10 === 0) {
-      console.log('[GameEngine] Saving game state...');
+    const saveSystem = this.systems.get('SaveSystem') as SaveSystem | undefined;
+    const uiSystem = this.systems.get('UISystem') as UISystem | undefined;
+
+    if (!saveSystem) {
+      console.error('[GameEngine] SaveSystem not available');
+      return;
     }
 
-    // Update save data
-    this.gameState.saveData.lastSaveTime = Date.now();
-    this.gameState.saveData.saveCount++;
+    try {
+      // Update save data before saving
+      this.gameState.saveData.lastSaveTime = Date.now();
+      this.gameState.saveData.saveCount++;
+
+      // Attempt to save the game state
+      await saveSystem.save(this.gameState);
+
+      if (this.config.debugMode && this.tickCount % 10 === 0) {
+        console.log('[GameEngine] Game state saved successfully');
+      }
+
+      // PESSIMISTIC SAVING: Only render to UI after successful save
+      if (uiSystem && uiSystem.isInitialized()) {
+        uiSystem.renderState(this.gameState);
+      }
+    } catch (error) {
+      console.error('[GameEngine] Failed to save game state:', error);
+
+      // Notify UI of save failure if available
+      if (uiSystem && uiSystem.isInitialized()) {
+        uiSystem.showNotification({
+          type: 'SAVE_FAILURE',
+          title: 'Save Failed',
+          message: 'Failed to save game. Your progress may be lost.',
+          severity: 'error',
+          timestamp: Date.now(),
+        });
+      }
+
+      // Don't throw - allow game to continue but log the error
+      this.handleSystemError('SaveSystem', error as Error);
+    }
   }
 
   /**

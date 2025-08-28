@@ -282,9 +282,7 @@ export class PetSystem extends BaseSystem {
   ): Promise<void> {
     if (!gameState.pet) return;
 
-    const sleepTimer = gameState.world.activeTimers.find(
-      (t) => t.type === 'sleep' && !t.paused,
-    );
+    const sleepTimer = gameState.world.activeTimers.find((t) => t.type === 'sleep' && !t.paused);
     if (!sleepTimer) {
       return;
     }
