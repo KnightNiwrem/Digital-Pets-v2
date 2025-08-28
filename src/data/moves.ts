@@ -614,8 +614,8 @@ export const MOVE_LEARNING_TABLE: MoveLearnRequirement[] = [
 /**
  * Get a move by ID
  */
-export function getMoveById(moveId: string): BattleMove | null {
-  return BATTLE_MOVES[moveId] || null;
+export function getMoveById(moveId: string): BattleMove | undefined {
+  return BATTLE_MOVES[moveId] || undefined;
 }
 
 /**

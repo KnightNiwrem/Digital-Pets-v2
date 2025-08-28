@@ -225,8 +225,8 @@ export const EGG_TYPES_DATA: Record<string, EggType> = {
 /**
  * Get an egg type by ID
  */
-export function getEggTypeById(eggTypeId: string): EggType | null {
-  return EGG_TYPES_DATA[eggTypeId] || null;
+export function getEggTypeById(eggTypeId: string): EggType | undefined {
+  return EGG_TYPES_DATA[eggTypeId] || undefined;
 }
 
 /**

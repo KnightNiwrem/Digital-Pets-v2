@@ -562,7 +562,7 @@ export class ActivitySystem extends BaseSystem {
   /**
    * Roll a single reward based on activity type
    */
-  private rollSingleReward(type: ActivityType): ActivityReward | null {
+  private rollSingleReward(type: ActivityType): ActivityReward | undefined {
     // Define reward pools by activity type
     const rewardPools: Record<
       ActivityType,
@@ -655,7 +655,7 @@ export class ActivitySystem extends BaseSystem {
 
     const pool = rewardPools[type];
     if (!pool || pool.length === 0) {
-      return null;
+      return undefined;
     }
 
     // Calculate total weight
@@ -687,7 +687,7 @@ export class ActivitySystem extends BaseSystem {
       };
     }
 
-    return null;
+    return undefined;
   }
 
   /**
@@ -853,7 +853,7 @@ export class ActivitySystem extends BaseSystem {
   private getActivityConfig(
     type: ActivityType,
     duration: 'short' | 'medium' | 'long' | 'training',
-  ): ActivityConfig | null {
+  ): ActivityConfig | undefined {
     if (!this.tuning) {
       // Use defaults if tuning not available
       const defaultDurations: Record<string, number> = {
@@ -884,13 +884,13 @@ export class ActivitySystem extends BaseSystem {
     // Get from tuning configuration for regular activities
     const activityConfig = this.tuning.activities?.[type.toLowerCase()];
     if (!activityConfig) {
-      return null;
+      return undefined;
     }
 
     // Get duration config for regular activities
     const durationConfig = activityConfig[duration as 'short' | 'medium' | 'long'];
     if (!durationConfig) {
-      return null;
+      return undefined;
     }
 
     // Convert the config to our local ActivityConfig type
@@ -922,17 +922,17 @@ export class ActivitySystem extends BaseSystem {
   /**
    * Get activity by ID
    */
-  public getActivity(activityId: string): ActiveActivity | null {
-    return this.activeActivities.get(activityId) || null;
+  public getActivity(activityId: string): ActiveActivity | undefined {
+    return this.activeActivities.get(activityId) || undefined;
   }
 
   /**
    * Get remaining time for an activity
    */
-  public getActivityRemainingTime(activityId: string): number | null {
+  public getActivityRemainingTime(activityId: string): number | undefined {
     const activity = this.activeActivities.get(activityId);
     if (!activity) {
-      return null;
+      return undefined;
     }
 
     if (activity.paused && activity.remainingTime !== undefined) {

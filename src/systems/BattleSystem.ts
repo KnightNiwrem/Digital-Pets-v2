@@ -45,7 +45,7 @@ export interface BattleResult {
  * BattleSystem manages all battle mechanics
  */
 export class BattleSystem extends BaseSystem {
-  private currentBattle: BattleState | null = null;
+  private currentBattle: BattleState | undefined = undefined;
 
   constructor(gameUpdateWriter: GameUpdateWriter) {
     super('BattleSystem', gameUpdateWriter);
@@ -69,7 +69,7 @@ export class BattleSystem extends BaseSystem {
 
   protected async onReset(): Promise<void> {
     // Clear current battle
-    this.currentBattle = null;
+    this.currentBattle = undefined;
   }
 
   protected async onTick(_deltaTime: number, _gameState: any): Promise<void> {
@@ -87,7 +87,7 @@ export class BattleSystem extends BaseSystem {
 
     // End battle on critical errors
     if (this.currentBattle) {
-      this.currentBattle = null;
+      this.currentBattle = undefined;
     }
   }
 
@@ -495,8 +495,8 @@ export class BattleSystem extends BaseSystem {
   /**
    * Check for battle end conditions
    */
-  private checkBattleEnd(): BattleResult | null {
-    if (!this.currentBattle) return null;
+  private checkBattleEnd(): BattleResult | undefined {
+    if (!this.currentBattle) return undefined;
 
     // Check if any participant is defeated
     const playerParticipant = this.currentBattle.participants.find((p) => p.team === 'player');
@@ -535,7 +535,7 @@ export class BattleSystem extends BaseSystem {
       };
     }
 
-    return null;
+    return undefined;
   }
 
   /**
@@ -595,7 +595,7 @@ export class BattleSystem extends BaseSystem {
     }
 
     // Clear current battle
-    this.currentBattle = null;
+    this.currentBattle = undefined;
   }
 
   /**
@@ -656,20 +656,20 @@ export class BattleSystem extends BaseSystem {
   /**
    * Get the current battle state
    */
-  public getCurrentBattle(): BattleState | null {
+  public getCurrentBattle(): BattleState | undefined {
     return this.currentBattle;
   }
 
   /**
    * Get the current turn participant
    */
-  public getCurrentTurnParticipant(): BattleParticipant | null {
-    if (!this.currentBattle) return null;
+  public getCurrentTurnParticipant(): BattleParticipant | undefined {
+    if (!this.currentBattle) return undefined;
 
     const currentTurnIndex = this.currentBattle.turnOrder[this.currentBattle.currentTurn];
-    if (currentTurnIndex === undefined) return null;
+    if (currentTurnIndex === undefined) return undefined;
 
-    return this.currentBattle.participants[currentTurnIndex] || null;
+    return this.currentBattle.participants[currentTurnIndex];
   }
 
   /**
@@ -712,7 +712,7 @@ export class BattleSystem extends BaseSystem {
     return obj && typeof obj === 'object' && 'currentHealth' in obj && 'team' in obj;
   }
 
-  private getMoveById(moveId: string): BattleMove | null {
+  private getMoveById(moveId: string): BattleMove | undefined {
     // Use the moves database
     return getMoveDef(moveId);
   }
@@ -720,16 +720,20 @@ export class BattleSystem extends BaseSystem {
   private getDefaultTarget(
     participant: BattleParticipant,
     move: BattleMove,
-  ): BattleParticipant | null {
-    if (!this.currentBattle) return null;
+  ): BattleParticipant | undefined {
+    if (!this.currentBattle) return undefined;
 
     switch (move.targetType) {
       case 'enemy':
-        return this.currentBattle.participants.find((p) => p.team !== participant.team) || null;
+        return (
+          this.currentBattle.participants.find((p) => p.team !== participant.team) || undefined
+        );
       case 'self':
         return participant;
       default:
-        return this.currentBattle.participants.find((p) => p.team !== participant.team) || null;
+        return (
+          this.currentBattle.participants.find((p) => p.team !== participant.team) || undefined
+        );
     }
   }
 

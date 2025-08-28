@@ -17,12 +17,12 @@ interface GameError {
 
 export const Game: React.FC = () => {
   const [uiState, setUiState] = useState<GameUIState>('loading');
-  const [gameState, setGameState] = useState<GameState | null>(null);
-  const [error, setError] = useState<GameError | null>(null);
+  const [gameState, setGameState] = useState<GameState | undefined>(undefined);
+  const [error, setError] = useState<GameError | undefined>(undefined);
   const [loadingMessage, setLoadingMessage] = useState('Initializing game...');
 
-  const gameEngineRef = useRef<GameEngine | null>(null);
-  const uiSystemRef = useRef<UISystem | null>(null);
+  const gameEngineRef = useRef<GameEngine | undefined>(undefined);
+  const uiSystemRef = useRef<UISystem | undefined>(undefined);
 
   // Initialize the game engine
   useEffect(() => {
@@ -107,6 +107,8 @@ export const Game: React.FC = () => {
       return;
     }
 
+    console.log('[Game] Handling starter selection:', species.id, species.name);
+
     // Send starter selection action through UISystem
     uiSystemRef.current.handleUserAction({
       action: UI_ACTIONS.SELECT_STARTER,
@@ -115,6 +117,8 @@ export const Game: React.FC = () => {
         name: species.name,
       },
     });
+
+    console.log('[Game] Starter selection action queued');
   }, []);
 
   // Handle user actions from PetHomePage
@@ -172,6 +176,6 @@ export const Game: React.FC = () => {
       );
 
     default:
-      return null;
+      return <></>;
   }
 };

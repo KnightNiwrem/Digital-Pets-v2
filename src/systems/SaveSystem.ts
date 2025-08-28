@@ -201,14 +201,14 @@ export class SaveSystem extends BaseSystem {
   /**
    * Load the game state
    */
-  public async load(slot?: number): Promise<GameState | null> {
+  public async load(slot?: number): Promise<GameState | undefined> {
     try {
       const key = slot !== undefined ? `${this.BACKUP_PREFIX}${slot}` : this.CURRENT_SAVE_KEY;
 
       const serialized = this.getStorageItem(key);
 
       if (!serialized) {
-        return null;
+        return undefined;
       }
 
       let saveState: SaveState;
@@ -226,7 +226,7 @@ export class SaveSystem extends BaseSystem {
           };
         } catch (error) {
           console.error(`Failed to parse backup slot ${slot}:`, error);
-          return null;
+          return undefined;
         }
       } else {
         // Current save stores SaveState format
@@ -250,7 +250,7 @@ export class SaveSystem extends BaseSystem {
           return await this.recoverFromBackup();
         }
 
-        return null;
+        return undefined;
       }
 
       // Apply migrations if needed
@@ -271,7 +271,7 @@ export class SaveSystem extends BaseSystem {
         return await this.recoverFromBackup();
       }
 
-      return null;
+      return undefined;
     }
   }
 
@@ -294,7 +294,7 @@ export class SaveSystem extends BaseSystem {
         data: state,
       };
 
-      return JSON.stringify(exportData, null, 2);
+      return JSON.stringify(exportData, undefined, 2);
     } catch (error) {
       this.handleError(error as Error);
       throw new Error(`Failed to export save: ${(error as Error).message}`);
@@ -357,12 +357,12 @@ export class SaveSystem extends BaseSystem {
   /**
    * Get import preview without actually importing
    */
-  public async getImportPreview(data: string): Promise<ImportPreview | null> {
+  public async getImportPreview(data: string): Promise<ImportPreview | undefined> {
     try {
       const importData = JSON.parse(data);
 
       if (!importData.data) {
-        return null;
+        return undefined;
       }
 
       const gameState = importData.data as GameState;
@@ -379,7 +379,7 @@ export class SaveSystem extends BaseSystem {
       };
     } catch (error) {
       this.handleError(error as Error);
-      return null;
+      return undefined;
     }
   }
 
@@ -620,7 +620,7 @@ export class SaveSystem extends BaseSystem {
   /**
    * Recover from backup saves
    */
-  private async recoverFromBackup(): Promise<GameState | null> {
+  private async recoverFromBackup(): Promise<GameState | undefined> {
     const backups = this.getBackupSaves();
 
     // Try each backup in order (newest first)
@@ -661,7 +661,7 @@ export class SaveSystem extends BaseSystem {
       }
     }
 
-    return null;
+    return undefined;
   }
 
   /**
@@ -764,6 +764,7 @@ export class SaveSystem extends BaseSystem {
    */
   private getStorageItem(key: string): string | null {
     try {
+      // Note: localStorage.getItem() must return null per Web Storage API spec
       return localStorage.getItem(key);
     } catch (error) {
       console.error(`Failed to get item ${key}:`, error);
@@ -840,7 +841,7 @@ export class SaveSystem extends BaseSystem {
    */
   private getMetadata(): any {
     const data = this.getStorageItem(this.METADATA_KEY);
-    return data ? JSON.parse(data) : null;
+    return data ? JSON.parse(data) : undefined;
   }
 
   /**

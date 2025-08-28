@@ -246,7 +246,7 @@ export interface GameState {
   playerId: string; // Generated UUID for this save
 
   // Core game state
-  pet: Pet | null; // Current active pet
+  pet: Pet | undefined; // Current active pet
 
   // Inventory and resources
   inventory: {

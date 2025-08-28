@@ -15,7 +15,7 @@ const createMockGameState = (): GameState => ({
   ...createBaseMockState({
     playerId: 'test-player',
     currentLocationId: 'main_city',
-    pet: null,
+    pet: undefined,
     coins: 100,
     unlockedSlots: 20,
   }),
@@ -206,7 +206,7 @@ describe('UISystem', () => {
     });
 
     it('should start with no rendered state', () => {
-      expect(uiSystem.getLastRenderedState()).toBeNull();
+      expect(uiSystem.getLastRenderedState()).toBeUndefined();
     });
   });
 
@@ -446,8 +446,8 @@ describe('UISystem', () => {
       expect(uiSystem.getCurrentModal()).toEqual(modal);
 
       uiSystem.hideModal();
-      expect(modalCallback).toHaveBeenCalledWith(null);
-      expect(uiSystem.getCurrentModal()).toBeNull();
+      expect(modalCallback).toHaveBeenCalledWith(undefined);
+      expect(uiSystem.getCurrentModal()).toBeUndefined();
     });
   });
 

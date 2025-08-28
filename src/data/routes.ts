@@ -133,8 +133,8 @@ export const ROUTES_MAP: Map<string, TravelRoute> = new Map(
 /**
  * Get a route between two locations
  */
-export function getRoute(from: string, to: string): TravelRoute | null {
-  return ROUTES_MAP.get(`${from}_${to}`) || null;
+export function getRoute(from: string, to: string): TravelRoute | undefined {
+  return ROUTES_MAP.get(`${from}_${to}`) || undefined;
 }
 
 /**

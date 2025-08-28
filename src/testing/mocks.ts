@@ -12,7 +12,7 @@ import { RARITY_TIERS, STATUS_TYPES, GROWTH_STAGES, ITEM_CATEGORIES } from '../m
 // Options for customizing mock objects
 export interface MockGameStateOptions {
   playerId?: string;
-  pet?: Pet | null;
+  pet?: Pet | undefined;
   coins?: number;
   maxSlots?: number;
   unlockedSlots?: number;
@@ -47,7 +47,7 @@ export interface MockPetOptions {
 export function createMockGameState(options: MockGameStateOptions = {}): GameState {
   const {
     playerId = 'test-player',
-    pet = null,
+    pet = undefined,
     coins = 100,
     maxSlots = 100,
     unlockedSlots = 50,

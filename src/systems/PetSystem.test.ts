@@ -30,7 +30,7 @@ describe('PetSystem', () => {
     gameState = createMockGameState({
       playerId: 'test-player',
       currentLocationId: 'city_central',
-      pet: null,
+      pet: undefined,
       coins: 0,
       unlockedSlots: 20,
     });

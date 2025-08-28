@@ -640,7 +640,7 @@ describe('EventSystem', () => {
 
   describe('Edge Cases', () => {
     it('should handle missing pet gracefully', () => {
-      mockGameState.pet = null;
+      mockGameState.pet = undefined;
 
       const joinResult = eventSystem.joinEvent('daily_arena', mockGameState);
       expect(joinResult).toBe(false);

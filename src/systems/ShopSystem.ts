@@ -32,7 +32,7 @@ export interface ShopTransaction {
 }
 
 export class ShopSystem extends BaseSystem {
-  private currentInventory: ShopInventory | null = null;
+  private currentInventory: ShopInventory | undefined = undefined;
   private itemPools: Map<ItemCategory, Item[]> = new Map();
 
   // Base price multipliers by rarity
@@ -63,17 +63,17 @@ export class ShopSystem extends BaseSystem {
   }
 
   protected async onInitialize(_options: SystemInitOptions): Promise<void> {
-    this.currentInventory = null;
+    this.currentInventory = undefined;
     // Shop inventory will be generated on demand
   }
 
   protected async onShutdown(): Promise<void> {
-    this.currentInventory = null;
+    this.currentInventory = undefined;
     this.itemPools.clear();
   }
 
   protected async onReset(): Promise<void> {
-    this.currentInventory = null;
+    this.currentInventory = undefined;
   }
 
   protected async onTick(_deltaTime: number, _gameState: GameState): Promise<void> {
@@ -532,7 +532,7 @@ export class ShopSystem extends BaseSystem {
     return true;
   }
 
-  getShopInventory(): ShopInventory | null {
+  getShopInventory(): ShopInventory | undefined {
     return this.currentInventory;
   }
 

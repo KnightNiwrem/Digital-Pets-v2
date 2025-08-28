@@ -152,7 +152,7 @@ export interface UIModal {
 /**
  * UI modal callback
  */
-export type UIModalCallback = (modal: UIModal | null) => void;
+export type UIModalCallback = (modal: UIModal | undefined) => void;
 
 /**
  * UI system configuration
@@ -170,12 +170,12 @@ export interface UISystemConfig {
  */
 export class UISystem extends BaseSystem {
   private config: Required<UISystemConfig>;
-  private renderCallback: UIRenderCallback | null = null;
-  private notificationCallback: UINotificationCallback | null = null;
-  private modalCallback: UIModalCallback | null = null;
-  private currentModal: UIModal | null = null;
+  private renderCallback: UIRenderCallback | undefined = undefined;
+  private notificationCallback: UINotificationCallback | undefined = undefined;
+  private modalCallback: UIModalCallback | undefined = undefined;
+  private currentModal: UIModal | undefined = undefined;
   private notificationQueue: UINotification[] = [];
-  private lastRenderedState: GameState | null = null;
+  private lastRenderedState: GameState | undefined = undefined;
   private pendingActions: UIAction[] = [];
   private isProcessingAction: boolean = false;
 
@@ -210,16 +210,16 @@ export class UISystem extends BaseSystem {
    */
   protected async onShutdown(): Promise<void> {
     // Clear all callbacks
-    this.renderCallback = null;
-    this.notificationCallback = null;
-    this.modalCallback = null;
+    this.renderCallback = undefined;
+    this.notificationCallback = undefined;
+    this.modalCallback = undefined;
 
     // Clear queues
     this.notificationQueue = [];
     this.pendingActions = [];
 
     // Clear modal
-    this.currentModal = null;
+    this.currentModal = undefined;
   }
 
   /**
@@ -228,8 +228,8 @@ export class UISystem extends BaseSystem {
   protected async onReset(): Promise<void> {
     this.notificationQueue = [];
     this.pendingActions = [];
-    this.currentModal = null;
-    this.lastRenderedState = null;
+    this.currentModal = undefined;
+    this.lastRenderedState = undefined;
     this.isProcessingAction = false;
   }
 
@@ -396,11 +396,11 @@ export class UISystem extends BaseSystem {
    * Hide modal
    */
   public hideModal(): void {
-    this.currentModal = null;
+    this.currentModal = undefined;
 
     if (this.modalCallback) {
       try {
-        this.modalCallback(null);
+        this.modalCallback(undefined);
       } catch (error) {
         console.error('[UISystem] Modal error:', error);
         this.handleError(error as Error);
@@ -428,14 +428,14 @@ export class UISystem extends BaseSystem {
   /**
    * Get current modal
    */
-  public getCurrentModal(): UIModal | null {
+  public getCurrentModal(): UIModal | undefined {
     return this.currentModal;
   }
 
   /**
    * Get last rendered state
    */
-  public getLastRenderedState(): GameState | null {
+  public getLastRenderedState(): GameState | undefined {
     return this.lastRenderedState;
   }
 
@@ -496,7 +496,9 @@ export class UISystem extends BaseSystem {
   /**
    * Translate UI action to game update
    */
-  private translateActionToUpdate(action: UIAction): Omit<GameUpdate, 'id' | 'timestamp'> | null {
+  private translateActionToUpdate(
+    action: UIAction,
+  ): Omit<GameUpdate, 'id' | 'timestamp'> | undefined {
     const baseUpdate = {
       type: UPDATE_TYPES.USER_ACTION,
       payload: {

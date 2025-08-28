@@ -233,8 +233,8 @@ export const LOCATIONS_DATA: Readonly<Record<string, CityLocation | WildLocation
 /**
  * Get a location by ID
  */
-export function getLocationById(locationId: string): CityLocation | WildLocation | null {
-  return LOCATIONS_DATA[locationId] || null;
+export function getLocationById(locationId: string): CityLocation | WildLocation | undefined {
+  return LOCATIONS_DATA[locationId] || undefined;
 }
 
 /**

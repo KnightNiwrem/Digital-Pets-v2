@@ -48,7 +48,7 @@ export abstract class BaseSystem {
   protected lastUpdate = 0;
   protected errorCount = 0;
   protected readonly version = '1.0.0';
-  protected tuning: TuningConfig | null = null; // Store tuning values locally
+  protected tuning: TuningConfig | undefined = undefined; // Store tuning values locally
 
   constructor(name: string, gameUpdateWriter?: GameUpdateWriter) {
     this.name = name;
@@ -64,7 +64,7 @@ export abstract class BaseSystem {
       throw new Error(`System ${this.name} is already initialized`);
     }
 
-    this.tuning = options.tuning || null; // Store tuning values
+    this.tuning = options.tuning || undefined; // Store tuning values
 
     // Call system-specific initialization
     await this.onInitialize(options);
@@ -302,9 +302,9 @@ export interface UpdateHandler {
    * Handle a specific update
    * @param update The update to handle
    * @param gameState Current game state
-   * @returns Updated game state or null if no changes
+   * @returns Updated game state or undefined if no changes
    */
-  handleUpdate(update: any, gameState: GameState): Promise<GameState | null>;
+  handleUpdate(update: any, gameState: GameState): Promise<GameState | undefined>;
 }
 
 /**

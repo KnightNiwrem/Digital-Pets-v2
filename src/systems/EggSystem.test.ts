@@ -69,7 +69,7 @@ describe('EggSystem', () => {
 
   describe('Starter Selection', () => {
     it('should provide starter options when no pet and no eggs', () => {
-      gameState.pet = null;
+      gameState.pet = undefined;
       gameState.collections.eggs = [];
 
       const starterOptions = eggSystem.getStarterOptions(gameState);
@@ -89,7 +89,7 @@ describe('EggSystem', () => {
     });
 
     it('should not provide starters when eggs exist', () => {
-      gameState.pet = null;
+      gameState.pet = undefined;
       gameState.collections.eggs = [createMockEgg()];
 
       const starterOptions = eggSystem.getStarterOptions(gameState);
@@ -99,10 +99,10 @@ describe('EggSystem', () => {
     });
 
     it('should select a valid starter species', async () => {
-      gameState.pet = null;
+      gameState.pet = undefined;
       gameState.collections.eggs = [];
 
-      const result = await eggSystem.selectStarter(gameState, 'starter_fire');
+      const result = await eggSystem.selectStarter(gameState, 'starter_fire', 'Flame');
 
       expect(result.success).toBe(true);
       expect(result.message).toContain('chose');
@@ -110,10 +110,10 @@ describe('EggSystem', () => {
     });
 
     it('should reject invalid starter species', async () => {
-      gameState.pet = null;
+      gameState.pet = undefined;
       gameState.collections.eggs = [];
 
-      const result = await eggSystem.selectStarter(gameState, 'invalid_species');
+      const result = await eggSystem.selectStarter(gameState, 'invalid_species', 'Test');
 
       expect(result.success).toBe(false);
       expect(result.message).toContain('Invalid');
@@ -285,15 +285,15 @@ describe('EggSystem', () => {
     it('should get species by ID', () => {
       const species = eggSystem.getSpecies('starter_fire');
 
-      expect(species).not.toBeNull();
+      expect(species).not.toBeUndefined();
       expect(species?.name).toBe('Flamepup');
       expect(species?.rarity).toBe(RARITY_TIERS.COMMON);
     });
 
-    it('should return null for unknown species', () => {
+    it('should return undefined for unknown species', () => {
       const species = eggSystem.getSpecies('unknown_species');
 
-      expect(species).toBeNull();
+      expect(species).toBeUndefined();
     });
   });
 
@@ -304,14 +304,14 @@ describe('EggSystem', () => {
 
       const retrieved = eggSystem.getEgg(gameState, egg.id);
 
-      expect(retrieved).not.toBeNull();
+      expect(retrieved).not.toBeUndefined();
       expect(retrieved?.id).toBe(egg.id);
     });
 
-    it('should return null for unknown egg', () => {
+    it('should return undefined for unknown egg', () => {
       const retrieved = eggSystem.getEgg(gameState, 'unknown_egg');
 
-      expect(retrieved).toBeNull();
+      expect(retrieved).toBeUndefined();
     });
 
     it('should get all incubating eggs', async () => {

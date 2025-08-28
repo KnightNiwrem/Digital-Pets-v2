@@ -52,9 +52,9 @@ export class TimeSystem extends BaseSystem {
   private tickInterval: number;
   private tickCounter: number;
   private lastTickTime: number;
-  private tickTimerId: NodeJS.Timeout | null;
+  private tickTimerId: NodeJS.Timeout | undefined;
   private timers: Map<string, Timer>;
-  private timerCheckInterval: NodeJS.Timeout | null;
+  private timerCheckInterval: NodeJS.Timeout | undefined;
   private maxOfflineTicks: number;
 
   constructor(gameUpdateWriter: GameUpdateWriter, config?: TimeSystemConfig) {
@@ -63,9 +63,9 @@ export class TimeSystem extends BaseSystem {
     this.maxOfflineTicks = config?.maxOfflineTicks ?? 10080; // Default: 1 week worth of ticks
     this.tickCounter = 0;
     this.lastTickTime = Date.now();
-    this.tickTimerId = null;
+    this.tickTimerId = undefined;
     this.timers = new Map();
-    this.timerCheckInterval = null;
+    this.timerCheckInterval = undefined;
   }
 
   /**
@@ -108,12 +108,12 @@ export class TimeSystem extends BaseSystem {
   public stop(): void {
     if (this.tickTimerId) {
       clearInterval(this.tickTimerId);
-      this.tickTimerId = null;
+      this.tickTimerId = undefined;
     }
 
     if (this.timerCheckInterval) {
       clearInterval(this.timerCheckInterval);
-      this.timerCheckInterval = null;
+      this.timerCheckInterval = undefined;
     }
 
     console.log('[TimeSystem] Stopped');

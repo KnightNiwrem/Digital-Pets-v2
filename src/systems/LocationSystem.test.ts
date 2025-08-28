@@ -112,9 +112,9 @@ describe('LocationSystem', () => {
       expect(travelInfo?.energyCost).toBe(10);
     });
 
-    it('should return null for invalid routes', () => {
+    it('should return undefined for invalid routes', () => {
       const travelInfo = locationSystem.getTravelInfo('main_city', 'nonexistent');
-      expect(travelInfo).toBeNull();
+      expect(travelInfo).toBeUndefined();
     });
 
     it('should get available destinations from current location', () => {

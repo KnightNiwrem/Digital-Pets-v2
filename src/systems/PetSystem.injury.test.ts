@@ -197,9 +197,9 @@ describe('PetSystem - Injury Mechanics', () => {
   });
 
   describe('getInjuryStatusMessage', () => {
-    it('should return null for healthy pet', () => {
+    it('should return undefined for healthy pet', () => {
       const message = petSystem.getInjuryStatusMessage(mockPet);
-      expect(message).toBeNull();
+      expect(message).toBeUndefined();
     });
 
     it('should return minor injury message', () => {

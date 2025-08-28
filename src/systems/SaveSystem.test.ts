@@ -12,6 +12,7 @@ class LocalStorageMock {
   private store: Record<string, string> = {};
 
   getItem(key: string): string | null {
+    // Note: localStorage.getItem() must return null per Web Storage API spec
     return this.store[key] || null;
   }
 
@@ -28,6 +29,7 @@ class LocalStorageMock {
   }
 
   key(index: number): string | null {
+    // Note: localStorage.key() must return null per Web Storage API spec
     const keys = Object.keys(this.store);
     return keys[index] || null;
   }
@@ -237,9 +239,9 @@ describe('SaveSystem', () => {
       expect(loadedState?.pet?.name).toBe('Fluffy');
     });
 
-    it('should return null when no save exists', async () => {
+    it('should return undefined when no save exists', async () => {
       const loadedState = await saveSystem.load();
-      expect(loadedState).toBeNull();
+      expect(loadedState).toBeUndefined();
     });
 
     it('should validate checksum on load', async () => {
@@ -615,7 +617,7 @@ describe('SaveSystem', () => {
 
       // Should fail to load due to validation
       const loadedState = await saveSystem.load();
-      expect(loadedState).toBeNull();
+      expect(loadedState).toBeUndefined();
     });
 
     it('should handle version migration', async () => {
@@ -689,7 +691,7 @@ describe('SaveSystem', () => {
       await saveSystem.deleteSave();
 
       const loadedState = await saveSystem.load();
-      expect(loadedState).toBeNull();
+      expect(loadedState).toBeUndefined();
     });
 
     it('should delete specific backup slot', async () => {
@@ -723,7 +725,7 @@ describe('SaveSystem', () => {
 
       // Try to load from slot 0
       const loadedState = await saveSystem.load(0);
-      expect(loadedState).toBeNull();
+      expect(loadedState).toBeUndefined();
     });
 
     it('should clear all saves', async () => {
@@ -754,7 +756,7 @@ describe('SaveSystem', () => {
       await saveSystem.clearAllSaves();
 
       // Check that all saves are gone
-      expect(await saveSystem.load()).toBeNull();
+      expect(await saveSystem.load()).toBeUndefined();
       expect(saveSystem.getBackupSaves()).toEqual([]);
       expect(mockLocalStorage.length).toBe(1); // Only metadata remains
     });
@@ -971,7 +973,7 @@ describe('SaveSystem', () => {
       mockLocalStorage.setItem('test_current', 'not valid json');
 
       const loadedState = await saveSystem.load();
-      expect(loadedState).toBeNull();
+      expect(loadedState).toBeUndefined();
     });
   });
 

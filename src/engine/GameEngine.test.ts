@@ -10,6 +10,7 @@ class LocalStorageMock {
   private store: Record<string, string> = {};
 
   getItem(key: string): string | null {
+    // Note: localStorage.getItem() must return null per Web Storage API spec
     return this.store[key] || null;
   }
 
@@ -26,6 +27,7 @@ class LocalStorageMock {
   }
 
   key(index: number): string | null {
+    // Note: localStorage.key() must return null per Web Storage API spec
     const keys = Object.keys(this.store);
     return keys[index] || null;
   }
@@ -44,7 +46,7 @@ class MockSystem extends BaseSystem {
   public updateCalled = false;
   public errorHandled = false;
   public lastDeltaTime = 0;
-  public lastGameState: GameState | null = null;
+  public lastGameState: GameState | undefined = undefined;
 
   protected async onInitialize(_options: SystemInitOptions): Promise<void> {
     this.initializeCalled = true;
@@ -87,7 +89,10 @@ class MockUpdateHandlerSystem extends MockSystem {
     return this.handledUpdateTypes.includes(updateType);
   }
 
-  public async handleUpdate(update: GameUpdate, gameState: GameState): Promise<GameState | null> {
+  public async handleUpdate(
+    update: GameUpdate,
+    gameState: GameState,
+  ): Promise<GameState | undefined> {
     // Return modified state for testing
     return {
       ...gameState,
@@ -353,7 +358,7 @@ describe('GameEngine', () => {
       const state = engine.getGameState();
 
       expect(state.version).toBe('1.0.0');
-      expect(state.pet).toBeNull();
+      expect(state.pet).toBeUndefined();
     });
 
     test('should have valid player ID', () => {

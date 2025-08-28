@@ -266,7 +266,7 @@ describe('BattleSystem', () => {
           participantId: currentParticipant.id,
         });
 
-        expect(battleSystem.getCurrentBattle()).toBeNull(); // Battle ended
+        expect(battleSystem.getCurrentBattle()).toBeUndefined(); // Battle ended
       } finally {
         Math.random = originalRandom;
       }
@@ -286,7 +286,7 @@ describe('BattleSystem', () => {
           participantId: currentParticipant.id,
         });
 
-        expect(battleSystem.getCurrentBattle()).not.toBeNull(); // Battle continues
+        expect(battleSystem.getCurrentBattle()).not.toBeUndefined(); // Battle continues
         const lastLog = battleState.log[battleState.log.length - 1]!;
         expect(lastLog.message).toContain("couldn't escape");
       } finally {
@@ -323,7 +323,7 @@ describe('BattleSystem', () => {
         participantId: currentParticipant.id,
       });
 
-      expect(battleSystem.getCurrentBattle()).toBeNull(); // Battle ended
+      expect(battleSystem.getCurrentBattle()).toBeUndefined(); // Battle ended
     });
 
     test('should end battle when opponent pet is defeated', async () => {
@@ -340,7 +340,7 @@ describe('BattleSystem', () => {
         participantId: currentParticipant.id,
       });
 
-      expect(battleSystem.getCurrentBattle()).toBeNull(); // Battle ended
+      expect(battleSystem.getCurrentBattle()).toBeUndefined(); // Battle ended
     });
 
     test('should end battle on timeout', async () => {
@@ -356,7 +356,7 @@ describe('BattleSystem', () => {
         participantId: currentParticipant.id,
       });
 
-      expect(battleSystem.getCurrentBattle()).toBeNull(); // Battle ended
+      expect(battleSystem.getCurrentBattle()).toBeUndefined(); // Battle ended
     });
 
     test('should end battle on timeout with custom max turns', async () => {
@@ -377,7 +377,7 @@ describe('BattleSystem', () => {
         participantId: currentParticipant.id,
       });
 
-      expect(battleSystem.getCurrentBattle()).toBeNull(); // Battle ended
+      expect(battleSystem.getCurrentBattle()).toBeUndefined(); // Battle ended
     });
   });
 
@@ -548,17 +548,17 @@ describe('BattleSystem', () => {
   });
 
   describe('Battle State Queries', () => {
-    test('should return null when no battle is active', () => {
-      expect(battleSystem.getCurrentBattle()).toBeNull();
-      expect(battleSystem.getCurrentTurnParticipant()).toBeNull();
+    test('should return undefined when no battle is active', () => {
+      expect(battleSystem.getCurrentBattle()).toBeUndefined();
+      expect(battleSystem.getCurrentTurnParticipant()).toBeUndefined();
       expect(battleSystem.isPlayerTurn()).toBe(false);
     });
 
     test('should return current battle state when battle is active', async () => {
       await battleSystem.initializeBattle(mockPlayerPet, mockOpponentPet, mockBattleConfig);
 
-      expect(battleSystem.getCurrentBattle()).not.toBeNull();
-      expect(battleSystem.getCurrentTurnParticipant()).not.toBeNull();
+      expect(battleSystem.getCurrentBattle()).not.toBeUndefined();
+      expect(battleSystem.getCurrentTurnParticipant()).not.toBeUndefined();
     });
   });
 
@@ -567,7 +567,7 @@ describe('BattleSystem', () => {
       await battleSystem.initializeBattle(mockPlayerPet, mockOpponentPet, mockBattleConfig);
 
       const update = mockUpdatesQueue.dequeue();
-      expect(update).not.toBeNull();
+      expect(update).not.toBeUndefined();
       expect(update!.type).toBe('BATTLE_ACTION');
       expect(update!.payload.action).toBe('battle_started');
     });
@@ -591,7 +591,7 @@ describe('BattleSystem', () => {
       });
 
       const update = mockUpdatesQueue.dequeue();
-      expect(update).not.toBeNull();
+      expect(update).not.toBeUndefined();
       expect(update!.type).toBe('BATTLE_ACTION');
       expect(update!.payload.action).toBe('battle_ended');
     });

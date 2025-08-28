@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { useRef, type FormEvent } from 'react';
 
 export function APITester() {
+  // Note: React refs must use null per React API specification
   const responseInputRef = useRef<HTMLTextAreaElement>(null);
 
   const testEndpoint = async (e: FormEvent<HTMLFormElement>) => {
@@ -25,7 +26,7 @@ export function APITester() {
       const res = await fetch(url, { method });
 
       const data = await res.json();
-      responseInputRef.current!.value = JSON.stringify(data, null, 2);
+      responseInputRef.current!.value = JSON.stringify(data, undefined, 2);
     } catch (error) {
       responseInputRef.current!.value = String(error);
     }

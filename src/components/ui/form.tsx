@@ -123,6 +123,7 @@ function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
   const body = error ? String(error?.message) : props.children;
 
   if (!body) {
+    // Note: React components must return null (not undefined) per React API
     return null;
   }
 

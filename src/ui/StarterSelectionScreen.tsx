@@ -6,14 +6,14 @@ import { GROWTH_STAGES } from '../models/constants';
 
 interface StarterSelectionScreenProps {
   onSelectStarter: (species: Species) => void;
-  gameState: GameState | null;
+  gameState: GameState | undefined;
 }
 
 export const StarterSelectionScreen: React.FC<StarterSelectionScreenProps> = ({
   onSelectStarter,
   gameState,
 }) => {
-  const [selectedSpecies, setSelectedSpecies] = useState<Species | null>(null);
+  const [selectedSpecies, setSelectedSpecies] = useState<Species | undefined>(undefined);
   const [starters, setStarters] = useState<Species[]>([]);
 
   useEffect(() => {
@@ -24,6 +24,11 @@ export const StarterSelectionScreen: React.FC<StarterSelectionScreenProps> = ({
 
   const handleConfirmSelection = () => {
     if (selectedSpecies) {
+      console.log(
+        '[StarterSelection] Confirming selection:',
+        selectedSpecies.id,
+        selectedSpecies.name,
+      );
       onSelectStarter(selectedSpecies);
     }
   };

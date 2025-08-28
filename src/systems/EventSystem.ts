@@ -151,7 +151,7 @@ export interface EventParticipation {
 export class EventSystem extends BaseSystem {
   private eventDefinitions: Map<string, EventDefinition> = new Map();
   private activeEvents: Map<string, ActiveEvent> = new Map();
-  private eventCheckInterval: NodeJS.Timeout | null = null;
+  private eventCheckInterval: NodeJS.Timeout | undefined = undefined;
   private lastEventCheck: number = 0;
   private eventCheckFrequency = 60000; // Check every minute
 
@@ -467,7 +467,7 @@ export class EventSystem extends BaseSystem {
   private stopEventChecking(): void {
     if (this.eventCheckInterval) {
       clearInterval(this.eventCheckInterval);
-      this.eventCheckInterval = null;
+      this.eventCheckInterval = undefined;
     }
   }
 

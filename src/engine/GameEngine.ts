@@ -66,14 +66,14 @@ export class GameEngine {
 
   // Game state
   private gameState: GameState;
-  private previousState: GameState | null = null;
+  private previousState: GameState | undefined = undefined;
 
   // Engine state
   private running = false;
   private tickCount = 0;
   private updateCount = 0;
   private lastTickTime = 0;
-  private tickTimer: ReturnType<typeof setInterval> | null = null;
+  private tickTimer: ReturnType<typeof setInterval> | undefined = undefined;
 
   // Configuration
   private readonly config: Required<EngineConfig>;
@@ -305,7 +305,7 @@ export class GameEngine {
       version: '1.0.0',
       timestamp: Date.now(),
       playerId: this.generatePlayerId(),
-      pet: null,
+      pet: undefined,
       inventory: {
         items: [],
         currency: {
@@ -555,6 +555,11 @@ export class GameEngine {
    * Register a system as an update handler
    */
   private registerUpdateHandler(name: string, system: any): void {
+    // Check if the system implements the UpdateHandler interface
+    if (!isUpdateHandler(system)) {
+      return;
+    }
+
     // Add to relevant update type handlers
     for (const updateType of Object.values(UPDATE_TYPES)) {
       if (system.canHandleUpdate(updateType)) {
@@ -589,7 +594,7 @@ export class GameEngine {
   private stopGameLoop(): void {
     if (this.tickTimer) {
       clearInterval(this.tickTimer);
-      this.tickTimer = null;
+      this.tickTimer = undefined;
     }
   }
 

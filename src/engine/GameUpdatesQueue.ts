@@ -20,8 +20,8 @@ export interface GameUpdateWriter {
  * Interface for read-only access to the queue (for GameEngine)
  */
 export interface GameUpdateReader {
-  dequeue(): GameUpdate | null;
-  peek(): GameUpdate | null;
+  dequeue(): GameUpdate | undefined;
+  peek(): GameUpdate | undefined;
   size(): number;
   isEmpty(): boolean;
   clear(): void;
@@ -97,18 +97,18 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
 
   /**
    * Dequeue the next update
-   * @returns The next update or null if queue is empty
+   * @returns The next update or undefined if queue is empty
    */
-  public dequeue(): GameUpdate | null {
-    return this.queue.shift() ?? null;
+  public dequeue(): GameUpdate | undefined {
+    return this.queue.shift() ?? undefined;
   }
 
   /**
    * Peek at the next update without removing it
-   * @returns The next update or null if queue is empty
+   * @returns The next update or undefined if queue is empty
    */
-  public peek(): GameUpdate | null {
-    return this.queue[0] ?? null;
+  public peek(): GameUpdate | undefined {
+    return this.queue[0] ?? undefined;
   }
 
   /**
@@ -166,7 +166,7 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
    * @returns True if the payload is valid
    */
   private isValidPayload(payload: any): boolean {
-    return payload !== null && typeof payload === 'object';
+    return payload !== undefined && payload !== null && typeof payload === 'object';
   }
 
   /**
@@ -175,11 +175,11 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
    */
   public getStatistics(): {
     size: number;
-    oldestUpdate: GameUpdate | null;
+    oldestUpdate: GameUpdate | undefined;
     averageAge: number;
   } {
     const now = Date.now();
-    const oldestUpdate = this.queue[0] ?? null;
+    const oldestUpdate = this.queue[0] ?? undefined;
 
     let totalAge = 0;
     for (const update of this.queue) {

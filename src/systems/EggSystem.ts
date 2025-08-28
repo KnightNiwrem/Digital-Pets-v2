@@ -3,6 +3,7 @@
  */
 
 import { BaseSystem } from './BaseSystem';
+import type { UpdateHandler } from './BaseSystem';
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { SystemInitOptions, SystemError } from './BaseSystem';
 import type { GameState, GameUpdate, OfflineCalculation } from '../models/GameState';
@@ -48,7 +49,7 @@ export interface StarterOptions {
 /**
  * EggSystem class implementation
  */
-export class EggSystem extends BaseSystem {
+export class EggSystem extends BaseSystem implements UpdateHandler {
   private incubatingEggs: Map<string, Egg> = new Map();
   private speciesDatabase: Map<string, Species> = new Map();
   private eggTypeDatabase: Map<string, EggType> = new Map();
@@ -321,20 +322,20 @@ export class EggSystem extends BaseSystem {
   private async rollSpecies(
     eggTypeId: string,
     guaranteedSpecies?: string,
-  ): Promise<Species | null> {
+  ): Promise<Species | undefined> {
     // If species is predetermined, return it
     if (guaranteedSpecies) {
-      return this.speciesDatabase.get(guaranteedSpecies) || null;
+      return this.speciesDatabase.get(guaranteedSpecies) || undefined;
     }
 
     const eggType = this.eggTypeDatabase.get(eggTypeId);
     if (!eggType) {
       console.error(`Unknown egg type: ${eggTypeId}`);
-      return null;
+      return undefined;
     }
 
     // First roll for rarity if custom weights are provided
-    let targetRarity: RarityTier | null = null;
+    let targetRarity: RarityTier | undefined = undefined;
     if (eggType.rarityWeights) {
       targetRarity = this.rollRarity(eggType.rarityWeights);
     }
@@ -342,7 +343,7 @@ export class EggSystem extends BaseSystem {
     // Then roll for species within that rarity
     const possibleSpecies = eggType.possibleSpecies;
     if (possibleSpecies.length === 0) {
-      return null;
+      return undefined;
     }
 
     // Filter by rarity if specified
@@ -362,7 +363,7 @@ export class EggSystem extends BaseSystem {
     // Calculate total weight
     const totalWeight = filteredSpecies.reduce((sum, ps) => sum + ps.weight, 0);
     if (totalWeight === 0) {
-      return null;
+      return undefined;
     }
 
     // Roll for species
@@ -372,12 +373,12 @@ export class EggSystem extends BaseSystem {
     for (const ps of filteredSpecies) {
       currentWeight += ps.weight;
       if (roll <= currentWeight) {
-        return this.speciesDatabase.get(ps.speciesId) || null;
+        return this.speciesDatabase.get(ps.speciesId) || undefined;
       }
     }
 
     // Fallback to first species
-    return this.speciesDatabase.get(filteredSpecies[0]?.speciesId || '') || null;
+    return this.speciesDatabase.get(filteredSpecies[0]?.speciesId || '') || undefined;
   }
 
   /**
@@ -417,7 +418,7 @@ export class EggSystem extends BaseSystem {
    */
   public getStarterOptions(gameState: GameState): StarterOptions {
     // Check if player has no pet and no eggs
-    const hasPet = gameState.pet !== null && gameState.pet !== undefined;
+    const hasPet = gameState.pet !== undefined;
     const hasEggs = (gameState.collections?.eggs?.length || 0) > 0;
 
     if (hasPet || hasEggs) {
@@ -446,7 +447,11 @@ export class EggSystem extends BaseSystem {
   /**
    * Select a starter species and create a pet
    */
-  public async selectStarter(gameState: GameState, speciesId: string): Promise<HatchResult> {
+  public async selectStarter(
+    gameState: GameState,
+    speciesId: string,
+    customName?: string,
+  ): Promise<HatchResult> {
     const starterOptions = this.getStarterOptions(gameState);
 
     if (!starterOptions.available) {
@@ -466,7 +471,7 @@ export class EggSystem extends BaseSystem {
 
     // Create the pet
     const petCreationOptions: PetCreationOptions = {
-      name: species.name, // Default name
+      name: customName || species.name, // Use custom name if provided, otherwise default
       species: species.id,
       isStarter: true,
     };
@@ -592,15 +597,15 @@ export class EggSystem extends BaseSystem {
   /**
    * Get egg by ID
    */
-  public getEgg(gameState: GameState, eggId: string): Egg | null {
-    return gameState.collections?.eggs?.find((e) => e.id === eggId) || null;
+  public getEgg(gameState: GameState, eggId: string): Egg | undefined {
+    return gameState.collections?.eggs?.find((e) => e.id === eggId) || undefined;
   }
 
   /**
    * Get species data by ID
    */
-  public getSpecies(speciesId: string): Species | null {
-    return this.speciesDatabase.get(speciesId) || null;
+  public getSpecies(speciesId: string): Species | undefined {
+    return this.speciesDatabase.get(speciesId) || undefined;
   }
 
   /**
@@ -637,5 +642,44 @@ export class EggSystem extends BaseSystem {
    */
   private generateId(): string {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Check if this system can handle a specific update type
+   */
+  public canHandleUpdate(updateType: string): boolean {
+    // EggSystem handles user actions and some state transitions
+    return updateType === UPDATE_TYPES.USER_ACTION || updateType === UPDATE_TYPES.STATE_TRANSITION;
+  }
+
+  /**
+   * Handle a specific update
+   */
+  public async handleUpdate(
+    update: GameUpdate,
+    gameState: GameState,
+  ): Promise<GameState | undefined> {
+    // Handle USER_ACTION updates
+    if (update.type === UPDATE_TYPES.USER_ACTION) {
+      const action = update.payload?.action;
+
+      if (action === 'SELECT_STARTER') {
+        const speciesId = update.payload?.data?.species;
+        const customName = update.payload?.data?.name;
+        if (speciesId) {
+          const result = await this.selectStarter(gameState, speciesId, customName);
+          if (result.success) {
+            // The selectStarter method already queues the CREATE_STARTER_PET update
+            console.log('[EggSystem] Starter selection successful:', result.message);
+          } else {
+            console.error('[EggSystem] Starter selection failed:', result.message);
+          }
+        }
+      }
+    }
+
+    // EggSystem doesn't directly modify state for these actions
+    // It queues updates for PetSystem to handle
+    return undefined;
   }
 }

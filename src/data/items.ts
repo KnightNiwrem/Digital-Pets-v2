@@ -891,8 +891,8 @@ export const ITEMS_DATA: Record<string, Item> = {
 /**
  * Get an item by ID
  */
-export function getItemById(itemId: string): Item | null {
-  return ITEMS_DATA[itemId] || null;
+export function getItemById(itemId: string): Item | undefined {
+  return ITEMS_DATA[itemId] || undefined;
 }
 
 /**

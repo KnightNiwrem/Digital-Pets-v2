@@ -3,6 +3,7 @@
  */
 
 import { BaseSystem } from './BaseSystem';
+import type { UpdateHandler } from './BaseSystem';
 import type { GameUpdateWriter } from '../engine/GameUpdatesQueue';
 import type { SystemInitOptions, SystemError } from './BaseSystem';
 import type { GameState, GameUpdate, OfflineCalculation } from '../models/GameState';
@@ -70,8 +71,8 @@ export interface GrowthCheckResult {
 /**
  * PetSystem class implementation
  */
-export class PetSystem extends BaseSystem {
-  private petCache: Pet | null = null;
+export class PetSystem extends BaseSystem implements UpdateHandler {
+  private petCache: Pet | undefined = undefined;
   private lastDecayTick = 0;
 
   constructor(gameUpdateWriter: GameUpdateWriter) {
@@ -92,7 +93,7 @@ export class PetSystem extends BaseSystem {
    * System-specific shutdown
    */
   protected async onShutdown(): Promise<void> {
-    this.petCache = null;
+    this.petCache = undefined;
     this.lastDecayTick = 0;
   }
 
@@ -100,7 +101,7 @@ export class PetSystem extends BaseSystem {
    * System-specific reset
    */
   protected async onReset(): Promise<void> {
-    this.petCache = null;
+    this.petCache = undefined;
     this.lastDecayTick = 0;
   }
 
@@ -1275,9 +1276,9 @@ export class PetSystem extends BaseSystem {
   /**
    * Get injury status message
    */
-  public getInjuryStatusMessage(pet: Pet): string | null {
+  public getInjuryStatusMessage(pet: Pet): string | undefined {
     if (pet.injuries.length === 0) {
-      return null;
+      return undefined;
     }
 
     // Build a message based on all injuries
@@ -1391,6 +1392,81 @@ export class PetSystem extends BaseSystem {
    */
   private generateId(): string {
     return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Check if this system can handle a specific update type
+   */
+  public canHandleUpdate(updateType: string): boolean {
+    // PetSystem handles state transitions and some user actions
+    return updateType === UPDATE_TYPES.STATE_TRANSITION || updateType === UPDATE_TYPES.USER_ACTION;
+  }
+
+  /**
+   * Handle a specific update
+   */
+  public async handleUpdate(
+    update: GameUpdate,
+    gameState: GameState,
+  ): Promise<GameState | undefined> {
+    // Handle STATE_TRANSITION updates
+    if (update.type === UPDATE_TYPES.STATE_TRANSITION) {
+      const action = update.payload?.action;
+
+      if (action === 'CREATE_STARTER_PET') {
+        const { petOptions, speciesData } = update.payload?.data || {};
+        if (petOptions) {
+          // Create the new pet
+          const newPet = this.createPet(petOptions, speciesData);
+
+          // Update game state with the new pet
+          const newState = { ...gameState };
+          newState.pet = newPet;
+
+          // Update statistics
+          if (newState.meta?.statistics) {
+            newState.meta.statistics.totalPetsOwned++;
+            newState.meta.statistics.currentPetAge = 0;
+          }
+
+          console.log('[PetSystem] Created starter pet:', newPet.name);
+          return newState;
+        }
+      } else if (action === 'CREATE_PET_FROM_EGG') {
+        const { petOptions, speciesData } = update.payload?.data || {};
+        if (petOptions) {
+          // Create the new pet from egg
+          const newPet = this.createPet(petOptions, speciesData);
+
+          // Update game state with the new pet
+          const newState = { ...gameState };
+          newState.pet = newPet;
+
+          // Update statistics
+          if (newState.meta?.statistics) {
+            newState.meta.statistics.totalPetsOwned++;
+            newState.meta.statistics.currentPetAge = 0;
+          }
+
+          console.log('[PetSystem] Created pet from egg:', newPet.name);
+          return newState;
+        }
+      }
+    }
+
+    // Handle USER_ACTION updates
+    if (update.type === UPDATE_TYPES.USER_ACTION) {
+      const action = update.payload?.action;
+
+      // Handle pet care actions
+      if (action === 'FEED_PET' || action === 'GIVE_DRINK' || action === 'PLAY_WITH_PET') {
+        // These will be handled in future implementations
+        // For now, just return undefined
+        return undefined;
+      }
+    }
+
+    return undefined;
   }
 
   /**

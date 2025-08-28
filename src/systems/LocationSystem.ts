@@ -37,8 +37,8 @@ export interface TravelModifiers {
 export class LocationSystem extends BaseSystem {
   private locations: Map<string, Location | CityLocation | WildLocation> = new Map();
   private routes: Map<string, TravelRoute> = new Map();
-  private currentLocationState: LocationState | null = null;
-  private travelTimer: NodeJS.Timeout | null = null;
+  private currentLocationState: LocationState | undefined = undefined;
+  private travelTimer: NodeJS.Timeout | undefined = undefined;
 
   constructor(gameUpdateWriter: GameUpdateWriter) {
     super('LocationSystem', gameUpdateWriter);
@@ -61,7 +61,7 @@ export class LocationSystem extends BaseSystem {
     // Clear any active travel timers
     if (this.travelTimer) {
       clearTimeout(this.travelTimer);
-      this.travelTimer = null;
+      this.travelTimer = undefined;
     }
 
     // Clear travel state on shutdown
@@ -75,7 +75,7 @@ export class LocationSystem extends BaseSystem {
     this.currentLocationState = this.createDefaultLocationState();
     if (this.travelTimer) {
       clearTimeout(this.travelTimer);
-      this.travelTimer = null;
+      this.travelTimer = undefined;
     }
   }
 
@@ -123,21 +123,21 @@ export class LocationSystem extends BaseSystem {
 
   // Public methods
 
-  getCurrentLocation(): Location | CityLocation | WildLocation | null {
-    if (!this.currentLocationState) return null;
-    return this.locations.get(this.currentLocationState.currentLocationId) || null;
+  getCurrentLocation(): Location | CityLocation | WildLocation | undefined {
+    if (!this.currentLocationState) return undefined;
+    return this.locations.get(this.currentLocationState.currentLocationId) || undefined;
   }
 
-  getCurrentLocationId(): string | null {
-    return this.currentLocationState?.currentLocationId || null;
+  getCurrentLocationId(): string | undefined {
+    return this.currentLocationState?.currentLocationId || undefined;
   }
 
   getCurrentArea(): CityArea | undefined {
     return this.currentLocationState?.currentArea;
   }
 
-  getLocation(locationId: string): Location | CityLocation | WildLocation | null {
-    return this.locations.get(locationId) || null;
+  getLocation(locationId: string): Location | CityLocation | WildLocation | undefined {
+    return this.locations.get(locationId) || undefined;
   }
 
   getAllLocations(): Map<string, Location | CityLocation | WildLocation> {
@@ -148,11 +148,11 @@ export class LocationSystem extends BaseSystem {
     return this.currentLocationState?.traveling || false;
   }
 
-  getTravelInfo(from: string, to: string): TravelInfo | null {
+  getTravelInfo(from: string, to: string): TravelInfo | undefined {
     const route = getRoute(from, to);
 
     if (!route) {
-      return null;
+      return undefined;
     }
 
     return {
@@ -316,7 +316,7 @@ export class LocationSystem extends BaseSystem {
     // Clear the timer
     if (this.travelTimer) {
       clearTimeout(this.travelTimer);
-      this.travelTimer = null;
+      this.travelTimer = undefined;
     }
 
     return true;
@@ -358,7 +358,7 @@ export class LocationSystem extends BaseSystem {
     // Clear timer
     if (this.travelTimer) {
       clearTimeout(this.travelTimer);
-      this.travelTimer = null;
+      this.travelTimer = undefined;
     }
 
     // Queue travel cancel update with full energy refund
@@ -438,7 +438,7 @@ export class LocationSystem extends BaseSystem {
     // Clear travel state
     this.currentLocationState.traveling = false;
     this.currentLocationState.travelRoute = undefined;
-    this.travelTimer = null;
+    this.travelTimer = undefined;
   }
 
   /**
@@ -526,7 +526,7 @@ export class LocationSystem extends BaseSystem {
     return true;
   }
 
-  getLocationState(): LocationState | null {
+  getLocationState(): LocationState | undefined {
     return this.currentLocationState;
   }
 
@@ -542,8 +542,8 @@ export class LocationSystem extends BaseSystem {
     return this.currentLocationState?.visitedLocations.includes(locationId) || false;
   }
 
-  getLastVisitTime(locationId: string): number | null {
-    return this.currentLocationState?.lastVisitTimes[locationId] || null;
+  getLastVisitTime(locationId: string): number | undefined {
+    return this.currentLocationState?.lastVisitTimes[locationId] || undefined;
   }
 
   // Get available destinations from current location
@@ -556,6 +556,6 @@ export class LocationSystem extends BaseSystem {
 
   // Check if a route exists between two locations
   hasRoute(from: string, to: string): boolean {
-    return getRoute(from, to) !== null;
+    return getRoute(from, to) !== undefined;
   }
 }

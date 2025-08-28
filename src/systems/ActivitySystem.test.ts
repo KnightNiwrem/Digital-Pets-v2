@@ -304,7 +304,7 @@ describe('ActivitySystem', () => {
 
       expect(offlineCalc.completedActivities.length).toBe(1);
       expect(offlineCalc.completedActivities[0]?.activityId).toBe(activityId);
-      expect(activitySystem.getActivity(activityId)).toBeNull();
+      expect(activitySystem.getActivity(activityId)).toBeUndefined();
       expect(gameState.world.activeTimers.find((t) => t.id === timerId)).toBeUndefined();
     });
   });
@@ -490,9 +490,9 @@ describe('ActivitySystem', () => {
       expect(remaining).toBeGreaterThan(0);
     });
 
-    it('should return null for non-existent activity', () => {
+    it('should return undefined for non-existent activity', () => {
       const remaining = activitySystem.getActivityRemainingTime('invalid_id');
-      expect(remaining).toBeNull();
+      expect(remaining).toBeUndefined();
     });
   });
 

@@ -409,8 +409,8 @@ export const SPECIES_DATA: Record<string, Species> = {
 /**
  * Get a species by ID
  */
-export function getSpeciesById(speciesId: string): Species | null {
-  return SPECIES_DATA[speciesId] || null;
+export function getSpeciesById(speciesId: string): Species | undefined {
+  return SPECIES_DATA[speciesId] || undefined;
 }
 
 /**
