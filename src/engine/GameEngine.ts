@@ -7,6 +7,7 @@ import { GameUpdatesQueue, type GameUpdateReader } from './GameUpdatesQueue';
 import { BaseSystem, isUpdateHandler, type SystemInitOptions } from '../systems/BaseSystem';
 import { ConfigSystem } from '../systems/ConfigSystem';
 import type { GameState, GameUpdate, OfflineCalculation } from '../models';
+import type { InventoryItem } from '../models/Item';
 import { UPDATE_TYPES, GAME_TICK_INTERVAL } from '../models/constants';
 
 // Import systems
@@ -324,15 +325,30 @@ export class GameEngine {
     const limits = this.configSystem.getLimits();
     const defaultSettings = this.configSystem.getDefaultSettings();
 
+    // Create starter items for new players
+    const now = Date.now();
+    const starterItems: InventoryItem[] = [
+      // Basic care items
+      { itemId: 'basic_berries', quantity: 5, obtainedTime: now }, // Food
+      { itemId: 'sweet_berries', quantity: 3, obtainedTime: now }, // Better food
+      { itemId: 'fresh_water', quantity: 5, obtainedTime: now }, // Drink
+      { itemId: 'mineral_water', quantity: 2, obtainedTime: now }, // Better drink
+      { itemId: 'simple_ball', quantity: 1, obtainedTime: now, currentDurability: 20 }, // Toy for happiness (with durability)
+      { itemId: 'basic_medicine', quantity: 2, obtainedTime: now }, // Medicine for emergencies
+      { itemId: 'simple_bandage', quantity: 2, obtainedTime: now }, // Bandages for injuries
+      { itemId: 'energy_pill', quantity: 1, obtainedTime: now }, // Energy booster
+      { itemId: 'basic_fishing_rod', quantity: 1, obtainedTime: now, currentDurability: 50 }, // Tool to start fishing (with durability)
+    ];
+
     return {
       version: '1.0.0',
       timestamp: Date.now(),
       playerId: this.generatePlayerId(),
       pet: undefined,
       inventory: {
-        items: [],
+        items: starterItems,
         currency: {
-          coins: 0,
+          coins: 100, // Start with 100 coins
         },
         maxSlots: limits.maxInventorySlots,
         unlockedSlots: 20, // Keep this hard-coded as it's user progression, not config
