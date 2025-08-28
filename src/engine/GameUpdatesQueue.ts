@@ -34,6 +34,7 @@ export interface GameUpdateReader {
 export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
   private queue: GameUpdate[] = [];
   private updateCounter = 0;
+  private onEnqueueCallback: (() => void) | undefined = undefined;
 
   /**
    * Create a writer interface for a specific system
@@ -93,6 +94,15 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
 
     // Simple FIFO insertion
     this.queue.push(completeUpdate);
+
+    // Notify the GameEngine that a new update is available
+    if (this.onEnqueueCallback) {
+      try {
+        this.onEnqueueCallback();
+      } catch (error) {
+        console.error('[GameUpdatesQueue] Error notifying GameEngine:', error);
+      }
+    }
   }
 
   /**
@@ -239,6 +249,15 @@ export class GameUpdatesQueue implements GameUpdateWriter, GameUpdateReader {
     });
 
     return true;
+  }
+
+  /**
+   * Set callback to be notified when updates are enqueued
+   * Only GameEngine should use this since it has exclusive read access
+   * @param callback Function to call when an update is enqueued
+   */
+  public setOnEnqueueCallback(callback: (() => void) | undefined): void {
+    this.onEnqueueCallback = callback;
   }
 }
 

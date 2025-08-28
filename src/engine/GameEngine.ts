@@ -73,7 +73,7 @@ export class GameEngine {
   private tickCount = 0;
   private updateCount = 0;
   private lastTickTime = 0;
-  private tickTimer: ReturnType<typeof setInterval> | undefined = undefined;
+  private isProcessingUpdates = false;
 
   // Configuration
   private readonly config: Required<EngineConfig>;
@@ -159,11 +159,22 @@ export class GameEngine {
     this.running = true;
     this.lastTickTime = Date.now();
 
-    // Start the game loop
-    this.startGameLoop();
+    // Set up callback to process updates when they're enqueued
+    this.updatesQueue.setOnEnqueueCallback(() => {
+      this.triggerUpdateProcessing();
+    });
 
-    // Queue initial game tick
-    this.queueGameTick();
+    // Start the TimeSystem to generate game ticks
+    const timeSystem = this.systems.get('TimeSystem') as TimeSystem | undefined;
+    if (timeSystem) {
+      timeSystem.start();
+    } else {
+      console.error('[GameEngine] TimeSystem not available');
+    }
+
+    if (this.config.debugMode) {
+      console.log('[GameEngine] Started with event-driven update processing');
+    }
   }
 
   /**
@@ -180,8 +191,19 @@ export class GameEngine {
 
     this.running = false;
 
-    // Stop the game loop
-    this.stopGameLoop();
+    // Stop the TimeSystem first
+    const timeSystem = this.systems.get('TimeSystem') as TimeSystem | undefined;
+    if (timeSystem) {
+      timeSystem.stop();
+    }
+
+    // Clear the update callback
+    this.updatesQueue.setOnEnqueueCallback(undefined);
+
+    // Wait for any in-progress update processing to complete
+    while (this.isProcessingUpdates) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
 
     // Save game state
     await this.saveGameState();
@@ -191,48 +213,49 @@ export class GameEngine {
   }
 
   /**
-   * Process one game tick
+   * Trigger update processing when new updates are available
+   * Called by the queue's callback when an update is enqueued
    */
-  public async tick(): Promise<void> {
-    if (!this.running) {
+  private triggerUpdateProcessing(): void {
+    // Only start processing if not already processing and engine is running
+    if (!this.isProcessingUpdates && this.running) {
+      this.processUpdatesUntilEmpty();
+    }
+  }
+
+  /**
+   * Process all updates in the queue until it's empty
+   * Runs asynchronously and processes updates sequentially
+   */
+  private async processUpdatesUntilEmpty(): Promise<void> {
+    // Prevent concurrent processing
+    if (this.isProcessingUpdates) {
       return;
     }
 
-    const tickStartTime = performance.now();
-    const currentTime = Date.now();
-    const deltaTime = currentTime - this.lastTickTime;
+    this.isProcessingUpdates = true;
 
     try {
-      // Increment tick count first
-      this.tickCount++;
+      // Process all available updates sequentially
+      while (!this.updateReader.isEmpty() && this.running) {
+        const update = this.updateReader.dequeue();
 
-      // Process queued updates
-      await this.processUpdates();
-
-      // Tick all active systems
-      await this.tickAllSystems(deltaTime);
-
-      // Update game state
-      this.updateGameState();
-
-      // Auto-save if needed
-      if (this.tickCount % 1 === 0) {
-        // Save every tick
-        await this.saveGameState();
-      }
-
-      this.lastTickTime = currentTime;
-
-      // Track performance
-      const tickTime = performance.now() - tickStartTime;
-      this.trackTickTime(tickTime);
-
-      if (this.config.debugMode && this.tickCount % 10 === 0) {
-        console.log(`[GameEngine] Tick ${this.tickCount} completed in ${tickTime.toFixed(2)}ms`);
+        if (update) {
+          await this.processUpdate(update);
+          this.updateCount++;
+        }
       }
     } catch (error) {
-      console.error('[GameEngine] Error during tick:', error);
-      // Don't stop the engine on tick errors
+      console.error('[GameEngine] Error processing updates:', error);
+    } finally {
+      this.isProcessingUpdates = false;
+
+      // Check if more updates arrived while we were processing
+      // This ensures we don't miss any updates
+      if (!this.updateReader.isEmpty() && this.running) {
+        // Process again without waiting
+        this.processUpdatesUntilEmpty();
+      }
     }
   }
 
@@ -574,71 +597,33 @@ export class GameEngine {
   }
 
   /**
-   * Start the game loop
-   */
-  private startGameLoop(): void {
-    if (this.tickTimer) {
-      return;
-    }
-
-    this.tickTimer = setInterval(() => {
-      this.tick().catch((error) => {
-        console.error('[GameEngine] Game loop error:', error);
-      });
-    }, this.config.tickInterval);
-  }
-
-  /**
-   * Stop the game loop
-   */
-  private stopGameLoop(): void {
-    if (this.tickTimer) {
-      clearInterval(this.tickTimer);
-      this.tickTimer = undefined;
-    }
-  }
-
-  /**
-   * Queue a game tick update
-   */
-  private queueGameTick(): void {
-    this.updatesQueue.enqueue({
-      type: UPDATE_TYPES.GAME_TICK,
-      payload: {
-        data: {
-          tick: this.tickCount,
-          timestamp: Date.now(),
-        },
-      },
-    });
-  }
-
-  /**
-   * Process queued updates
-   */
-  private async processUpdates(): Promise<void> {
-    let processedCount = 0;
-
-    while (!this.updateReader.isEmpty() && processedCount < this.config.maxUpdatesPerTick) {
-      const update = this.updateReader.dequeue();
-
-      if (update) {
-        await this.processUpdate(update);
-        processedCount++;
-        this.updateCount++;
-      }
-    }
-
-    if (this.config.debugMode && processedCount > 0) {
-      console.log(`[GameEngine] Processed ${processedCount} updates`);
-    }
-  }
-
-  /**
    * Process a single update
    */
   private async processUpdate(update: GameUpdate): Promise<void> {
     try {
+      // Special handling for GAME_TICK updates
+      if (update.type === UPDATE_TYPES.GAME_TICK) {
+        // Increment tick count
+        this.tickCount++;
+        const currentTime = Date.now();
+        const deltaTime = currentTime - this.lastTickTime;
+
+        // Tick all active systems
+        await this.tickAllSystems(deltaTime);
+
+        // Update game state timestamps
+        this.updateGameState();
+
+        // Auto-save every tick
+        await this.saveGameState();
+
+        this.lastTickTime = currentTime;
+
+        if (this.config.debugMode && this.tickCount % 10 === 0) {
+          console.log(`[GameEngine] Processed tick ${this.tickCount}`);
+        }
+      }
+
       // Get systems that handle this update type
       const handlers = this.updateHandlers[update.type] || [];
 
@@ -668,8 +653,8 @@ export class GameEngine {
       }
 
       // After processing updates that changed state, save and notify UI
-      if (stateChanged) {
-        // Save the new state
+      if (stateChanged && update.type !== UPDATE_TYPES.GAME_TICK) {
+        // Save the new state (skip for GAME_TICK as it's already saved above)
         await this.saveGameState();
       }
     } catch (error) {
