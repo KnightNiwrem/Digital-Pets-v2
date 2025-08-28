@@ -654,6 +654,9 @@ export class GameEngine {
 
       // After processing updates that changed state, save and notify UI
       if (stateChanged && update.type !== UPDATE_TYPES.GAME_TICK) {
+        // Update timestamp for non-tick updates to ensure UI renders the change
+        this.gameState.timestamp = Date.now();
+
         // Save the new state (skip for GAME_TICK as it's already saved above)
         await this.saveGameState();
       }
