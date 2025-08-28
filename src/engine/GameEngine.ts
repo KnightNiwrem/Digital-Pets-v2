@@ -642,6 +642,17 @@ export class GameEngine {
       // Get systems that handle this update type
       const handlers = this.updateHandlers[update.type] || [];
 
+      // Also check all systems that can handle this update dynamically
+      for (const [systemName, system] of this.systems) {
+        if (isUpdateHandler(system) && system.canHandleUpdate(update.type)) {
+          if (!handlers.includes(systemName)) {
+            handlers.push(systemName);
+          }
+        }
+      }
+
+      let stateChanged = false;
+
       for (const systemName of handlers) {
         const system = this.systems.get(systemName);
 
@@ -651,8 +662,15 @@ export class GameEngine {
           if (newState) {
             this.previousState = this.gameState;
             this.gameState = newState;
+            stateChanged = true;
           }
         }
+      }
+
+      // After processing updates that changed state, save and notify UI
+      if (stateChanged) {
+        // Save the new state
+        await this.saveGameState();
       }
     } catch (error) {
       console.error(`[GameEngine] Error processing update:`, error, update);

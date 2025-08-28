@@ -232,7 +232,21 @@ export class PetSystem extends BaseSystem implements UpdateHandler {
       maxAction: 10,
     };
 
+    // If species data provided with stage-specific stats, use those
     if (speciesData?.baseStats) {
+      const stageStats = speciesData.baseStats[GROWTH_STAGES.HATCHLING];
+      if (stageStats) {
+        return {
+          health: stageStats.health || baseStats.health,
+          maxHealth: stageStats.health || baseStats.maxHealth,
+          attack: stageStats.attack || baseStats.attack,
+          defense: stageStats.defense || baseStats.defense,
+          speed: stageStats.speed || baseStats.speed,
+          action: stageStats.action || baseStats.action,
+          maxAction: stageStats.action || baseStats.maxAction,
+        };
+      }
+      // Fallback to generic baseStats if not stage-specific
       return { ...baseStats, ...speciesData.baseStats };
     }
 
@@ -1424,12 +1438,18 @@ export class PetSystem extends BaseSystem implements UpdateHandler {
           newState.pet = newPet;
 
           // Update statistics
-          if (newState.meta?.statistics) {
-            newState.meta.statistics.totalPetsOwned++;
-            newState.meta.statistics.currentPetAge = 0;
+          if (!newState.meta) {
+            newState.meta = gameState.meta || {};
           }
+          if (!newState.meta.statistics) {
+            newState.meta.statistics = gameState.meta?.statistics || {};
+          }
+          newState.meta.statistics.totalPetsOwned =
+            (newState.meta.statistics.totalPetsOwned || 0) + 1;
+          newState.meta.statistics.currentPetAge = 0;
 
-          console.log('[PetSystem] Created starter pet:', newPet.name);
+          console.log('[PetSystem] Created starter pet:', newPet.name, 'Species:', newPet.species);
+          console.log('[PetSystem] Initial stats:', newPet.stats);
           return newState;
         }
       } else if (action === 'CREATE_PET_FROM_EGG') {
@@ -1443,12 +1463,17 @@ export class PetSystem extends BaseSystem implements UpdateHandler {
           newState.pet = newPet;
 
           // Update statistics
-          if (newState.meta?.statistics) {
-            newState.meta.statistics.totalPetsOwned++;
-            newState.meta.statistics.currentPetAge = 0;
+          if (!newState.meta) {
+            newState.meta = gameState.meta || {};
           }
+          if (!newState.meta.statistics) {
+            newState.meta.statistics = gameState.meta?.statistics || {};
+          }
+          newState.meta.statistics.totalPetsOwned =
+            (newState.meta.statistics.totalPetsOwned || 0) + 1;
+          newState.meta.statistics.currentPetAge = 0;
 
-          console.log('[PetSystem] Created pet from egg:', newPet.name);
+          console.log('[PetSystem] Created pet from egg:', newPet.name, 'Species:', newPet.species);
           return newState;
         }
       }
