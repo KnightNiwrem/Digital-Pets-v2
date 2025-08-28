@@ -68,6 +68,8 @@ export const InventoryScreen: React.FC<InventoryScreenProps> = ({
         return '💊';
       case ITEM_CATEGORIES.BANDAGE:
         return '🩹';
+      case ITEM_CATEGORIES.HYGIENE:
+        return '🧻';
       case ITEM_CATEGORIES.ENERGY_BOOSTER:
         return '⚡';
       case ITEM_CATEGORIES.TOOL:

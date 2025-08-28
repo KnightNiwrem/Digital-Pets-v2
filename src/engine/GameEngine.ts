@@ -336,6 +336,8 @@ export class GameEngine {
       { itemId: 'simple_ball', quantity: 1, obtainedTime: now, currentDurability: 20 }, // Toy for happiness (with durability)
       { itemId: 'basic_medicine', quantity: 2, obtainedTime: now }, // Medicine for emergencies
       { itemId: 'simple_bandage', quantity: 2, obtainedTime: now }, // Bandages for injuries
+      { itemId: 'wet_wipe', quantity: 5, obtainedTime: now }, // Hygiene items for cleaning poop
+      { itemId: 'cleaning_spray', quantity: 2, obtainedTime: now }, // Better hygiene item
       { itemId: 'energy_pill', quantity: 1, obtainedTime: now }, // Energy booster
       { itemId: 'basic_fishing_rod', quantity: 1, obtainedTime: now, currentDurability: 50 }, // Tool to start fishing (with durability)
     ];

@@ -51,6 +51,7 @@ export class ShopSystem extends BaseSystem {
     [ITEM_CATEGORIES.TOY]: 2,
     [ITEM_CATEGORIES.MEDICINE]: 2,
     [ITEM_CATEGORIES.BANDAGE]: 1,
+    [ITEM_CATEGORIES.HYGIENE]: 2,
     [ITEM_CATEGORIES.ENERGY_BOOSTER]: 1,
     [ITEM_CATEGORIES.TOOL]: 2,
     [ITEM_CATEGORIES.EGG]: 1,
@@ -214,6 +215,26 @@ export class ShopSystem extends BaseSystem {
       this.createItem('medical_kit', 'Medical Kit', ITEM_CATEGORIES.BANDAGE, {
         rarity: RARITY_TIERS.UNCOMMON,
         basePrice: 35,
+      }),
+    ]);
+
+    // Hygiene items
+    this.itemPools.set(ITEM_CATEGORIES.HYGIENE, [
+      this.createItem('wet_wipe', 'Wet Wipe', ITEM_CATEGORIES.HYGIENE, {
+        rarity: RARITY_TIERS.COMMON,
+        basePrice: 10,
+      }),
+      this.createItem('cleaning_spray', 'Cleaning Spray', ITEM_CATEGORIES.HYGIENE, {
+        rarity: RARITY_TIERS.COMMON,
+        basePrice: 30,
+      }),
+      this.createItem('disinfectant', 'Disinfectant', ITEM_CATEGORIES.HYGIENE, {
+        rarity: RARITY_TIERS.UNCOMMON,
+        basePrice: 50,
+      }),
+      this.createItem('premium_cleaner', 'Premium Pet Cleaner', ITEM_CATEGORIES.HYGIENE, {
+        rarity: RARITY_TIERS.RARE,
+        basePrice: 100,
       }),
     ]);
 

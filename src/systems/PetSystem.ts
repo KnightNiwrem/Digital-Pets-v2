@@ -1489,6 +1489,31 @@ export class PetSystem extends BaseSystem implements UpdateHandler {
         // For now, just return undefined
         return undefined;
       }
+
+      // Handle cleaning poop with hygiene items
+      if (action === 'USE_HYGIENE_ITEM' || action === 'CLEAN_POOP_WITH_ITEM') {
+        const { cleaningPower, happinessBonus } = update.payload?.data || {};
+
+        if (cleaningPower !== undefined && gameState.pet) {
+          // Clean poop with the specified amount (0 means clean all)
+          const cleanAmount = cleaningPower === 0 ? undefined : cleaningPower;
+          const result = await this.cleanPoop(gameState, cleanAmount);
+
+          if (result.success && happinessBonus) {
+            // Apply happiness bonus from hygiene item
+            const pet = gameState.pet;
+            pet.hiddenCounters.happinessTicks = Math.min(
+              (this.tuning?.careTickMultipliers.happiness || 30) * 100,
+              pet.hiddenCounters.happinessTicks +
+                happinessBonus * (this.tuning?.careTickMultipliers.happiness || 30),
+            );
+            pet.careValues = this.calculateCareValues(pet.hiddenCounters);
+          }
+
+          // Return the updated state
+          return gameState;
+        }
+      }
     }
 
     return undefined;

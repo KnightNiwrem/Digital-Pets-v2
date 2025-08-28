@@ -15,6 +15,7 @@ import type {
   MaterialItem,
   EggItem,
   CurrencyItem,
+  HygieneItem,
 } from '../models/Item';
 import type { ItemCategory, RarityTier } from '../models/constants';
 import {
@@ -523,6 +524,77 @@ export const ITEMS_DATA: Record<string, Item> = {
     instantHeal: true,
     movementSpeedRestore: 50,
   } as BandageItem,
+
+  // ========== HYGIENE ITEMS ==========
+  wet_wipe: {
+    id: 'wet_wipe',
+    name: 'Wet Wipe',
+    description: 'Basic wipe for quick cleanup - cleans 1 poop',
+    category: ITEM_CATEGORIES.HYGIENE,
+    sprite: 'sprites/items/wet_wipe.png',
+    stackable: true,
+    maxStack: STACK_LIMITS.DEFAULT,
+    sellPrice: 5,
+    buyPrice: 10,
+    rarity: RARITY_TIERS.COMMON,
+    consumable: true,
+    cleaningPower: 1,
+    happinessBonus: 5,
+    scentType: 'fresh',
+  } as HygieneItem,
+
+  cleaning_spray: {
+    id: 'cleaning_spray',
+    name: 'Cleaning Spray',
+    description: 'Effective spray that cleans 3 poops',
+    category: ITEM_CATEGORIES.HYGIENE,
+    sprite: 'sprites/items/cleaning_spray.png',
+    stackable: true,
+    maxStack: STACK_LIMITS.DEFAULT,
+    sellPrice: 15,
+    buyPrice: 30,
+    rarity: RARITY_TIERS.COMMON,
+    consumable: true,
+    cleaningPower: 3,
+    happinessBonus: 10,
+    scentType: 'citrus',
+  } as HygieneItem,
+
+  disinfectant: {
+    id: 'disinfectant',
+    name: 'Disinfectant',
+    description: 'Strong disinfectant that cleans all poop and prevents sickness',
+    category: ITEM_CATEGORIES.HYGIENE,
+    sprite: 'sprites/items/disinfectant.png',
+    stackable: true,
+    maxStack: STACK_LIMITS.DEFAULT,
+    sellPrice: 25,
+    buyPrice: 50,
+    rarity: RARITY_TIERS.UNCOMMON,
+    consumable: true,
+    cleaningPower: 0, // 0 means clean all
+    happinessBonus: 15,
+    preventionDuration: 6, // 6 hours of reduced poop spawn
+    scentType: 'herbal',
+  } as HygieneItem,
+
+  premium_cleaner: {
+    id: 'premium_cleaner',
+    name: 'Premium Pet Cleaner',
+    description: 'Luxury cleaner that cleans all poop and boosts happiness significantly',
+    category: ITEM_CATEGORIES.HYGIENE,
+    sprite: 'sprites/items/premium_cleaner.png',
+    stackable: true,
+    maxStack: 50,
+    sellPrice: 50,
+    buyPrice: 100,
+    rarity: RARITY_TIERS.RARE,
+    consumable: true,
+    cleaningPower: 0, // Clean all
+    happinessBonus: 30,
+    preventionDuration: 12, // 12 hours of reduced poop spawn
+    scentType: 'floral',
+  } as HygieneItem,
 
   // ========== ENERGY BOOSTER ITEMS ==========
   energy_pill: {

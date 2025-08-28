@@ -110,6 +110,17 @@ export interface BandageItem extends Item {
 }
 
 /**
+ * Hygiene item for cleaning poop
+ */
+export interface HygieneItem extends Item {
+  category: 'HYGIENE';
+  cleaningPower: number; // Amount of poop to clean (0 = all)
+  happinessBonus?: number; // Optional happiness bonus from cleaning
+  preventionDuration?: number; // Hours of reduced poop spawn rate
+  scentType?: 'floral' | 'fresh' | 'citrus' | 'herbal' | 'neutral';
+}
+
+/**
  * Energy booster item
  */
 export interface EnergyBoosterItem extends Item {

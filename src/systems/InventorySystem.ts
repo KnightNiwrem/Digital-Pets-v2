@@ -14,6 +14,7 @@ import type {
   ToyItem,
   MedicineItem,
   EnergyBoosterItem,
+  HygieneItem,
 } from '../models/Item';
 import {
   UPDATE_TYPES,
@@ -497,6 +498,41 @@ export class InventorySystem extends BaseSystem {
             type: booster.sideEffect.type,
             description: `Side effect: ${booster.sideEffect.type}`,
             duration: booster.sideEffect.duration,
+          });
+        }
+        break;
+      }
+
+      case ITEM_CATEGORIES.HYGIENE: {
+        const hygiene = item as HygieneItem;
+
+        // Send update to PetSystem to clean poop
+        if (this.gameUpdateWriter) {
+          const update: GameUpdate = {
+            id: `use-hygiene-${Date.now()}`,
+            type: UPDATE_TYPES.USER_ACTION,
+            timestamp: Date.now(),
+            payload: {
+              action: 'USE_HYGIENE_ITEM',
+              data: {
+                itemId: item.id,
+                cleaningPower: hygiene.cleaningPower,
+                happinessBonus: hygiene.happinessBonus,
+              },
+            },
+          };
+          this.gameUpdateWriter.enqueue(update);
+        }
+
+        changes.poopCleaned = hygiene.cleaningPower;
+        if (hygiene.happinessBonus) {
+          changes.happiness = hygiene.happinessBonus * quantity;
+        }
+        if (hygiene.preventionDuration) {
+          sideEffects.push({
+            type: 'poop_prevention',
+            description: `Reduced poop spawn rate for ${hygiene.preventionDuration} hours`,
+            duration: hygiene.preventionDuration * 60, // Convert hours to minutes
           });
         }
         break;
