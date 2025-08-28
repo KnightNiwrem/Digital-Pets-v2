@@ -717,6 +717,11 @@ export class GameEngine {
         if (this.config.debugMode) {
           console.log('[GameEngine] No save found, using default state');
         }
+
+        // Also render the default state to UI so it can show starter selection
+        if (uiSystem && uiSystem.isInitialized()) {
+          uiSystem.renderState(this.gameState, true); // Force render default state
+        }
       }
     } catch (error) {
       console.error('[GameEngine] Failed to load game state:', error);
